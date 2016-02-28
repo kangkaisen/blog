@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html >
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <link rel="shortcut icon" href="/images/favicon.ico">
+    <link rel="stylesheet" href="/css/bootstrap.css" type="text/css" />
+    <title>写文章</title>
+</head>
+<body>
+<form class="form-horizontal" action="/blog" method="POST">
+    <div class="form-group">
+        <label  class="col-sm-2 control-label">作者</label>
+        <div class="col-sm-9">
+            <input  class="form-control" name="author" value=<%= author.name%> required>
+        </div>
+    </div>
+    <div class="form-group">
+        <label  class="col-sm-2 control-label">标题</label>
+        <div class="col-sm-9">
+            <input  class="form-control" name="title" required>
+        </div>
+    </div>
+    <div class="form-group">
+        <label  class="col-sm-2 control-label">日期</label>
+        <div class="col-sm-9">
+            <input  class="form-control" name="time" value="2015-12-07" required>
+        </div>
+    </div>
+    <div class="form-group">
+        <label  class="col-sm-2 control-label">标签</label>
+        <div class="col-sm-9">
+            <input  class="form-control" name="tag" value="未分类" required>
+        </div>
+    </div>
+    <div class="form-group">
+        <label  class="col-sm-2 control-label">URL地址</label>
+        <div class="col-sm-9">
+            <input  class="form-control" name="url" required>
+        </div>
+    </div>
+    <div class="form-group">
+        <label  class="col-sm-2 control-label">置顶</label>
+        <div class="col-sm-9">
+            <input  class="form-control" name="top" value="0" required>
+        </div>
+    </div>
+    <div class="form-group">
+        <label  class="col-sm-2 control-label">markdown内容</label>
+        <div class="col-sm-9">
+            <textarea class="form-control" rows="20" name="content" required></textarea>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-9">
+            <button type="submit" class="btn btn-info">发表文章</button>
+        </div>
+    </div>
+</form>
+</body>
+</html>

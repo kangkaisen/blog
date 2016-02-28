@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html >
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <link rel="shortcut icon" href="/images/favicon.ico">
+    <link rel="stylesheet" href="/css/bootstrap.css" type="text/css" />
+    <title>编辑文章</title>
+</head>
+<body>
+<form class="form-horizontal" action="/blog/<%= post._id%>" method="POST">
+    <div class="form-group">
+        <label  class="col-sm-2 control-label">作者</label>
+        <div class="col-sm-9">
+            <input  class="form-control" name="author" value="<%= post.author%>" required>
+        </div>
+    </div>
+    <div class="form-group">
+        <label  class="col-sm-2 control-label">标题</label>
+        <div class="col-sm-9">
+            <input  class="form-control" name="title" value="<%= post.title%>" required>
+        </div>
+    </div>
+    <div class="form-group">
+        <label  class="col-sm-2 control-label">日期</label>
+        <div class="col-sm-9">
+            <input  class="form-control" name="time" value="<%= post.time%>" required>
+        </div>
+    </div>
+    <div class="form-group">
+        <label  class="col-sm-2 control-label">标签</label>
+        <div class="col-sm-9">
+            <input  class="form-control" name="tag" value="<%= post.tag%>" required>
+        </div>
+    </div>
+    <div class="form-group">
+        <label  class="col-sm-2 control-label">URL地址</label>
+        <div class="col-sm-9">
+            <input  class="form-control" name="url" value="<%= post.url%>"  required>
+        </div>
+    </div>
+    <div class="form-group">
+        <label  class="col-sm-2 control-label">置顶</label>
+        <div class="col-sm-9">
+            <input  class="form-control" name="top" value="<%= post.top%>" required>
+        </div>
+    </div>
+    <div class="form-group">
+        <label  class="col-sm-2 control-label">markdown内容</label>
+        <div class="col-sm-9">
+            <textarea class="form-control" rows="20" name="content" required><%= post.content%></textarea>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-9">
+            <button type="submit" class="btn btn-info">更新文章</button>
+        </div>
+    </div>
+</form>
+</body>
+</html>

@@ -1,0 +1,737 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
+    <title>linux 命令|编程小梦--康凯森的技术博客</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" >
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank"  rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank"  rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <h1 class="panel-title ">linux 命令</h1>
+                </div>
+                <div class="panel-body">
+                    <!-- toc -->
+<ul>
+<li><a href="#终端快捷键">终端快捷键</a></li>
+<li><a href="#用户的用户组">用户的用户组</a></li>
+<li><a href="#磁盘">磁盘</a></li>
+<li><a href="#文件">文件</a></li>
+<li><a href="#shell命令">Shell命令</a></li>
+<li><a href="#shell-脚本">Shell 脚本</a></li>
+<li><a href="#进程">进程</a></li>
+<li><a href="#网络">网络</a></li>
+<li><a href="#vim">vim</a></li>
+<li><a href="#svc">svc</a></li>
+<li><a href="#hbase">hbase</a></li>
+<li><a href="#用户">用户</a></li>
+<li><a href="#ssh">SSH</a></li>
+<li><a href="#挂载">挂载</a></li>
+<li><a href="#进程">进程</a></li>
+<li><a href="#文件">文件</a><ul>
+<li><a href="#the-maximum-amount-of-heap-to-use-in-mb-default-is-1000">The maximum amount of heap to use, in MB. Default is 1000.</a></li>
+<li><a href="#export-hadoopnamenodeinitheapsize">export HADOOP_NAMENODE_INIT_HEAPSIZE=&quot;&quot;</a></li>
+<li><a href="#the-following-applies-to-multiple-commands-fs-dfs-fsck-distcp-etc">The following applies to multiple commands (fs, dfs, fsck, distcp etc)</a></li>
+<li><a href="#command-specific-options-appended-to-hadoopopts-when-specified">Command specific options appended to HADOOP_OPTS when specified</a></li>
+</ul>
+</li>
+<li><a href="#git">git</a></li>
+</ul>
+<!-- toc stop -->
+<h2 id="终端快捷键">终端快捷键</h2>
+<ul>
+<li>Ctrl+a 将光标移至输入行头</li>
+<li>Ctrl+e 将光标移至输入行末</li>
+<li>Ctrl+k 删除从光标所在位置到行末</li>
+<li><p>简单顺序执行可以使用;</p>
+<h2 id="用户的用户组">用户的用户组</h2>
+<h3 id="sudo">sudo</h3>
+<p>使用sudo命令的前提：</p>
+</li>
+<li><p>知道当前用户密码</p>
+</li>
+<li>当前用户必须在sudo用户组
+##磁盘<h3 id="df-查看磁盘使用情况">df 查看磁盘使用情况</h3>
+<h3 id="du-查看目录容量">du 查看目录容量</h3>
+du -sh /*
+### <h3 id="查看磁盘个数">查看磁盘个数</h3>
+</li>
+<li>fdisk -l</li>
+<li>parted -l<h2 id="文件">文件</h2>
+<h3 id="文件权限">文件权限</h3>
+</li>
+<li>chgrp -R hdfs hadoop</li>
+<li>chown -R hdfs:hdfs hadoop</li>
+<li>chmod 600 authorized_keys  <h3 id="文件和目录操作">文件和目录操作</h3>
+</li>
+<li>ls -alh</li>
+<li>cd ~  cd - cd ..</li>
+<li>pwd</li>
+<li>touch newFile</li>
+<li>mv source target</li>
+<li>mkdir -p -m 600 dir/a/c</li>
+<li>rm -rf dir</li>
+<li>cp -r demodir demodir.new</li>
+<li>file filename 查看文件类型<h3 id="文件搜索">文件搜索</h3>
+</li>
+<li>whereis python</li>
+<li>locate *.jpg</li>
+<li>which  python 通过PATH环境变量查找</li>
+<li>find<h3 id="文件打包和解压缩">文件打包和解压缩</h3>
+</li>
+<li>tar -zcf xx.tar.gz  文件名</li>
+<li>tar -zxf xx.tar.gz</li>
+</ul>
+<h2 id="shell命令">Shell命令</h2>
+<h3 id="curl">curl</h3>
+<pre><code>author, title, content, tag, time, top ,count,
+
+curl http://localhost:8088/blog/like/5646e58376a3cdd403f3edff
+
+curl -I --data &quot;author=康凯森&amp;title=最新&amp;content=# 爱你
+## 我爱你 
+## 我恨你
+&amp;tag=测试&amp;time=2015-11-22&amp;url=love2&amp;top=0&amp;count=0&quot; http://localhost:8088/blog
+
+curl --data &quot;author=康凯森&amp;title=大话数据库&amp;content=##数据库是什么 &amp;tag=测试&amp;time=2015-10-10&amp;top=0&amp;count=0&quot; http://localhost:8088/blog
+
+curl  -X DELETE http://localhost:8088/blog/564886c11790371b03816f9a
+
+curl --data &quot;author=康凯森&amp;title=我爱数据库&amp;content=## 数据库是数据库 &amp;tag=测试&amp;time=2015-10-19&amp;top=1&amp;url=shujuku&amp;count=1&quot; http://localhost:8088/blog/564886931790371b03816f99
+</code></pre><h3 id="set">set</h3>
+<h3 id="env">env</h3>
+<h3 id="export">export</h3>
+<h3 id="find">find</h3>
+<ul>
+<li>find ./ -size 0 </li>
+<li>find ./ -name demo1</li>
+<li>find /home -user chinahadoop -print</li>
+<li>find /etc -type d -print<h3 id="grep">grep</h3>
+</li>
+<li>ls /usr/ | grep lib --color</li>
+<li>ll | grep demo --color -n</li>
+<li>export | grep &quot;.*yanlou$&quot;查看环境变量中以&quot;yanlou&quot;结尾的字符串</li>
+<li>grep ‘test’ d*  显示所有以d开头的文件中包含 test的行。</li>
+<li>grep ‘test’ aa bb cc 显示在aa，bb，cc文件中匹配test的行。<h3 id="tail">tail</h3>
+</li>
+<li>tail -f filename</li>
+<li><p>tail -n 5 filename</p>
+<h3 id="sort">sort</h3>
+<p>-n 按照数值排序
+-u 不出现重复的行
+-r 逆向排序
+-t 指定分段的符号
+-k 指定的第几个段</p>
+</li>
+<li><p>sort demo</p>
+</li>
+<li>sort -r demo</li>
+<li>sort -t . -k 5 demo</li>
+<li><p>cat /etc/passwd | sort -t&#39;:&#39; -k 3 -n </p>
+<h3 id="cut">cut</h3>
+<p>-b 字节
+-c 字符
+-d 自定义字段分隔符</p>
+</li>
+<li><p>cut -b 2 demo  截取每一行第二个字节</p>
+</li>
+<li>cut -b 5-7 demo 截取每一行第五个到第七个字节</li>
+<li>cut -b 9- demo 截取第九个字节之后</li>
+<li>cut -b -9 demo 截取第九个字节之前</li>
+<li>cut -d . -f 2 demo 截取以点为分隔符获取第二个字段</li>
+<li>cut /etc/passwd -d &#39;:&#39; -f 1,6</li>
+<li>grep -w RemoteMavenServer jps_tmp|cut -d &#39; &#39; -f 1<h3 id="sed">sed</h3>
+sed支持正则表达式
+^ 表示一行的开头
+$ 表示一行的结尾
+. 表示任何单个字符。</li>
+<li><p>表示某个字符出现了0次或多次。</p>
+</li>
+<li><p>sed &quot;s/chinahadoop/hadoop/g&quot; demo.txt </p>
+</li>
+<li>sed &#39;s/^/@/g&#39; demo.txt  在每一行最前添加@</li>
+<li>sed &#39;s/$/@/g&#39; demo.txt  在每一行后面添加@</li>
+<li>sed &quot;3s/chinahadoop/hadoop/g&quot; demo.txt 只替换第三行</li>
+<li>sed &quot;1,2s/chinahadoop/hadoop/g&quot; demo.txt 替换第1到第2行的文本</li>
+</ul>
+<h3 id="wc">wc</h3>
+<ul>
+<li>行数
+wc -l /etc/passwd</li>
+<li>单词数
+wc -w /etc/passwd</li>
+<li>字节数
+wc -c /etc/passwd</li>
+<li>字符数
+wc -m /etc/passwd</li>
+<li>最长行字节数
+wc -L /etc/passwd</li>
+<li>ls -dl /etc/*/ | wc -l 统计 /etc 下面所有目录数：</li>
+</ul>
+<h3 id="uniq">uniq</h3>
+<ul>
+<li>history | cut -c 8- | cut -d &#39; &#39; -f 1 | sort | uniq</li>
+</ul>
+<h2 id="shell-脚本">Shell 脚本</h2>
+<ul>
+<li>which cowsay&gt;/dev/null &amp;&amp; echo &quot;exist&quot; || echo &quot;not exist&quot;</li>
+</ul>
+<h2 id="进程">进程</h2>
+<h3 id="ps">ps</h3>
+<ul>
+<li>ps aux 观察系统所有的进程数据</li>
+<li>ps -lA 也是能够观察所有系统的进程数据<h3 id="top">top</h3>
+选项：
+-d :后面可以接秒数,就是整个程序画面更新的秒数。默认5秒
+-b :以批次的方式执行 top ,还有更多的参数可以使用,通常会搭配数据流重导向来将批次的结果输出成为档案
+-n :与 -b 搭配,意义是,需要进行几次 top 的输出结果
+-p :指定某些个 PID 来进行观察监测而已</li>
+</ul>
+<p>在 top 执行过程当中可以使用的按键指令:
+? :显示在 top 当中可以输入的按键指令;
+P :以 CPU 的使用资源排序显示
+M :以 Memory 的使用资源排序显示
+N :以 PID 来排序喔
+T :由该 Process 使用的 CPU 时间累积 (TIME+) 排序
+k :给予某个 PID 一个讯号 (signal)
+r :给予某个 PID 重新制订一个 nice 值
+q :离开 top 软件的按键</p>
+<ul>
+<li>top -b -n 2 &gt; /tmp/top.txt<h3 id="pstree">pstree</h3>
+</li>
+<li>pstree -A 查看系统所有进程树</li>
+<li>pstree -Aup 系统进程树同时显示PID与user</li>
+</ul>
+<h3 id="uname">uname</h3>
+<ul>
+<li><p>uname -a</p>
+<h3 id="netstat">netstat</h3>
+<p>选项：
+-a :将目前系统上所有的联机、监听、Socket数据都列出来 
+-t :列出tcp网络封包的数据
+-u :列出udp网络封包的数据
+-n :不以程序的服务名称,以端口(port number)来显示; 
+-l :列出目前正在网络监听(listen)的服务;
+-p :列出该网络服务的程序PID</p>
+</li>
+<li><p>netstat -tlnp 目前系统上已在监听的网络链接以及PID</p>
+</li>
+<li>netstat -anlp | grep 22 与22端口相关的网络连接信息<h3 id="vmstat">vmstat</h3>
+</li>
+<li>vmstat 1 3<h3 id="jobs">jobs</h3>
+选项：
+-l :除了列出 job number 与指令串之外,同时列出 PID 的号码
+-r :仅列出正在背景 run 的工作
+-s :仅列出正在背景当中暂停 (stop) 的工作</li>
+</ul>
+<h2 id="网络">网络</h2>
+<h3 id="ifconfig">ifconfig</h3>
+<ul>
+<li>ifconfig ethX down<h3 id="ping">ping</h3>
+</li>
+<li>ping -c 3 www.bcmeng.com<h3 id="traceroute">traceroute</h3>
+</li>
+<li>traceroute -n www.bcmeng.com<h3 id="telnet">telnet</h3>
+</li>
+<li>telnet www.bcmeng.com 80<h3 id="wget">wget</h3>
+</li>
+<li>wget -c <a href="http://www.bcmeng.com">http://www.bcmeng.com</a> 断点续传</li>
+<li>wget -b <a href="http://www.bcmeng.com">http://www.bcmeng.com</a> 后台下载<h3 id="hostname">hostname</h3>
+</li>
+<li>hostname kangkaisen<h3 id="lsof-i-8888">lsof -i:8888</h3>
+<h2 id="vim">vim</h2>
+</li>
+<li>CTRL+d 向前滚动半屏</li>
+<li>CTRL+u 向后滚动半屏</li>
+<li>x 删除当前光标下的字符</li>
+<li>d^ 删除从当前光标到行首的字符</li>
+<li><p>d$ 删除从当前光标到行尾的字符</p>
+</li>
+<li><p>dd 删除当前光标所在的行</p>
+</li>
+<li>nyy 复制n行</li>
+<li>p 粘贴</li>
+<li>u 撤销</li>
+<li>/ 向下查找</li>
+<li>？向上查找</li>
+<li>set 对vi进行设置</li>
+<li>:! ls 执行Linux命令</li>
+<li>:s/search/replace/g  replace替换search</li>
+<li>:set nu以显示行号</li>
+<li>Ctrl+o快速回到上一次(跳转前)光标所在位置</li>
+<li>0 到行头</li>
+<li>$ 到行尾</li>
+<li>ddp 快速交换下面的行</li>
+<li><blockquote>
+<blockquote>
+<p>整行将向右缩进</p>
+</blockquote>
+</blockquote>
+</li>
+<li>:set shiftwidth=10 设置缩进为10个字符</li>
+<li>n表示继续查找</li>
+</ul>
+<p>PS1=&#39;[[\e[32m]###[\e[31m]\u@[\e[36m]\h \w]\$[\e[m]&#39;</p>
+<h2 id="svc">svc</h2>
+<p>sudo svstat /service/regionserver/</p>
+<p>sudo svc -d /service/regionserver/</p>
+<p>sudo -iu sankuai</p>
+<p>svc options: u up, d down, o once, x exit, p pause, c continue, h hup, a alarm, i interrupt, t term, k kill</p>
+<p>netstat -anp | grep 8020
+ps -aux | grep 17185
+telnet hbase-test01 8020
+seq -f rz-data-hbase-kylin%02g 1 30
+seq -f rz-data-hbase-prophet%02g 1 6
+seq -f rz-data-hbase-kylin%02g 1 30 | while read host; do echo $host; ssh $host &quot;hostname&quot; &lt; /dev/null; done</p>
+<p>seq -f dx-data-hbase-monitor%02g 5 10 | while read host; do echo $host; ssh $host &quot;ln -s /opt/meituan/versions/hadoop-2.4.1-client /opt/meituan/hadoop;&quot; &lt; /dev/null; done</p>
+<p>seq -f dx-data-hbase-monitor%02g 5 10 | while read host; do echo $host; ssh $host &quot;/opt/meituan/hadoop/sbin/hadoop-daemon.sh start datanode&quot; &lt; /dev/null; done</p>
+<p>seq -f dx-data-hbase-monitor%02g 5 10 | while read host; do echo $host; ssh $host &quot;ln -s /opt/meituan/hbase/bin/regionserver /service/regionserver;&quot; &lt; /dev/null; done</p>
+<p>seq -f dx-data-hbase-monitor%02g 5 10 | while read host; do echo $host; ssh $host &quot;sudo svc -d /service/regionserver;&quot; &lt; /dev/null; done</p>
+<p>kinit hdfs/&#39;cq-data-hbase05.cq.sankuai.com&#39;@SANKUAI.COM -k -t /etc/hadoop/keytabs/hdfs.keytab</p>
+<p>seq -f cq-data-hbase%02g 1 18 | while read host; do echo $host; ssh $host &quot;/opt/meituan/hadoop/sbin/hadoop-daemon.sh start journalnode&quot; &lt; /dev/null; done</p>
+<p>seq -f cq-data-hbase%02g 1 18 | while read host; do echo $host; ssh $host &quot;ln -s /opt/meituan/versions/hbase-0.98.13.1 /opt/meituan/hbase&quot; &lt; /dev/null; done</p>
+<p>seq -f cq-data-hbase%02g 1 18 | while read host; do echo $host; ssh $host &quot;ln -s /opt/meituan/hbase/bin/regionserver /service/regionserver&quot; &lt; /dev/null; done</p>
+<p>seq -f cq-data-hbase-mars%02g 1 6 | while read host; do echo $host; ssh $host &quot;/opt/meituan/hadoop/sbin/hadoop-daemon.sh stop datanode&quot; &lt; /dev/null; done
+kinit hdfs/&#39;cq-data-hbase01.cq.sankuai.com&#39;@SANKUAI.COM -k -t /etc/hadoop/keytabs/hdfs.keytab</p>
+<h2 id="hbase">hbase</h2>
+<p>在kks1上，对其进行格式化，并启动：
+bin/hdfs namenode -format</p>
+<p>sbin/hadoop-daemon.sh start namenode</p>
+<p>在kks1上，启动所有datanode
+sbin/hadoop-daemons.sh start datanode</p>
+<p>启动YARN：
+sbin/start-yarn.sh</p>
+<p>sbin/stop-dfs.sh</p>
+<p>sbin/start-dfs.sh</p>
+<p>sbin/start-yarn.sh</p>
+<p>sbin/stop-yarn.sh</p>
+<p>bin/zkServer.sh stop
+bin/zkServer.sh start
+bin/zkServer.sh status 查看节点状态</p>
+<p>bin/start-hbase.sh</p>
+<p>bin/stop-hbase.sh</p>
+<h2 id="用户">用户</h2>
+<p>sudo groupadd hbase
+sudo useradd  -g hbase -m hbase
+chgrp -R hbase hbase
+chown -R hbase /opt/meituan</p>
+<p>sudo groupadd hdfs
+sudo groupadd zookeeper
+sudo useradd -g hdfs -m hdfs</p>
+<p>useradd</p>
+<p>userdel</p>
+<p>usermod</p>
+<p>groupadd</p>
+<p>groupdel </p>
+<p>passwd</p>
+<p>sudo useradd -d /home/kks -m kks</p>
+<p>sudo userdel -r kks</p>
+<p>sudo usermod -g super kks</p>
+<p>sudo groupadd g111</p>
+<p>sudo groupdel g111</p>
+<p>相关 系统文件 /etc/passwd /etc/shadow  /ect/group</p>
+<p>sudo useradd -d /home/kks -m kks
+sudo passwd kks</p>
+<p>su kks //切换用户</p>
+<h2 id="ssh">SSH</h2>
+<p>ssh-keygen -t rsa</p>
+<p>ssh sankuai@hbase-test02 &quot;mkdir .ssh;chmod 0700 .ssh&quot;</p>
+<h2 id="挂载">挂载</h2>
+<p>fdisk -l</p>
+<p>fdisk  /dev/xvdb</p>
+<p>依次输入“n”，“p” “1”，两次回车，“wq&quot;</p>
+<p>fdisk -l</p>
+<p>mkfs.ext3 /dev/xvdb1</p>
+<p>echo &#39;/dev/xvdb1  /mnt ext3    defaults    0  0&#39; &gt;&gt; /etc/fstab</p>
+<p>mount -a</p>
+<p>df -h</p>
+<h2 id="进程">进程</h2>
+<h3 id="ps">ps</h3>
+<h4 id="ps-ax-fgrep-git">ps ax | fgrep git</h4>
+<h4 id="ps-aux-grep-java">ps aux | grep java</h4>
+<h3 id="top">top</h3>
+<p>top动态观察进程的变化
+功能：动态查看进程运行变化
+语法：top [-options]
+说明：
+选项：
+-d :后面可以接秒数,就是整个程序画面更新的秒数。默认5秒
+-b :以批次的方式执行 top ,还有更多的参数可以使用,通常会搭配数据流重导向来将批次的结果输出成为档案
+-n :与 -b 搭配,意义是,需要进行几次 top 的输出结果
+-p :指定某些个 PID 来进行观察监测而已</p>
+<p>在 top 执行过程当中可以使用的按键指令:
+? :显示在 top 当中可以输入的按键指令;
+P :以 CPU 的使用资源排序显示
+M :以 Memory 的使用资源排序显示
+N :以 PID 来排序喔
+T :由该 Process 使用的 CPU 时间累积 (TIME+) 排序
+k :给予某个 PID 一个讯号 (signal)
+r :给予某个 PID 重新制订一个 nice 值
+q :离开 top 软件的按键</p>
+<p>二、步骤
+1.每两秒钟更新一次 top ,观察整体信息</p>
+<p>top</p>
+<p>2.将top信息进行2次并输出到文件中</p>
+<p>top -b -n 2 &gt; /tmp/top.txt</p>
+<h3 id="pstree">pstree</h3>
+<p>pstree查看进程树
+功能：查看进程树
+语法：pstree [-options]
+说明：
+选项：
+-A :各程序树之间的连接以 ASCII 字符来连接
+-U :各程序树之间的连接以万国码的字符来连接。在某些终端接口下可能会有错误
+-p :并同时列出每个 process 的 PID
+-u :并同时列出每个 process 的所属账号名称</p>
+<p>二、步骤
+1.查看系统所有进程树</p>
+<p>pstree -A</p>
+<p>2.系统进程树同时显示PID与user（root身份来执行，属于root的程序不会显示）</p>
+<p>pstree -Aup</p>
+<p>pgrep -l init</p>
+<h3 id="uname">uname</h3>
+<p>uname查阅系统与核心相关信息
+功能：查阅系统与核心相关信息
+语法：uname [-asrmpi]
+说明：
+选项：
+-a :所有系统相关的信息,包括底下的数据都会被列出来
+-s :系统核心名称
+-r :核心的版本
+-m :本系统的硬件名称,例如 i686 或 x86_64 等
+-p :CPU 的类型,与 -m 类似,只是显示的是CPU的类型
+-i :硬件的平台(ix86)</p>
+<p>二、步骤
+1.输出系统的基本信息</p>
+<p>uname -a</p>
+<h3 id="vmstat">vmstat</h3>
+<p>vmstat侦测系统资源变化
+功能：动态的了解一下系统资源的运作，CPU/内存/磁盘输入输出状态
+语法：vmstatt -[asSp]
+说明：
+选项：
+-a :使用 inactive/active(活跃与否) 取代 buffer/cache 的内存输出信息;
+-f :将开机到目前为止,系统复制 (fork) 的程序数;
+-s :将一些事件 (开机至目前为止) 导致的内存变化情况列表说明;
+-S :后面可以接单位,让显示的数据有单位。例如 K/M 取代 bytes 的容量; 
+-d :列出磁盘的读写总量统计表
+-p :后面列出分割槽,可显示该分割槽的读写总量统计表</p>
+<p>二、步骤
+1.统计目前主机CPU状态,每秒一次,共计三次</p>
+<p>vmstat 1 3</p>
+<h3 id="jobs">jobs</h3>
+<p>jobs查看当前工作状态
+功能：查看当前工作状态
+语法：jobs -[lrs]
+说明：
+选项：
+-l :除了列出 job number 与指令串之外,同时列出 PID 的号码
+-r :仅列出正在背景 run 的工作
+-s :仅列出正在背景当中暂停 (stop) 的工作</p>
+<h3 id="nohup">nohup</h3>
+<p>nohup
+可以让你在脱机或注销系统 后,还能够让工作继续进行
+选项：
+nohup [指令与参数] 在终端机前景中工作 
+nohup [指令与参数] &amp; 在终端机背景中工作</p>
+<h3 id="ifconfig">ifconfig</h3>
+<p>ifconfig主要是可以手动的启动、观察与修改网络接口的相关参数,可以修改的参数很多
+ifconfig {interface} {up|down} 关闭与启动接口
+ifconfig {interface} {options} 设置与修改接口
+interface:网卡接口名称包括eth0,eth1,ppp0
+options:可以选的参数,包括如下:
+    up,down:启动(up)或关闭(down)该网络接口(不涉及任何参数)
+    mtu :可以设定不同的MTU数值,例如 mtu1500(单位为byte)
+    netmask :就是子网掩码网络
+    broadcast:就是广播地址</p>
+<h3 id="ping">ping</h3>
+<p> ping [选项与参数] IP 
+选项与参数:
+-c 数值:执行ping的次数,例如 -c 5
+-n :在输出数据时不进行IP与主机名的反查,直接使用IP输出速度较快
+-s 数值:发送出去的ICMP包大小,默认位56bytes
+-t 数值:TTL的数值,默认是255,每经过一个节点就会少一
+-W 数值:等待响应对方主机的秒数
+-M [do|dont] :主要在侦测网络的MTU数值大小,两个常见的项目是:
+    do :代表传送一个DF旗标,让包不能重新拆包与打包
+    dont:代表不要传送DF旗标,表示包可以在其他主机上拆包与打包</p>
+<p>1.向某台主机发送三次</p>
+<p>ping -c 3 www.chinahadoop.cn</p>
+<p>2.用ping追踪路径中的最大MTU数值，测试1000MTU</p>
+<p>ping -c 2 -s 1000 -M do www.chinahadoop.cn</p>
+<p>3.用ping追踪路径中的最大MTU数值，测试8000MTU,观察输出的异常提示，因为默认最大1500MTU</p>
+<p>ping -c 2 -s 8000 -M do www.chinahadoop.cn</p>
+<h3 id="traceroute">traceroute</h3>
+<p>追踪两部主机之间通过的各个节点通信状况的好坏
+traceroute [选项与参数] IP
+选项与参数:
+-n :可以不必进行主机的名称解析,单纯用IP速度较快
+-U :使用UDP的port 33434来进行侦测,默认协议
+-I :使用ICMP的方式来进行测试
+-T :使用TCP来进行测试,一般使用port 80测试
+-w :若对方主机在几秒钟内没有响应，默认是5秒
+-p port:若不想使用UDP与TCP的默认端口号来测试,可以改变此端口号
+-g 路由:与-i的参数相仿,只是-g后面接的是gateway的IP地址</p>
+<p>二、步骤
+1.通过traceroute来进行检查去chinahadoop节点连接状态</p>
+<p>traceroute -n www.chinahadoop.cn</p>
+<h3 id="telnet">telnet</h3>
+<p>查看某个端口是否可访问
+telnet [host|IP [port]]</p>
+<p>二、步骤
+1.查看是否开启了80端口</p>
+<p>telnet www.chinahadoop.cn 80</p>
+<h3 id="wget">wget</h3>
+<p>wget用于从网络上下载资源，没有指定目录，下载资源回默认为当前目录。
+wget [参数] [URL地址]
+-O下载并以不同的文件名保存
+--limit-rate限速下载
+-c断点续传
+-b后台下载</p>
+<p>二、步骤
+1.下载页面</p>
+<p>wget <a href="http://www.chinahadoop.cn">http://www.chinahadoop.cn</a></p>
+<p>2.使用wget -O下载并以不同的文件名保存</p>
+<p>wget -O chinahadoop.zip <a href="http://www.chinahadoop.cn">http://www.chinahadoop.cn</a></p>
+<p>3.使用wget --limit-rate限速下载</p>
+<p>wget --limit-rate=300k <a href="http://www.chinahadoop.cn">http://www.chinahadoop.cn</a></p>
+<p>4.使用wget -c断点续传</p>
+<p>wget -c <a href="http://www.chinahadoop.cn">http://www.chinahadoop.cn</a></p>
+<p>5.使用wget -b后台下载,终端会输出进程pid，可以通过ps查看</p>
+<p>wget -b <a href="http://www.chinahadoop.cn">http://www.chinahadoop.cn</a></p>
+<h3 id="netstat">Netstat</h3>
+<p>Netstat 命令用于显示各种网络相关信息，如网络连接，路由表，接口状态 (Interface Statistics)，masquerade 连接，多播成员 (Multicast Memberships) 等等。</p>
+<p>常见参数
+-a (all)显示所有选项，默认不显示LISTEN相关
+-t (tcp)仅显示tcp相关选项
+-u (udp)仅显示udp相关选项
+-n 拒绝显示别名，能显示数字的全部转化成数字。
+-l 仅列出有在 Listen (监听) 的服務状态</p>
+<p>-p 显示建立相关链接的程序名
+-r 显示路由信息，路由表
+-e 显示扩展信息，例如uid等
+-s 按各个协议进行统计
+-c 每隔一个固定时间，执行该netstat命令。</p>
+<p>提示：LISTEN和LISTENING的状态只有用-a或者-l才能看到</p>
+<ol>
+<li><p>列出所有端口 (包括监听和未监听的)
+列出所有端口 netstat -a</p>
+<p>列出所有 tcp 端口 netstat -at</p>
+<p> 列出所有 udp 端口 netstat -au</p>
+<p>   只列出所有监听 tcp 端口 netstat -lt</p>
+<p>   显示核心路由信息 netstat -r</p>
+<pre><code> 找出运行在指定端口的进程
+</code></pre><p>netstat -an | grep &#39;:80&#39;</p>
+</li>
+</ol>
+<h2 id="文件">文件</h2>
+<p>文件类型: 普通文件 目录文件 链接文件 设备文件 FIFO  socket 6种</p>
+<pre><code>         -        d       l        b或者c   P
+</code></pre><p>~ 用户主目录
+. 当前工作目录
+.. 当前工作目录的父目录
+cd -                 回到上次所在目录</p>
+<h3 id="权限对文件的作用">权限对文件的作用</h3>
+<ul>
+<li><p>stdin 0
+stdout 1
+stderr 2</p>
+</li>
+</ul>
+<p>mkdir -p kks/a/b</p>
+<p>cd - cd ../</p>
+<p>rmdir -pv kks/a/b 只能删除空目录</p>
+<p>cat -n kks/a
+more +10 -5 kks/c</p>
+<p>less pkks /kks/a 查找kks 出现的第一处位置</p>
+<p>head -5 kks/a</p>
+<p>tail -5 kks/a</p>
+<p>du -k /kks/a 查看大小</p>
+<p>cp -ir /kks/a ~</p>
+<p>mv main.c kks/a</p>
+<p>rm -r kks/a/b</p>
+<p>diff a b</p>
+<p>ln -s kks/a kks/b //创建软连接</p>
+<p>chmod u-rwx kks/a
+chmod 755 kks/a</p>
+<p>grep -n &#39;include&#39; /kks/a</p>
+<p>find /kks -name a</p>
+<p>sort -r kks/a 逆序排序</p>
+<p>tar -zcvf name.tar.gz ./filename</p>
+<p>tar -zxvf name.tar.gz</p>
+<p>diff -u t.old t.new &gt;t.patch</p>
+<p>patch -p0 &lt; t.patch</p>
+<p>chgrp [-R] 用户组名称 dirname/filename ...
+chown  -R</p>
+<p>功能：变更文件或目录的权限
+语法：chmod [选项] [目录或文件名称]
+说明：
+选项：
+-R 递归处理，将指定目录下的所有文件及子目录一并处理
+-v 显示指令执行过程
+注意：只有文件拥有者和root用户才有更改文件的权限
+权限说明：
+权限范围
+u：User，即文件或目录的拥有者 
+g：Group，即文件或目录的所属群组
+o：Other，除了文件或目录拥有者或所属群组之外，其他用户皆属于这个范围
+a：All，即全部的用户，包含拥有者，所属群组以及其他用户</p>
+<p>权限符号： 
+r：读取权限，数字代号为&quot;4&quot;
+w：写入权限，数字代号为&quot;2&quot;
+x：执行或切换权限，数字代号为&quot;1&quot;
+-：不具任何权限，数字代号为&quot;0&quot;</p>
+<p>权限设置方式
+&lt;权限范围&gt;+&lt;权限设置&gt; 　开启权限范围的文件或目录的该项权限设置 
+&lt;权限范围&gt;-&lt;权限设置&gt; 　关闭权限范围的文件或目录的该项权限设置 
+&lt;权限范围&gt;=&lt;权限设置&gt; 　指定权限范围的文件或目录的该项权限设置</p>
+<p>chmod -v 700 demo</p>
+<p>功能：1.改变文件或目录时间
+           2.创建一个空文件
+语法：touch [选项] [文件]
+说明：建立一个空文件，如果文件存在，则会修改文件的最后的访问时间。
+选项：-t 修改文件创建时间</p>
+<p>touch -t 201501011010 demo2
+stat demo2</p>
+<p>功能：移动或更名现有的文件或目录
+语法：mv [选项] [源文件或目录] [目标文件或目录]
+说明：
+选项：
+-f 目标文件或目录与现有文件或目录重复,则直接覆盖现有文件或目录 
+-i 覆盖已经存在文件或目录之前询问用户
+-u 只会在源文件的更改时间较目标文件更新时或是目标文件并不存在才覆盖</p>
+<p>mv -i demo4.txt demo.txt</p>
+<p>功能：建立目录
+语法：mkdir [选项] [目录名称]
+说明：可建立目录并同时设置目录的权限
+选项：
+-m 建立目录时同时设置目录权限 
+-p 若建立目录的上层目录不存在，则先创建父目录</p>
+<p>mkdir -p -m 600 dir/a/c</p>
+<p>功能：删除文件或目录
+语法：rm [选项] [文件或目录]
+说明：
+选项：
+-f 直接删除不进行提示 
+-r 递归删除目录</p>
+<p>功能：复制文件或目录
+语法：cp [选项] [源文件或目录] [目标文件或目录]
+说明：
+选项：
+-f 强行复制文件或目录,不论目标文件或目录是否已经存在 
+-r 递归处理,将指定目录下的文件与子目录一并处理
+-i 覆盖已经存在文件之前询问用户
+-u 只会在源文件的更改时间较目标文件更新时或是目标文件并不存在才复制
+cp -r demodir demodir.new</p>
+<p>fdisk -l  //查看磁盘分区</p>
+<p>dumpe2fs  </p>
+<p>功能：查找文件或目录
+语法：find [选项] [目录或文件名称]
+说明：
+选项：
+-options，指定find命令的常用选项
+-print，find命令将匹配的文件输出到标准输出
+-exec，find命令对匹配的文件执行该参数所给出的shell命令。相应命令的形式为&#39;command&#39; {  } \;，注意{   }和\；之间的空格 </p>
+<p>find ./ -name demo1;</p>
+<p>tail -n 5 filename</p>
+<p>sort命令默认的情况下是按照字符排序
+功能：按照字符排序
+语法：sort [-option] [ File ]
+说明：
+选项：
+-n 按照数值排序
+-u 不出现重复的行
+-r 逆向排序
+-t 指定分段的符号
+-k 指定的第几个段</p>
+<p>cut命令在文件中负责剪切数据用的
+功能：文件中负责剪切数据
+语法：cut [-option] [ File ]
+说明：
+选项：
+-b 字节
+-c 字符
+-d 自定义字段分隔符</p>
+<p>6.截取以点为分隔符获取第二个字段</p>
+<p>cut -d . -f 2 demo</p>
+<p>7.截取以点为分隔符获取第一个字段</p>
+<p>cut -d . -f 1 demo</p>
+<p>执行shell脚本的方式:
+./shell.sh  sh shell.sh source shell.sh</p>
+<h3 id="scp">scp</h3>
+<p>命令格式： scp -r local_folder remote_username@remote_ip:remote_folder
+或者 scp -r local_folder remote_ip:remote_folder</p>
+<h3 id="vim">vim</h3>
+<p>-G 到文件最后一行</p>
+<p>gg 行首</p>
+<p>0  行头</p>
+<p>/word  向下查找 &quot;word&quot;
+?word  向上查找&quot;word&quot;</p>
+<p>n[Enter] 光标下移 n行</p>
+<p>export HBASE_HEAPSIZE=512</p>
+<p>export HBASE_MASTER_OPTS=&quot;$HBASE_JMX_OPTS -Xms256m -Xmx256m -XX:MaxPermSize=128m -Dcom.sun.management.jmxremote.port=10101&quot;
+export HBASE_REGIONSERVER_OPTS=&quot;$HBASE_JMX_OPTS -Xms512m -Xmx512m -XX:MaxPermSize=128m -Dcom.sun.management.jmxremote.port=10102&quot;</p>
+<h1 id="the-maximum-amount-of-heap-to-use-in-mb-default-is-1000">The maximum amount of heap to use, in MB. Default is 1000.</h1>
+<p>export HADOOP_HEAPSIZE=2000</p>
+<p>#export HADOOP_NAMENODE_INIT_HEAPSIZE=&quot;&quot;
+export HADOOP_NAMENODE_OPTS=&quot;-Xms1g -Xmx1g  -XX:MaxPermSize=128m -XX:+PrintGCApplicationStoppedTime -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=80 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps $HADOOP_NAMENODE_OPTS&quot;
+export HADOOP_SECONDARYNAMENODE_OPTS=&quot;-Xms1g -Xmx1g $HADOOP_SECONDARYNAMENODE_OPTS&quot;</p>
+<h1 id="the-following-applies-to-multiple-commands-fs-dfs-fsck-distcp-etc-">The following applies to multiple commands (fs, dfs, fsck, distcp etc)</h1>
+<p>export HADOOP_CLIENT_OPTS=&quot;-Xmx128m $HADOOP_CLIENT_OPTS&quot;</p>
+<h1 id="command-specific-options-appended-to-hadoop_opts-when-specified">Command specific options appended to HADOOP_OPTS when specified</h1>
+<p>export HADOOP_NAMENODE_OPTS=&quot;-Dhadoop.security.logger=${HADOOP_SECURITY_LOGGER:-INFO,RFAS} -Dhdfs.audit.logger=${HDFS_AUDIT_LOGGER:-INFO,NullAppender} $HADOOP_NAMENODE_OPTS&quot;
+export HADOOP_DATANODE_OPTS=&quot;-Xms512m -Xmx512m $HADOOP_DATANODE_OPTS&quot;</p>
+<h2 id="git">git</h2>
+<p> git config --global user.name &quot;kangkaisen&quot;
+ git config --global user.email &quot;kangkaisen@meituan.com&quot;</p>
+<p> git init </p>
+<p> git clone <a href="http://kangkaisen@git.sankuai.com/scm/data/mthdp-clients.git">http://kangkaisen@git.sankuai.com/scm/data/mthdp-clients.git</a></p>
+<p> ln -s /opt/meituan/versions/hadoop-2.4.1-client /opt/meituan/hadoop</p>
+<p>ln -s /opt/meituan/versions/hbase-0.98.13.1 /opt/meituan/hbase</p>
+<p>ln -s /opt/meituan/versions/zookeeper-3.4.6 /opt/meituan/zookeeper</p>
+
+                </div>
+                <div class="panel-footer">
+                    康凯森
+                </div>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+</body>
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</html>

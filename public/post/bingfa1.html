@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
+    <title>同步和异步1|编程小梦--康凯森的技术博客</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" >
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank"  rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank"  rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <h1 class="panel-title ">同步和异步1</h1>
+                </div>
+                <div class="panel-body">
+                    <!-- toc -->
+<ul>
+<li><a href="#同步">同步</a></li>
+<li><a href="#异步">异步</a></li>
+<li><a href="#优点">优点</a></li>
+<li><a href="#形象理解">形象理解</a></li>
+</ul>
+<!-- toc stop -->
+<p>同步/异步，关注多个对象或者线程的执行顺序，是一种逻辑次序的约定关系。
+阻塞/非阻塞，关注某个对象或者线程的执行状态，一个线程进入阻塞状态，它所被分配的cpu时间就被没收了。</p>
+<h2 id="同步">同步</h2>
+<p>同步就是一个任务的完成需要依赖另外一个任务, 只有等待被依赖的任务完成后，依赖的任务才能完成。</p>
+<p>同步是一个可靠的任务序列</p>
+<h2 id="异步">异步</h2>
+<p>异步不需要 等待 被依赖的任务完成，只是通知被依赖的任务要完成任务工作，依赖的任务也立即执行</p>
+<h2 id="优点">优点</h2>
+<p>同步保证程序的可靠性</p>
+<p>异步可以提升程序性能</p>
+<h2 id="形象理解">形象理解</h2>
+<ul>
+<li>同步是打电话 异步是发短信</li>
+</ul>
+<p><img src="http://img.blog.csdn.net/20150615023319968" alt="此处输入图片的描述"></p>
+
+                </div>
+                <div class="panel-footer">
+                    康凯森
+                </div>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+</body>
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <link rel="shortcut icon" href="/images/favicon.ico">
+    <link rel="stylesheet" href="/css/bootstrap.css" type="text/css" />
+    <title> <%= site.long_name %></title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/"><%= site.short_name %></a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/admin/blog">写文章</a></li>
+                <% if (author.github) { %>
+                <li><a href="<%= author.github %>" target="_blank"  rel="nofollow">GitHub</a></li>
+                <% } %>
+                <% if (author.weibo) { %>
+                <li><a href="<%= author.weibo %>" target="_blank"  rel="nofollow">WeiBo</a></li>
+                <% } %>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 100px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <table class="table table-hover table-bordered">
+                <thead>
+                <tr>
+                    <th>标题</th>
+                    <th>分类</th>
+                    <th>日期</th>
+                    <th>查看</th>
+                    <th>编辑</th>
+                    <th>删除</th>
+                </tr>
+                </thead>
+                <tbody>
+                    <% posts.forEach(function (post) { %>
+                    <tr class="item-id-<%= post._id %>">
+                        <td><%= post.title %></td>
+                        <td><%= post.tag %></td>
+                        <td><%= post.time %></td>
+                        <td><a href="../post/<%= post.url %>.html">查看</a></td>
+                        <td><a href="/admin/blog/<%= post._id %>">编辑</a></td>
+                        <td><button type="button" class="btn btn-danger del" data-id="<%= post._id %>">删除</button></td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+</body>
+<script src="/js/jquery.min.js"></script>
+<script src="/js/admin.js"></script>
+</html>
