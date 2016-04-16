@@ -47,3 +47,13 @@ exports.deletePost = function (id, callback) {
 exports.incCount = function (id, callback) {
     Post.update({_id: id},{ $inc: { "count": 1 }}, callback);
 }
+
+//获取tag
+exports.allTags = function(callback) {
+    Post.distinct('tag', callback);
+}
+
+//根据tag获取文章列表
+exports.getPostByTag = function(tag, callback) {
+    Post.find({tag : tag}, null, callback);
+}

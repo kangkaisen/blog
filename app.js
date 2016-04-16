@@ -7,8 +7,10 @@ var logger = require('morgan');
 var express = require('express');
 var session = require('express-session');
 
+
 var app = express();
 var server = require('http').Server(app);
+
 app.use(session({ secret: 'kangkaisen', cookie: { maxAge: 60000 }}));
 
 app.use(logger('dev'));

@@ -40,6 +40,10 @@
         <div class="col-md-10 col-sm-12">
             <h1> <%= post.title %></h1>
             <hr/>
+            <p>作者: <%= post.author %></p>
+            <p>日期: <%= post.time %></p>
+            <p>分类: <a href="../tag/<%= post.tag %>.html" target="_blank" ><%= post.tag %></a></p>
+            <hr/>
             <%- post.html %>
             <hr/>
             <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
@@ -63,6 +67,7 @@
         <div class="col-md-1"></div>
     </div>
 </div>
+
 <div class="row" style="padding-top: 60px">
     <div class="container center-block">
         <div class="col-md-1"></div>
@@ -76,7 +81,11 @@
         <div class="col-md-1"></div>
     </div>
 </div>
-</body>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow"><%= author.name %></a>
+</div>
+
 <script src="../js/code.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
 <script type="text/javascript">
@@ -91,4 +100,6 @@
         || document.getElementsByTagName('body')[0]).appendChild(ds);
     })();
 </script>
+
+</body>
 </html>

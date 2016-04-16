@@ -38,7 +38,7 @@
         <div class="col-md-8 col-sm-12">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Blog</h3>
+                    <h3 class="panel-title"><%= tag %></h3>
                 </div>
                 <ul class="list-group">
                     <% pages.forEach(function (post) { %>
@@ -62,9 +62,8 @@
 </div>
 
 <div class="footer">
-    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow"><%= author.name %></a>
+    <%= author.name %>
 </div>
-
-
+</div>
 </body>
 </html>

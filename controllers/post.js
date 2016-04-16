@@ -13,6 +13,11 @@ exports.save = function(req, res){
                     md.compilePages(posts);
                 }
             })
+            Post.getPostByTag(req.body.tag,function(err, posts){
+                if (posts){
+                    md.compileTags(posts);
+                }
+            })
             return res.redirect('/');
         }
         return res.sendStatus(404);
@@ -54,6 +59,13 @@ exports.update = function(req, res){
                 md.compilePages(posts);
             }
         })
+
+        Post.getPostByTag(req.body.tag, function(err, posts){
+            if (posts){
+                md.compileTags(req.body.tag, posts);
+            }
+        })
+
         return res.redirect('/');
     })
 }
@@ -73,11 +85,29 @@ exports.delete = function(req, res){
 
     })
 }
-exports.inc = function(req, res){
+exports.inc = function(req, res) {
     Post.incCount(req.params.id, function(err, post){
         if (err){
             return res.statusCode(404);
         }
         return res.sendStatus(200);
+    })
+}
+
+exports.getAllTags = function (req, res) {
+    Post.allTags(function(err, tags){
+        if (tags) {
+            return res.json(tags);
+        }
+        return res.sendStatus(404);
+    })
+}
+
+exports.getPostByTag = function(req, res) {
+    Post.getPostByTag(req.params.tag, function(err, posts) {
+        if (posts){
+            return res.json(posts);
+        }
+        return res.sendStatus(404);
     })
 }
