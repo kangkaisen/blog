@@ -2,5 +2,4 @@ config.js
 public/page/
 public/post/
 public/tag/
-node_modules/
 .idea/
