@@ -2,7 +2,7 @@
 
 ## 编程小梦纯静态博客源码
 
-## Demo : http://www.bcmeng.com/donate/
+## Demo : http://www.bcmeng.com/
 
 ## 博客特点
 
