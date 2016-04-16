@@ -7,11 +7,14 @@ var logger = require('morgan');
 var express = require('express');
 var session = require('express-session');
 
-
 var app = express();
 var server = require('http').Server(app);
 
-app.use(session({ secret: 'kangkaisen', cookie: { maxAge: 60000 }}));
+app.use(session({
+  secret: 'kangkaisen',
+  resave: true,
+  saveUninitialized: true,
+  cookie: { maxAge: 3600000 * 24}}));
 
 app.use(logger('dev'));
 app.use(bodyParser.json());

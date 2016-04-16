@@ -40,7 +40,7 @@ exports.savePost = function (author, title, url, content, tag, time, top ,count,
 
 //删除文章
 exports.deletePost = function (id, callback) {
-    Post.remove({_id: id}, callback);
+    Post.findOneAndRemove({_id: id}, callback);
 }
 
 //like更新
