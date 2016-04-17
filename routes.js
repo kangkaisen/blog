@@ -14,7 +14,7 @@ router.delete('/blog/:id', auth.userRequired, post.delete)               //删�
 router.get('/tags', auth.userRequired, post.getAllTags);   //获取所有博客标签
 router.get('/tags/:tag', auth.userRequired, post.getPostByTag);   //根据标签获取博客
 
-router.get('/admin/update', auth.userRequired, post.updateAll);   //根据标签获取博客
+router.get('/admin/update', auth.userRequired, post.updateAll);   //更新所有博客
 
 
 router.get('/admin/blog/:id', user.postUpdate);
