@@ -55,5 +55,5 @@ exports.allTags = function(callback) {
 
 //根据tag获取文章列表
 exports.getPostByTag = function(tag, callback) {
-    Post.find({tag : tag}, null, callback);
+    Post.find({tag : tag}, null, {sort:{top: -1, time: -1}}, callback);
 }
