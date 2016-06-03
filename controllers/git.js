@@ -2,17 +2,19 @@
  * Created by kangkaisen on 16/6/3.
  */
 
-var execFile = require('child_process').execFile;
-
 exports.postHook = function(req, res){
     if (req.header('X-GitHub-Event') == 'push'){
-        execFile('../lib/post-receive.sh', function(error, stdout, stderr) {
-            if (error) {
-                console.error(error);
-            } else {
-                console.log( 'blog Finished Deploy' );
-            }
-        });
+        run_cmd('sh', ['/home/kks/git/blog/lib/post-receive.sh'], function(text){ console.log(text) });
     }
     return res.sendStatus(200);
+}
+
+
+function run_cmd(cmd, args, callback) {
+    var spawn = require('child_process').spawn;
+    var child = spawn(cmd, args);
+    var resp = "";
+
+    child.stdout.on('data', function(buffer) { resp += buffer.toString(); });
+    child.stdout.on('end', function() { callback (resp) });
 }

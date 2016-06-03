@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ## Where to store the log information about the updates
-LOGFILE=./post-receive.log
+LOGFILE=/home/kks/git/blog/post-receive.log
 
 # The deployed directory (the running site)
 DEPLOYDIR=/home/kks/git/blog
