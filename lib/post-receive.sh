@@ -7,7 +7,7 @@ LOGFILE=/home/kks/git/blog/post-receive.log
 DEPLOYDIR=/home/kks/git/blog
 PIDDIR=/home/logs/blog.pid
 
-
+echo "开始: `date`" >> $LOGFILE
 echo "Starting Deploy" >> $LOGFILE
 
 
@@ -27,3 +27,4 @@ fi
 
 
 echo "Finished Deploy" >> $LOGFILE
+echo "结束: `date`" >> $LOGFILE
