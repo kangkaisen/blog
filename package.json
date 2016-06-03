@@ -1,9 +1,13 @@
 {
   "name": "blog",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "node app.js"
+    "restart": "pm2 restart process.json",
+    "start":"pm2 start process.json",
+    "stop":  "pm2 stop process.json",
+    "pm2logs": "pm2 logs",
+    "pm2flush": "pm2 flush"
   },
   "dependencies": {
     "express": "~4.13.1",
