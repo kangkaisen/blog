@@ -7,7 +7,11 @@ var execFile = require('child_process').execFile;
 exports.postHook = function(req, res){
     if (req.header('X-GitHub-Event') == 'push'){
         execFile('../lib/post-receive.sh', function(error, stdout, stderr) {
-            console.log( 'blog Finished Deploy' );
+            if (error) {
+                console.error(error);
+            } else {
+                console.log( 'blog Finished Deploy' );
+            }
         });
     }
     res.statusCode(200);
