@@ -14,5 +14,5 @@ exports.postHook = function(req, res){
             }
         });
     }
-    res.statusCode(200);
+    return res.sendStatus(200);
 }

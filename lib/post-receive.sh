@@ -1,7 +1,4 @@
 #!/bin/sh
-#
-## store the arguments given to the script
-read oldrev newrev refname
 
 ## Where to store the log information about the updates
 LOGFILE=./post-receive.log
@@ -10,26 +7,23 @@ LOGFILE=./post-receive.log
 DEPLOYDIR=/home/kks/git/blog
 PIDDIR=/home/logs/blog.pid
 
-##  Record the fact that the push has been received
-echo -e "Received Push Request at $( date +%F )" >> $LOGFILE
-echo " - Old SHA: $oldrev New SHA: $newrev Branch Name: $refname" >> $LOGFILE
 
-## Update the deployed copy
 echo "Starting Deploy" >> $LOGFILE
 
 
-echo " - Starting git pull"
+echo " - Starting git pull" >> $LOGFILE
 cd "$DEPLOYDIR"; git pull;
-echo " - Finished git pull"
+echo " - Finished git pull" >> $LOGFILE
 
 if [ -f "$PIDDIR" ]; then
- echo " - pm2 restart "
+ echo " - pm2 restart " >> $LOGFILE
  npm restart;
- echo " - Finished pm2 restart"
+ echo " - Finished pm2 restart" >> $LOGFILE
 else
- echo " - pm2 start "
+ echo " - pm2 start " >> $LOGFILE
  npm start;
- echo " - Finished pm2 start"
+ echo " - Finished pm2 start" >> $LOGFILE
 fi
-cd -
+
+
 echo "Finished Deploy" >> $LOGFILE
