@@ -1,0 +1,250 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|HBase 数据导入Hive</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> HBase 数据导入Hive</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-04-25</p>
+            <p>分类: <a href="../tag/解决方案.html" target="_blank" >解决方案</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#hbase-数据导入-hive-原理">HBase 数据导入 Hive 原理</a></li>
+<li><a href="#hbase-数据导入-hive-基本步骤">HBase 数据导入 Hive 基本步骤</a></li>
+<li><a href="#hbase-数据导入-hive-注意问题">HBase 数据导入 Hive 注意问题</a></li>
+<li><a href="#hbase-数据导入-hive-核心代码">HBase 数据导入 Hive 核心代码</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="hbase-数据导入-hive-原理">HBase 数据导入 Hive 原理</h3>
+<p>主要工作就是将HBase的数据格式转化为Hive中的数据格式。</p>
+<h3 id="hbase-数据导入-hive-基本步骤">HBase 数据导入 Hive 基本步骤</h3>
+<ul>
+<li>跑一个MapRudece作业，在Map阶段读取Hbase表的数据，并将HBase的KV数据格式转化为Hive表的数据格式，并在Map阶段直接输出到HDFS</li>
+<li>在Hive中建表，并将HDFS中的数据load进Hive中。</li>
+</ul>
+<h3 id="hbase-数据导入-hive-注意问题">HBase 数据导入 Hive 注意问题</h3>
+<h4 id="数据类型">数据类型</h4>
+<p>因为HBase中的存储格式都是字节数组，所以转化为Hive数据时需要知道HBase中的数据原本的数据类型是什么，并转化为相应的数据类型。</p>
+<h4 id="数据过滤">数据过滤</h4>
+<p>我们在导入Hive时可能并不需要导入Hbase整张表的数据，我们参考HBase源码进行过滤</p>
+<pre><code>  private static Scan getConfiguredScanForJob(Configuration conf, String[] args) throws IOException {
+    Scan s = new Scan();
+    // Optional arguments.
+    // Set Scan Versions
+    s.setMaxVersions(1);
+    // Set Scan Range
+    long startTime = args.length &gt; 2 ? Long.parseLong(args[2]) : 0L;
+    long endTime = args.length &gt; 3 ? Long.parseLong(args[3]) : Long.MAX_VALUE;
+    s.setTimeRange(startTime, endTime);
+    // Set cache blocks
+    s.setCacheBlocks(false);
+    // set Start and Stop row
+    if (conf.get(TableInputFormat.SCAN_ROW_START) != null) {
+      s.setStartRow(Bytes.toBytes(conf.get(TableInputFormat.SCAN_ROW_START)));
+    }
+    if (conf.get(TableInputFormat.SCAN_ROW_STOP) != null) {
+      s.setStopRow(Bytes.toBytes(conf.get(TableInputFormat.SCAN_ROW_STOP)));
+    }
+    // Set Scan Column Family
+    boolean raw = Boolean.parseBoolean(conf.get(RAW_SCAN));
+    if (raw) {
+      s.setRaw(raw);
+    }
+    if (conf.get(TableInputFormat.SCAN_COLUMN_FAMILY) != null) {
+      s.addFamily(Bytes.toBytes(conf.get(TableInputFormat.SCAN_COLUMN_FAMILY)));
+    }
+    // Set RowFilter or Prefix Filter if applicable.
+    Filter exportFilter = getExportFilter(args);
+    if (exportFilter != null) {
+      LOG.info(&quot;Setting Scan Filter for Export.&quot;);
+      s.setFilter(exportFilter);
+    }
+    int batching = conf.getInt(EXPORT_BATCHING, -1);
+    if (batching != -1) {
+      try {
+        s.setBatch(batching);
+      } catch (IncompatibleFilterException e) {
+        LOG.error(&quot;Batching could not be set&quot;, e);
+      }
+    }
+    return s;
+  }
+</code></pre><h3 id="hbase-数据导入-hive-核心代码">HBase 数据导入 Hive 核心代码</h3>
+<pre><code>/**
+ * Created by kangkaisen on 15/10/27.
+ */
+public class Mapper extends TableMapper&lt;Text, NullWritable&gt; {
+  public Mapper() {
+  }
+
+  String cfName;
+  String rowkeyType;
+  Text key = new Text();
+  HashMap&lt;String, String&gt; columnMap = new HashMap&lt;String, String&gt;();
+
+  public static void initJob(String table, Scan scan, Class&lt;? extends TableMapper&gt; mapper, Job job) throws IOException {
+    TableMapReduceUtil.initTableMapperJob(table, scan, mapper, Text.class, NullWritable.class, job);
+  }
+
+  protected void setup(Context context) throws IOException, InterruptedException {
+    Configuration conf = context.getConfiguration();
+    cfName = conf.get(TableInputFormat.SCAN_COLUMN_FAMILY);
+    rowkeyType = conf.get(&quot;hbase.rowkey.type&quot;);
+    getColumns(conf.get(TableInputFormat.SCAN_COLUMNS));
+  }
+
+  @Override
+  public void map(ImmutableBytesWritable row, Result values, Context context) throws IOException, InterruptedException {
+    StringBuilder result = new StringBuilder();
+    result.append(getString(values.getRow(), rowkeyType));
+    result.append(&quot;\t&quot;);
+    for (Map.Entry&lt;String, String&gt; entry : columnMap.entrySet()) {
+      byte[] cell = values.getValue(cfName.getBytes(), entry.getKey().getBytes());
+      if (cell != null) {
+        result.append(getString(cell, entry.getValue()));
+        result.append(&quot;\t&quot;);
+      } else {
+        result.append(&quot; &quot;);
+        result.append(&quot;\t&quot;);
+      }
+    }
+    key.set(result.toString());
+    context.write(key, NullWritable.get());
+  }
+
+  private void getColumns(String columns) {
+    if (columns != null) {
+      String[] cols = columns.split(&quot; &quot;);
+      for (int i = 0; i &lt; cols.length; i++) {
+        String[] kv = cols[i].split(&quot;:&quot;);
+        columnMap.put(kv[0], kv[1]);
+      }
+    }
+  }
+
+  private String getString(byte[] cell, String type) {
+    TYPE_ENUM currentType = TYPE_ENUM.valueOf(type.toUpperCase());
+    switch (currentType) {
+      case STRING:
+        return new String(cell);
+      case INT:
+        Integer i = Bytes.toInt(cell);
+        return i.toString();
+      case LONG:
+        Long l = Bytes.toLong(cell);
+        return l.toString();
+      case FLOAT:
+        Float f = Bytes.toFloat(cell);
+        return f.toString();
+      case DOUBLE:
+        Double d = Bytes.toDouble(cell);
+        return d.toString();
+      default:
+        throw new IllegalArgumentException(&quot;wrong type&quot;);
+    }
+  }
+
+  private enum TYPE_ENUM {
+    STRING,
+    INT,
+    LONG,
+    FLOAT,
+    DOUBLE
+  }
+}
+</code></pre>
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871f1fbd2f092c392ca4d4e
+                 data-title=HBase 数据导入Hive
+                 data-url=hbase-hive>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

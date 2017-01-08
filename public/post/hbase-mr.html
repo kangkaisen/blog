@@ -1,0 +1,292 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Mapreduce导入导出Hbase0.98代码示例</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Mapreduce导入导出Hbase0.98代码示例</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-04-10</p>
+            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#1mapreduce从hdfs导入hbase098代码示例">1：Mapreduce从HDFS导入Hbase0.98代码示例</a></li>
+<li><a href="#2mapreduce从hbase导入hbase代码示例">2：Mapreduce从Hbase导入Hbase代码示例</a></li>
+<li><a href="#3mapreduce导入hbase时去重">3:Mapreduce导入Hbase时去重</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="1：mapreduce从hdfs导入hbase098代码示例">1：Mapreduce从HDFS导入Hbase0.98代码示例</h3>
+<p>源文件格式：</p>
+<pre><code>175.44.30.93 - - [29/Sep/2013:00:10:15 +0800] &quot;GET /structure/heap HTTP/1.1&quot; 301 406 &quot;-&quot; &quot;Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1;)&quot;
+</code></pre><p>Java代码：</p>
+<pre><code>package hbase;
+
+import java.io.IOException;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.mapreduce.TableOutputFormat;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.util.GenericOptionsParser;
+
+public class HbaseMr {
+
+      public static class MapperClass extends Mapper&lt;LongWritable,Text,ImmutableBytesWritable,Put&gt;{ 
+
+            public void map(LongWritable key,Text value,Context context)throws IOException,InterruptedException{  
+
+            String[] strs = value.toString().split(&quot; &quot;);
+                String rowkey = strs[0]+&quot;-&quot;+strs[3].substring(1);
+
+                  byte [] row = Bytes.toBytes(rowkey);  
+                  byte [] family = Bytes.toBytes(&quot;info&quot;);  
+                  byte [] qualifier = Bytes.toBytes(&quot;url&quot;);  
+                  byte [] values = Bytes.toBytes(strs[6]);  
+                 Put put=new Put(row);  
+                 put.add(family,qualifier,values);  
+
+                 context.write(new ImmutableBytesWritable(row),put);  
+            }  
+    }  
+
+      public static void main(String[] args) throws Exception {
+
+          Configuration conf = HBaseConfiguration.create();
+            conf.set(TableOutputFormat.OUTPUT_TABLE,&quot;access-log&quot;); 
+            String[] otherArgs = new GenericOptionsParser(conf, args)  
+            .getRemainingArgs();
+            Job job = Job.getInstance(conf, &quot;Hbase_Mr&quot;);
+            job.setNumReduceTasks(0);
+            job.setJarByClass(HbaseMr.class);
+            job.setMapperClass(MapperClass.class);
+            job.setOutputKeyClass(ImmutableBytesWritable.class);  
+            job.setOutputValueClass(Put.class);  
+         job.setOutputFormatClass(TableOutputFormat.class); 
+
+            FileInputFormat.addInputPath(job, new Path(otherArgs[0]));  
+            System.exit(job.waitForCompletion(true) ? 0 : 1);
+        }
+
+}
+</code></pre><p>导入效果如下：
+<img src="http://img02.taobaocdn.com/imextra/i2/1576560244/TB25YnEdpXXXXarXXXXXXXXXXXX_!!1576560244.png" alt="此处输入图片的描述"></p>
+<h3 id="2：mapreduce从hbase导入hbase代码示例">2：Mapreduce从Hbase导入Hbase代码示例</h3>
+<p>统计上张图中的同一IP的目录总数，代码如下：</p>
+<pre><code>package hbase;
+
+import java.io.IOException;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+
+import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
+import org.apache.hadoop.hbase.mapreduce.TableMapper;
+
+import org.apache.hadoop.hbase.mapreduce.TableReducer;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+
+public class HbaseMR {
+
+    final static String inTable = &quot;access-log&quot;;
+    final static String inFamily = &quot;info&quot;;
+    final static String inColumn = &quot;url&quot;;
+
+    final static  String outTable=&quot;total-access&quot;;
+    final static  String outFamily=&quot;url&quot;;
+    final static  String outColumn=&quot;count&quot;;
+    public static class Mapper extends TableMapper&lt;Text,Text&gt; {
+        public Mapper() {}
+        @Override
+        public void map(ImmutableBytesWritable row, Result values,Context context) throws IOException, InterruptedException {
+
+          byte [] b =values.getValue(inFamily.getBytes(), inColumn.getBytes());
+          if(b!=null){
+           String v = new String(b);
+
+           String r= new String(values.getRow());
+           String[] strs = r.split(&quot;-&quot;);
+           String ip=strs[0];
+
+           context.write(new Text(ip), new Text(v));
+          }
+        }
+    }
+
+    public static class Reducer extends TableReducer&lt;Text, Text, Text&gt; {
+        @Override
+        public void reduce(Text key,Iterable&lt;Text&gt; values,
+          Context context) throws IOException, InterruptedException {
+         int count=0;
+         String sum=null;
+         for (Text val : values) {
+             count++;
+         }
+         sum=String.valueOf(count);
+
+         Put put = new Put(Bytes.toBytes(key.toString()));
+
+         put.add(outFamily.getBytes(),outColumn.getBytes(),sum.getBytes());
+         context.write(key, put);
+        }
+        }
+
+    public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+        Configuration conf = HBaseConfiguration.create();
+
+        Job job =  Job.getInstance(conf, &quot;HbaseMR&quot;);
+        job.setJarByClass(HbaseMR.class);
+        Scan scan = new Scan();
+        TableMapReduceUtil.initTableMapperJob(&quot;access-log&quot;,scan,Mapper.class,
+                 Text.class, Text.class, job);
+            TableMapReduceUtil.initTableReducerJob(&quot;total-access&quot;,Reducer.class, job);
+            System.exit(job.waitForCompletion(true) ? 0 : 1);
+
+    }
+
+}
+</code></pre><p>新表效果如下：
+<img src="http://img01.taobaocdn.com/imgextra/i1/1576560244/TB2aG6AdpXXXXbDXXXXXXXXXXXX_!!1576560244.png" alt="此处输入图片的描述"></p>
+<h3 id="3-mapreduce导入hbase时去重">3:Mapreduce导入Hbase时去重</h3>
+<p>在上面的导入hbase过程中我们并没有考虑同一IP访问的子目录重复问题，所以我们应该去重。</p>
+<h4 id="一般的mapreduce去重思路：">一般的Mapreduce去重思路：</h4>
+<p><strong>利用经过shuffle之后输入到reduce中key的唯一性直接输出key即可。</strong></p>
+<p><code>具体就是map的输出的key为map输入的value,value为null。自然reduce的输入就是map的输出。当reduce接收到一个&lt;key，value-list&gt;时，其中value-list为null，就直接将key复制到输出的key中，并将value设置成空值</code></p>
+<p>map端的输出：</p>
+<pre><code>context.write(value, NullWriteable.get());
+</code></pre><p>reduce端的输出：</p>
+<pre><code>context.write(key, NullWriteable.get());
+</code></pre><p>在Mapreduce导入Hbase时我们也可以先去重，然后再导入，不过那样会需要俩次任务。</p>
+<p>我们可以直接在上面的reduce任务中去重即可。利用HashSet来去重。改动代码如下：</p>
+<pre><code>public static class Reducer extends TableReducer&lt;Text, Text, Text&gt; {
+        @Override
+        public void reduce(Text key,Iterable&lt;Text&gt; values,
+          Context context) throws IOException, InterruptedException {
+
+         String sum=null;
+         HashSet&lt;Text&gt; set = new HashSet&lt;Text&gt;();
+
+         for (Text val : values) {
+             set.add(val);
+         }
+
+         sum=String.valueOf(set.size());
+
+         Put put = new Put(Bytes.toBytes(key.toString()));
+
+         put.add(outFamily.getBytes(),outColumn.getBytes(),sum.getBytes());
+         context.write(key, put);
+        }
+        }
+</code></pre><p>同一数据源，去重后效果如下：
+<img src="http://img04.taobaocdn.com/imgextra/i4/1576560244/TB2xcD4dpXXXXXtXpXXXXXXXXXX_!!1576560244.png" alt="此处输入图片的描述">
+大家可以发现，统计的值明显减少。</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871f09dd2f092c392ca4d4b
+                 data-title=Mapreduce导入导出Hbase0.98代码示例
+                 data-url=hbase-mr>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,819 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|读书笔记——《大规模分布式存储系统原理解析和架构实战》</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 读书笔记——《大规模分布式存储系统原理解析和架构实战》</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-04-09</p>
+            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
+            <hr/>
+            <h2 id="概述">概述</h2>
+<h3 id="分布式存储技术">分布式存储技术</h3>
+<h4 id="数据分布：均匀，跨机器操作">数据分布：均匀，跨机器操作</h4>
+<h4 id="一致性">一致性</h4>
+<h4 id="容错">容错</h4>
+<h4 id="负载均衡">负载均衡</h4>
+<h4 id="事务和并发控制">事务和并发控制</h4>
+<h4 id="易用性">易用性</h4>
+<h4 id="压缩-解压缩">压缩/解压缩</h4>
+<h3 id="数据类型">数据类型</h3>
+<h4 id="非结构化数据：图片，音频">非结构化数据：图片，音频</h4>
+<h4 id="结构化数据：二维关系表。-数据模式和内容分开">结构化数据：二维关系表。 数据模式和内容分开</h4>
+<h4 id="半结构化数据：模式和内容混在一起。html">半结构化数据：模式和内容混在一起。HTML</h4>
+<h3 id="分布式存储分类：">分布式存储分类：</h3>
+<h4 id="分布式文件系统：blob对象，定长块，大文件">分布式文件系统：Blob对象，定长块，大文件</h4>
+<h4 id="分布式键值系统：简单的半结构化数据">分布式键值系统：简单的半结构化数据</h4>
+<h4 id="分布式表格系统：复杂的半结构化数据">分布式表格系统：复杂的半结构化数据</h4>
+<h4 id="分布式数据库系统：结构化数据">分布式数据库系统：结构化数据</h4>
+<h2 id="单机存储系统">单机存储系统</h2>
+<h3 id="硬件基础">硬件基础</h3>
+<h4 id="cpu架构：smp（共享）-numa">CPU架构：SMP（共享） NUMA</h4>
+<h4 id="io总线：">IO总线：</h4>
+<h4 id="网络拓扑：">网络拓扑：</h4>
+<p>同一数据中心的传输延迟在1ms内
+不同地区传输延迟：距离<em>1.5</em>2/300000 在几十ms数量级</p>
+<h4 id="性能参数">性能参数</h4>
+<h4 id="存储层次架构">存储层次架构</h4>
+<ul>
+<li>存储系统性能：吞吐量以及访问延时</li>
+<li>磁盘适合大块顺序访问的存储系统</li>
+<li>SSD适合访问较多或者延时比较敏感的关键系统</li>
+</ul>
+<h3 id="单机存储引擎">单机存储引擎</h3>
+<h4 id="哈希存储引擎">哈希存储引擎</h4>
+<ul>
+<li>数据结构</li>
+<li>定期合并 ：标记删除</li>
+<li>快速恢复 ：索引文件</li>
+</ul>
+<h4 id="b树存储引擎">B树存储引擎</h4>
+<ul>
+<li>数据结构</li>
+<li>缓冲区管理： LRU LIRS（分为俩级，每一级内部LRU）</li>
+</ul>
+<h4 id="lsm树存储引擎">LSM树存储引擎</h4>
+<ul>
+<li>存储结构</li>
+<li>合并</li>
+</ul>
+<h3 id="数据模型">数据模型</h3>
+<h4 id="文件模型">文件模型</h4>
+<h4 id="关系模型">关系模型</h4>
+<h4 id="键值模型">键值模型</h4>
+<h4 id="sql和nosql">SQL和NOSQL</h4>
+<h3 id="事务和并发控制">事务和并发控制</h3>
+<h4 id="事务">事务</h4>
+<ul>
+<li>原子性</li>
+<li>一致性</li>
+<li>隔离性</li>
+<li>持久性</li>
+</ul>
+<h4 id="并发控制">并发控制</h4>
+<h5 id="数据库锁">数据库锁</h5>
+<p>解决死锁思路：</p>
+<ul>
+<li>超时时间</li>
+<li>死锁检测</li>
+<li>控制顺序</li>
+</ul>
+<h5 id="写时复制">写时复制</h5>
+<h5 id="多版本并发控制-mvcc-版本控制">多版本并发控制  MVCC  版本控制</h5>
+<h3 id="故障恢复">故障恢复</h3>
+<h4 id="操作日志">操作日志</h4>
+<h4 id="重做日志">重做日志</h4>
+<h4 id="优化手段">优化手段</h4>
+<h5 id="成组提交">成组提交</h5>
+<ul>
+<li>大小： 数据量超过一定大小则提交</li>
+<li>时间：距离上次刷入磁盘一定时间则提交<h5 id="检查点-checkpoint">检查点 checkpoint</h5>
+</li>
+</ul>
+<h3 id="数据压缩">数据压缩</h3>
+<h4 id="压缩算法-：-压缩比和效率">压缩算法 ： 压缩比和效率</h4>
+<h4 id="列式存储：">列式存储：</h4>
+<h2 id="分布式系统">分布式系统</h2>
+<h3 id="基本概念">基本概念</h3>
+<h4 id="异常">异常</h4>
+<h5 id="异常类型">异常类型</h5>
+<ul>
+<li>服务器宕机</li>
+<li>网络异常：
+容错系统的基本原则：网络永远不可靠</li>
+<li>磁盘故障：磁盘损坏和磁盘数据错误（校验和）</li>
+</ul>
+<h5 id="“超时”">“超时”</h5>
+<p>RPC结果状态：</p>
+<ul>
+<li>成功</li>
+<li>失败</li>
+<li>超时（未知）</li>
+</ul>
+<h4 id="一致性（用户，存储系统）">一致性（用户，存储系统）</h4>
+<p>副本是分布式系统容错的唯一手段
+从用户角度：</p>
+<ul>
+<li>强一致性</li>
+<li>弱一致性</li>
+<li>最终一致性</li>
+</ul>
+<p>从存储系统角度：</p>
+<ul>
+<li>副本一致性</li>
+<li>更新顺序一致性</li>
+</ul>
+<h4 id="衡量指标">衡量指标</h4>
+<h5 id="性能">性能</h5>
+<ul>
+<li>吞吐量： QPS TPS</li>
+<li>延时</li>
+</ul>
+<h5 id="可用性">可用性</h5>
+<h5 id="一致性">一致性</h5>
+<h5 id="可扩展性">可扩展性</h5>
+<h3 id="性能分析">性能分析</h3>
+<h3 id="数据分布">数据分布</h3>
+<h4 id="哈希分布">哈希分布</h4>
+<h5 id="数据倾斜">数据倾斜</h5>
+<ul>
+<li>手动拆分</li>
+<li>自动拆分</li>
+</ul>
+<h5 id="一致性哈希（dht）">一致性哈希（DHT）</h5>
+<h4 id="顺序分布">顺序分布</h4>
+<p>顺序分布在分布式表格系统中比较常见</p>
+<h4 id="负载均衡">负载均衡</h4>
+<h3 id="复制">复制</h3>
+<h4 id="复制的概述">复制的概述</h4>
+<ul>
+<li>强同步协议：一致性好，可用性差</li>
+<li>异步复制：一致性差，可用性好
+同步操作日志（Commit Log)</li>
+</ul>
+<h4 id="一致性和可用性：cap">一致性和可用性：CAP</h4>
+<h5 id="cap：一致性，可用性，分区容忍性三者不可同时满足">CAP：一致性，可用性，分区容忍性三者不可同时满足</h5>
+<h3 id="容错">容错</h3>
+<h4 id="常见故障">常见故障</h4>
+<h4 id="故障检测">故障检测</h4>
+<ul>
+<li>心跳</li>
+<li>租约机制：带有超时时间的一种授权</li>
+</ul>
+<h4 id="故障恢复">故障恢复</h4>
+<p>分布式存储系统分为俩级结构：
+单层结构和双层结构。</p>
+<h3 id="可扩展性">可扩展性</h3>
+<h4 id="总控节点">总控节点</h4>
+<h4 id="数据库扩容">数据库扩容</h4>
+<p>按业务垂直切分，按哈希水平切分</p>
+<h4 id="异构系统">异构系统</h4>
+<h3 id="分布式协议">分布式协议</h3>
+<h4 id="俩阶段提交协议">俩阶段提交协议</h4>
+<ul>
+<li>协调者 ：一个系统给只有一个</li>
+<li>事务参与者 ：多个</li>
+</ul>
+<p>A邀请B,C,D去爬长城</p>
+<h5 id="阶段1：请求阶段">阶段1：请求阶段</h5>
+<h5 id="阶段2：提交阶段">阶段2：提交阶段</h5>
+<ul>
+<li>事务参与者故障 ：设置超时时间</li>
+<li>协调者发生故障 ： 主备 。 操作日志同步</li>
+</ul>
+<h4 id="paxos-协议">Paxos 协议</h4>
+<h5 id="执行步骤：">执行步骤：</h5>
+<ul>
+<li>准备： 提议序号N</li>
+<li>批准：</li>
+<li>确认</li>
+</ul>
+<h5 id="应用：">应用：</h5>
+<ul>
+<li>全局锁</li>
+<li>命名，配置服务</li>
+<li>将用户数据复制到多个数据中心</li>
+</ul>
+<h3 id="跨机房部署">跨机房部署</h3>
+<h4 id="集群整体切换">集群整体切换</h4>
+<h4 id="单个集群跨机房">单个集群跨机房</h4>
+<h4 id="paxos-选主副本">Paxos 选主副本</h4>
+<p>用于解决多个节点之间的一致性问题</p>
+<h2 id="分布式文件系统">分布式文件系统</h2>
+<h3 id="主要功能：">主要功能：</h3>
+<h4 id="存储blob类型数据">存储Blob类型数据</h4>
+<h4 id="作为分布式表格系统高的持久化层">作为分布式表格系统高的持久化层</h4>
+<h3 id="google-文件系统">GOOGLE 文件系统</h3>
+<h4 id="系统架构">系统架构</h4>
+<h4 id="关键问题">关键问题</h4>
+<h5 id="租约机制">租约机制</h5>
+<ul>
+<li>GFS通过租约机制将chunk写操作授权给 ChunkServer.</li>
+<li>在租约有效期内，对该chunk的写操作都由主 ChunkServer负责，从而减轻Master负载。</li>
+<li>GFS 会对每一个chunk 维护一个版本号来解决上下线数据一致问题。</li>
+</ul>
+<h5 id="一致性模型">一致性模型</h5>
+<h5 id="追加流程">追加流程</h5>
+<ul>
+<li>流水线：减少延时</li>
+<li>数据流和控制流分离：优化数据传输</li>
+</ul>
+<h5 id="容错机制">容错机制</h5>
+<h6 id="master容错">master容错</h6>
+<p>容错机制：操作日志+checkpoit+实时热备</p>
+<h6 id="cs容错">CS容错</h6>
+<p>容错机制：多副本+校验和</p>
+<h4 id="master设计">MASTER设计</h4>
+<h5 id="master内存占用">master内存占用</h5>
+<p>设每个chunk元数据小于64字节。
+则1PB数据的元数据大小：1PB<em>3/64MB</em>64 = 3GB</p>
+<h5 id="负载均衡">负载均衡</h5>
+<p>系统需要创建chunk副本的情况有3种，chunk创建，chunk复制，负载均衡。</p>
+<h5 id="垃圾回收">垃圾回收</h5>
+<p>GFS采用延时删除机制</p>
+<h5 id="快照">快照</h5>
+<p>快照只是增加GFS中chunk的引用计数。</p>
+<h4 id="chunkserver-设计">chunkserver 设计</h4>
+<p>磁盘和网络IO密集型应用</p>
+<h4 id="讨论">讨论</h4>
+<p><strong>单Master 的设计是可行的</strong></p>
+<h3 id="taobao-file-system">Taobao File System</h3>
+<p>TFS架构设计时需要考虑如下俩个问题：</p>
+<ul>
+<li>Metadata 信息存储：100亿图片的元数据单机无法提供服务</li>
+<li>减少图片读取IO次数。</li>
+</ul>
+<p>TFS的设计思路：<strong>多个逻辑图片共享一个物理文件</strong></p>
+<h4 id="系统架构">系统架构</h4>
+<p>在TFS中，将大量小文件合并为一个大文件，这个大文件成为block，通过&lt;块ID，文件编号&gt;可以快速确定一个文件。</p>
+<h5 id="追加流程">追加流程</h5>
+<p>TFS 是写少读多。
+系统由需求驱动，用最简单的方式解决用户面临的问题。</p>
+<h5 id="nameserver">nameserver</h5>
+<ul>
+<li>图片去重：用hash算法为图片计算指纹。去重是一个键值系统</li>
+<li>图片更新：直接写入新图片</li>
+</ul>
+<h3 id="facebook-haystack">Facebook Haystack</h3>
+<h4 id="系统架构">系统架构</h4>
+<p>目录，存储，缓存</p>
+<h5 id="写流程">写流程</h5>
+<h5 id="容错处理">容错处理</h5>
+<h5 id="目录">目录</h5>
+<h5 id="存储">存储</h5>
+<h3 id="内容分发网络">内容分发网络</h3>
+<h4 id="cdn架构">CDN架构</h4>
+<p>俩级 Cache
+LVS + Haproxy 方式进行负载均衡</p>
+<h2 id="分布式键值系统">分布式键值系统</h2>
+<p>只支持对单个 key-value 的增删查改。</p>
+<h3 id="amazon-dynamo">Amazon Dynamo</h3>
+<h4 id="数据分布">数据分布</h4>
+<p>采用改进的一致性哈希算法：虚拟节点</p>
+<p>同步信息：Gossip 协议。
+Gossip协议用于P2P系统中自治节点协调对整个集群的认识。</p>
+<h4 id="一致性和复制">一致性和复制</h4>
+<p>NMR：W+R&gt;N
+N：复制的备份数
+W：成功写操作的最少节点数
+R：成功读操作的最少节点数</p>
+<p>向量时钟来解决冲突</p>
+<h4 id="容错">容错</h4>
+<ul>
+<li>数据回传</li>
+<li>Merkle树同步
+Merkle:每个非叶子节点对应多个文件，为其所有节点值组合以后的哈希值，叶子节点对应单个数据文件，为文件内容的哈希值。</li>
+</ul>
+<h4 id="负载均衡">负载均衡</h4>
+<p>负载均衡取决于如何给每台机器分配虚拟节点号。</p>
+<h5 id="随机分配">随机分配</h5>
+<h5 id="数据范围等分-随机分配">数据范围等分 + 随机分配</h5>
+<h4 id="读写流程">读写流程</h4>
+<h4 id="单机实现">单机实现</h4>
+<p>存储节点包含3个组件：请求协调，成员和故障检测，存储引擎
+请求协调组件采用基于事件驱动的设计</p>
+<h4 id="讨论">讨论</h4>
+<p>无中心节点的P2P设计，会有一致性问题。</p>
+<h3 id="淘宝-tair">淘宝 Tair</h3>
+<h4 id="系统架构">系统架构</h4>
+<h5 id="数据分布">数据分布</h5>
+<p>根据数据主键计算哈希，分布到Q个桶中，桶是负载均衡和数据迁移的基本单位。
+Q取值应该远大于集群的物理机器数，例如Q取值 10240.</p>
+<h5 id="容错">容错</h5>
+<h5 id="数据迁移">数据迁移</h5>
+<h5 id="config-server">config server</h5>
+<p>config server 存储路由表。</p>
+<h5 id="data-server">data server</h5>
+<p>负责数据存储，根据 config server 的要求完成数据的复制和迁移工作。</p>
+<h2 id="分布式表格系统">分布式表格系统</h2>
+<h3 id="google-bigtable">Google bigtable</h3>
+<p>bigtable 的设计理念是构建在廉价的硬件之上，通过软件层面提供自动化容错和线性可扩展能力。
+bigtable 是一个分布式多维映射表。
+列族是bigtable访问控制的基本单元。</p>
+<h4 id="架构">架构</h4>
+<p>同HBase</p>
+<h4 id="数据分布">数据分布</h4>
+<p>为减少访问开销，客户端使用了缓存和预取技术。</p>
+<h4 id="复制和一致性">复制和一致性</h4>
+<p>bigtable本质是构建在GFS上的一层分布式索引，通过它解决了GFS的遗留的一致性问题。</p>
+<h4 id="容错">容错</h4>
+<p>同HBase.每条操作日志通过&lt;表格编号，行主键，日志序列号&gt;来唯一标识。</p>
+<h4 id="负载均衡">负载均衡</h4>
+<p>同Hbase.</p>
+<h4 id="分裂与合并">分裂与合并</h4>
+<p>顺序分布和哈希分布的区别在于哈希分布往往是静态的，而顺序分布往往是动态的，需要通过分裂和合并操作动态调整。</p>
+<h4 id="单机存储">单机存储</h4>
+<p>块缓存，行缓存，布隆过滤器。</p>
+<h4 id="垃圾回收">垃圾回收</h4>
+<p>标记删除。</p>
+<h3 id="google-megastore">Google Megastore</h3>
+<p>Megastore在bigtable系统之上提供友好的数据库功能支持，增强易用性。
+Megastore是介于传统关系型数据库和NoSQL之间的存储技术。</p>
+<p>每个用户的所有数据构成一个实体组。</p>
+<h4 id="系统架构">系统架构</h4>
+<p>组成：</p>
+<ul>
+<li>客户端库</li>
+<li>复制服务器</li>
+<li>协调者</li>
+</ul>
+<p>主要功能：</p>
+<ul>
+<li>映射Megastore数据到bigtable。</li>
+<li>事务及并发控制</li>
+<li>跨机房数据复制及读写优化</li>
+</ul>
+<h4 id="实体组">实体组</h4>
+<ul>
+<li>单个实体组内部支持ACID事务</li>
+<li>跨实体组事务通过俩阶段提交协议保证</li>
+<li>通过异步队列支持跨实体组最终一致性</li>
+</ul>
+<h4 id="并发控制">并发控制</h4>
+<h5 id="读事务">读事务</h5>
+<ul>
+<li>最新读取</li>
+<li>快照读取</li>
+<li>非一致性读取</li>
+</ul>
+<h5 id="写事务">写事务</h5>
+<p>写操作采用 Write-ahead 日志</p>
+<h4 id="复制">复制</h4>
+<p>基于 Paxos 的复制协议机制。</p>
+<h4 id="索引">索引</h4>
+<ul>
+<li>局部索引：单个实体组内</li>
+<li>全局索引：跨多个实体组</li>
+</ul>
+<h4 id="协调者">协调者</h4>
+<p>等同于 zookeeper</p>
+<h5 id="快速读">快速读</h5>
+<p>利用本地读取实现快速读，减少读取延时和跨机房操作。</p>
+<h5 id="协调者的可用性">协调者的可用性</h5>
+<p>锁服务</p>
+<h5 id="竞争条件">竞争条件</h5>
+<p>失效操作总是安全的，
+生效操作必须谨慎处理。</p>
+<h4 id="读取流程">读取流程</h4>
+<ul>
+<li>本地查询</li>
+<li>发现位置</li>
+<li>追赶：获取操作日志，应用操作日志</li>
+<li>使实体组生效</li>
+<li>查询数据<h4 id="写入流程">写入流程</h4>
+</li>
+<li>请求主副本接受</li>
+<li>准备</li>
+<li>接受</li>
+<li>使实体组失效</li>
+<li><p>应用操作日志</p>
+<h4 id="讨论">讨论</h4>
+<p>分布式系统的俩个目标：</p>
+</li>
+<li><p>可扩展性：最终目标是线性可扩展</p>
+</li>
+<li>功能：最终目标是支持全功能SQL</li>
+</ul>
+<p>Megastore 的主要创新点：</p>
+<ul>
+<li>提出实体组的数据模型</li>
+<li>通过 Paxos协议同时保证高可靠性和高可用性</li>
+</ul>
+<h3 id="windows-azure-storage">Windows Azure Storage</h3>
+<h4 id="整体架构">整体架构</h4>
+<p>WAS 主要分为俩个部分：</p>
+<ul>
+<li>定位服务</li>
+<li>存储区</li>
+</ul>
+<p>每个存储区是一个集群。存储区分为三层：</p>
+<ul>
+<li>文件流层：GFS类似</li>
+<li>分区层：bigtable 类似</li>
+<li>前端层<h4 id="复制">复制</h4>
+</li>
+<li>存储区内复制：强同步</li>
+<li>跨存储区复制：异步</li>
+</ul>
+<h2 id="分布式数据库">分布式数据库</h2>
+<h3 id="数据库中间层">数据库中间层</h3>
+<h4 id="架构：mysql-sharding">架构：MYSQL Sharding</h4>
+<ul>
+<li>MYSQL 客户端库</li>
+<li>中间层 dbproxy：解析客户端SQL请求并转发到后端数据库</li>
+<li>数据库组 dbgroup</li>
+<li>元数据服务器：维护 dbgroup 拆分规则并用于dbgroup选主</li>
+<li>常驻进程 agents</li>
+</ul>
+<h4 id="扩容">扩容</h4>
+<p>MYSQL Sharding 一般按照用户id进行哈希分区</p>
+<h3 id="microsoft-sql-azure">Microsoft SQL Azure</h3>
+<h4 id="数据模型">数据模型</h4>
+<h4 id="架构">架构</h4>
+<ul>
+<li>SQL Server 实例</li>
+<li>全局分区管理：维护分区映射信息</li>
+<li>协议网关：将用户的请求转发到相应主机</li>
+<li>分布式基础组件</li>
+</ul>
+<h4 id="复制和一致性">复制和一致性</h4>
+<h4 id="容错">容错</h4>
+<h4 id="负载均衡">负载均衡</h4>
+<p>副本迁移及主备副本切换</p>
+<h4 id="多租户">多租户</h4>
+<ul>
+<li>操作系统资源限制</li>
+<li>SQL Azure 逻辑数据库容量限制</li>
+<li>SQL Server 物理数据库数据大小限制</li>
+</ul>
+<h3 id="google-spanner">Google Spanner</h3>
+<h4 id="数据模型：和megastore系统类似">数据模型：和Megastore系统类似</h4>
+<h4 id="架构">架构</h4>
+<h4 id="复制与一致性">复制与一致性</h4>
+<ul>
+<li>Paxos 协议</li>
+<li>锁表</li>
+<li>事务管理器</li>
+</ul>
+<h4 id="truetime">TrueTime</h4>
+<p>全球时钟同步机制 TrueTime。
+实现基础是GPS和原子钟。</p>
+<h4 id="并发控制">并发控制</h4>
+<h4 id="数据迁移">数据迁移</h4>
+<h4 id="讨论">讨论</h4>
+<p>分布式技术和关系数据库技术融合的必然性，即底层通过分布式技术实现可扩展性，上层通过关系数据库的模型和接口将系统的功能暴露给用户。</p>
+<h2 id="oceanbase架构初探">OceanBase架构初探</h2>
+<h3 id="设计思路">设计思路</h3>
+<ul>
+<li>单台更新服务器记录最近一段时间的修改增量</li>
+<li>以前的数据保持不变，以前的数据成为基线数据</li>
+<li>基线数据以类似分布式文件系统的方式存储于多台基线数据服务器中</li>
+<li>每次查询都需要把基线数据和增量数据融合后返回给客户端</li>
+<li>写事务都集中在单台更新服务器中</li>
+<li>更新服务器的修改增量定期分发到多台基线数据服务器中</li>
+</ul>
+<h3 id="系统架构">系统架构</h3>
+<h4 id="整体架构">整体架构</h4>
+<ul>
+<li>客户端</li>
+<li>RootServer：</li>
+<li>UpdateServer：增量更新数据</li>
+<li>ChunkServer:基线数据</li>
+<li>MergeServer:接受并解析用户SQL请求，进过词法分析，语法分析，查询优化等一系列操作后转发给相应的ChunkServer或UpdateServer。结果合并。</li>
+</ul>
+<h4 id="客户端">客户端</h4>
+<h4 id="rootserver">RootServer</h4>
+<ul>
+<li>集群管理</li>
+<li>数据分布</li>
+<li>副本管理
+每个集群同一时刻只允许一个 UpdateServer提供写服务。
+Rootserver与mergeserver和chunkserver之间保持心跳。<h4 id="mergeserver">Mergeserver</h4>
+</li>
+<li>协议解析</li>
+<li>SQL解析</li>
+<li>请求转发</li>
+<li>结果合并</li>
+<li>多表操作</li>
+</ul>
+<h4 id="chunkserver">ChunkServer</h4>
+<ul>
+<li>存储多个子表</li>
+<li>读取服务</li>
+<li>定期合并</li>
+<li>数据分发</li>
+</ul>
+<h4 id="updateserver">UpdateServer</h4>
+<p>集群中唯一能够接受写入的模块，每个集群只有一个主UpdateServer。</p>
+<h4 id="定期和并与数据分发">定期和并与数据分发</h4>
+<p>查询结果 = 旧子表 + 冻结内存表 + 新的活跃内存表
+         = 新子表 + 新的活跃内存表</p>
+<h3 id="架构剖析">架构剖析</h3>
+<h4 id="一致性选择">一致性选择</h4>
+<p>强一致性会大大简化数据库管理，应用程序也会因此而简化。
+修改操作流程如下：</p>
+<ul>
+<li>将修改操作的操作日志发送到备机</li>
+<li>将修改操作的操作日志写入主机硬盘</li>
+<li>将操作日志应用到主机内存表中</li>
+<li>返回客户端写入成功</li>
+</ul>
+<h4 id="数据结构">数据结构</h4>
+<h4 id="可靠性和可用性">可靠性和可用性</h4>
+<h4 id="读写事务">读写事务</h4>
+<h4 id="单点性能">单点性能</h4>
+<h4 id="ssd支持">SSD支持</h4>
+<p>SSD写入放大，随机读写性能不好。</p>
+<h4 id="数据正确性">数据正确性</h4>
+<ul>
+<li>数据存储校验</li>
+<li>数据传输校验</li>
+<li>数据镜像校验</li>
+<li>数据副本校验</li>
+</ul>
+<h4 id="分层结构">分层结构</h4>
+<ul>
+<li>分布式存储引擎层</li>
+<li>数据库功能层</li>
+</ul>
+<h2 id="分布式存储引擎">分布式存储引擎</h2>
+<h3 id="公共模块">公共模块</h3>
+<p>公共数据结构，内存管理，锁，任务队列，RPC框架，压缩/解压缩。</p>
+<h4 id="内存管理">内存管理</h4>
+<p>首先注重内存管理的可控性，而不是高效，并防止内存碎片。</p>
+<p>全局定长内存池维护了由64KB大小的定长内存块组成的空闲链表。</p>
+<p>每个模块实现专用的内存池。</p>
+<p>每个线程总是首先尝试从线程局部缓存中申请内存，如果申请不到，再从全局内存池中申请。</p>
+<h4 id="基础数据结构">基础数据结构</h4>
+<ul>
+<li>哈希表：位锁。 延迟初始化。</li>
+<li>B树：B树支持多线程并发修改。<ul>
+<li>Copy-on-write</li>
+<li>MVCC存储引擎会在行的末尾追加一个单元记录更新的内容，而不会影响索引结构。</li>
+<li>对于删除，MVCC实现为标记删除，即在行的末尾追加一个单元记录行的删除时间，而不会物理删除某行</li>
+</ul>
+</li>
+</ul>
+<h4 id="锁">锁</h4>
+<h4 id="任务队列">任务队列</h4>
+<h4 id="网络框架">网络框架</h4>
+<h4 id="压缩和解压缩：lzo。snappy">压缩和解压缩：LZO。Snappy</h4>
+<h3 id="rootserver实现机制">rootserver实现机制</h3>
+<h4 id="数据结构">数据结构</h4>
+<h4 id="子表复制和负载均衡">子表复制和负载均衡</h4>
+<h4 id="子表分裂和合并">子表分裂和合并</h4>
+<h4 id="updateserver选主">UpdateServer选主</h4>
+<p>RootServer通过租约机制实现选主。</p>
+<h4 id="rootserver主备">RootServer主备</h4>
+<p>主备之间数据强同步。</p>
+<h3 id="updateserver实现机制">UpdateServer实现机制</h3>
+<h4 id="存储引擎">存储引擎</h4>
+<h4 id="任务模型">任务模型</h4>
+<h4 id="主备同步">主备同步</h4>
+<h3 id="chunkserver-实现机制">ChunkServer 实现机制</h3>
+<h4 id="子表管理">子表管理</h4>
+<h4 id="sstable">SStable</h4>
+<h4 id="缓存实现">缓存实现</h4>
+<p>块缓存，行缓存，块索引缓存。</p>
+<p>经典的LRU缓存实现：哈希表+LRU链表
+哈希表用于查找，LRU链表用于淘汰。</p>
+<h4 id="惊群效应">惊群效应</h4>
+<p>第一个线程发现行缓存失效时会往缓存中加入一个fake标记，其他线程发现这个标记后会等待一段时间。</p>
+<h4 id="缓存预热">缓存预热</h4>
+<h4 id="io实现">IO实现</h4>
+<ul>
+<li>双缓冲区机制实现磁盘预读与CPU处理并行化。</li>
+<li>双缓冲区广泛应用于生产者和消费者模型，在双缓冲区异步预读的技术中，生产者为磁盘，消费者为CPU。俩个缓冲区，总是一个用于生产者，另一个用于消费者。</li>
+<li>双缓冲区状态：<ul>
+<li>双缓冲区都在使用的状态</li>
+<li>单个缓冲区空闲</li>
+<li>缓冲区的切换</li>
+</ul>
+</li>
+</ul>
+<h4 id="定期合并与数据分发">定期合并与数据分发</h4>
+<h4 id="定期合并限速">定期合并限速</h4>
+<h3 id="消除更新瓶颈">消除更新瓶颈</h3>
+<h4 id="读写优化回顾">读写优化回顾</h4>
+<ul>
+<li>网络框架优化</li>
+<li>高性能内存数据结构：内存B树，大部分情况无锁</li>
+<li><p>写操作日志优化</p>
+<ul>
+<li>成组提交</li>
+<li>降低日志缓冲区的锁冲突</li>
+<li>日志文件并发写入</li>
+</ul>
+</li>
+<li><p>内存容量优化</p>
+<ul>
+<li>精心设计内存数据结构，尽可能节省内存使用</li>
+<li>将内存数据很快的分发出去<h4 id="数据旁路导入">数据旁路导入</h4>
+<h4 id="数据分区">数据分区</h4>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="数据库功能">数据库功能</h2>
+<h3 id="整体结构">整体结构</h3>
+<h3 id="只读事务">只读事务</h3>
+<p>只读事务经过词法分析，语法分析，预处理后，转化为逻辑查询计划和物理查询计划。</p>
+<h4 id="物理操作符接口">物理操作符接口</h4>
+<p>所有的物理运算符构成一个树，每个物理运算的输出结果都可以认为是一个临时的二维表，数中孩子节点的输出总是作为它的父亲节点的输入。</p>
+<h4 id="单表操作">单表操作</h4>
+<ul>
+<li><p>排序算法
+mergegroupby,mergedistinct以及sort都需要使用排序算法。</p>
+<ul>
+<li>数据收集</li>
+<li>迭代输出</li>
+</ul>
+</li>
+<li>哈希算法
+hashgroupby,hashdistinct都需要使用哈希算法。<h4 id="多表操作">多表操作</h4>
+俩张表实现等值连接方式主要分为俩类：基于哈希的算法，基于排序的算法。<h4 id="sql执行本地化">SQL执行本地化</h4>
+</li>
+</ul>
+<h3 id="写事务">写事务</h3>
+<h4 id="写事务执行流程">写事务执行流程</h4>
+<h4 id="多版本并发控制">多版本并发控制</h4>
+<p>写操作俩个阶段：</p>
+<ul>
+<li>预提交（多线程执行）</li>
+<li>提交（单线程）</li>
+</ul>
+<h3 id="olap业务支持">OLAP业务支持</h3>
+<h4 id="并发查询">并发查询</h4>
+<p>mergeserver将大请求拆分为多个子请求，同时发往每个子请求所在的chunkserver并发执行。</p>
+<p>mergeserver会成为性能瓶颈。</p>
+<h4 id="列式存储">列式存储</h4>
+<p>列式存储的前提是设计好内存数据结构，把CPU操作优化好。</p>
+<h3 id="特色功能">特色功能</h3>
+<h4 id="大表左连接">大表左连接</h4>
+<ul>
+<li>冗余存储</li>
+<li>增量修改</li>
+</ul>
+<h2 id="质量保证，运维及实践">质量保证，运维及实践</h2>
+<h3 id="质量保证">质量保证</h3>
+<h4 id="rd开发">RD开发</h4>
+<ul>
+<li>编码规范</li>
+<li>代码审核：编码风格审核，实现逻辑审核</li>
+<li>单元测试</li>
+<li>快速测试</li>
+<li>RD压力测试</li>
+</ul>
+<h4 id="qa测试">QA测试</h4>
+<ul>
+<li>接口，功能，容灾测试</li>
+<li>压力测试</li>
+<li>兼容性测试</li>
+</ul>
+<h4 id="试运行">试运行</h4>
+<ul>
+<li>业务压力测试</li>
+<li>线上流量回放</li>
+<li>灰度上线</li>
+</ul>
+<h3 id="使用与运维">使用与运维</h3>
+<h3 id="系统设计">系统设计</h3>
+<h4 id="设计原则">设计原则</h4>
+<ul>
+<li>容错</li>
+<li>自动化</li>
+<li>保持兼容</li>
+</ul>
+<h4 id="系统实现">系统实现</h4>
+<ul>
+<li>重视服务器代码资源管理</li>
+<li>做好代码审核</li>
+<li>重视测试</li>
+</ul>
+<h4 id="工程现象">工程现象</h4>
+<ul>
+<li>错误必然出现</li>
+<li>错误必然复现</li>
+<li>俩倍数据规模</li>
+<li>怪异现象的背后总有一个愚蠢的初级bug</li>
+<li>线上问题自一次出现后，第二次将很快重现</li>
+</ul>
+<h4 id="经验法则">经验法则</h4>
+<ul>
+<li>简单性原则</li>
+<li>精力投入原则</li>
+<li>先稳定再优化</li>
+<li>想清楚，再动手</li>
+</ul>
+<h2 id="云存储">云存储</h2>
+<p>分布式技术 + 服务化技术 + 资源隔离 + 虚拟化</p>
+<h3 id="saas-：-软件即服务">SAAS ： 软件即服务</h3>
+<h3 id="paas-：-平台即服务">PAAS ： 平台即服务</h3>
+<h3 id="iaas-：-基础设施作为服务">IAAS ： 基础设施作为服务</h3>
+<p><img src="https://img.alicdn.com/imgextra/i1/1576560244/TB2RcZ5eVXXXXawXpXXXXXXXXXX_!!1576560244.jpg" alt="此处输入图片的描述"></p>
+<h3 id="云存储技术体系结构：">云存储技术体系结构：</h3>
+<ul>
+<li>硬件层</li>
+<li>单机存储层</li>
+<li>分布式存储层</li>
+<li>存储访问层</li>
+</ul>
+<p><img src="https://img.alicdn.com/imgextra/i1/1576560244/TB2gYZUeVXXXXcKXpXXXXXXXXXX_!!1576560244.jpg_620x10000.jpg" alt="此处输入图片的描述"></p>
+<h2 id="大数据">大数据</h2>
+<h3 id="sql运算符映射到mapreduce">SQL运算符映射到Mapreduce</h3>
+<p>如果俩张表很大，且二者的大小比较接近，join字段也没有索引，Sort Merge Join 往往比较高效，然而，如果俩张表格相差很大，hash join往往比较合适。</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871ef69d2f092c392ca4d48
+                 data-title=读书笔记——《大规模分布式存储系统原理解析和架构实战》
+                 data-url=fenbushi>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

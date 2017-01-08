@@ -1,0 +1,195 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Hive 数据 bulkload 导入 HBase</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Hive 数据 bulkload 导入 HBase</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-04-26</p>
+            <p>分类: <a href="../tag/解决方案.html" target="_blank" >解决方案</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#hive-数据-bulkload-导入-hbase-原理">Hive 数据 bulkload 导入 HBase 原理</a></li>
+<li><a href="#hive-数据-bulkload-导入-hbase-步骤">Hive 数据 bulkload 导入 HBase 步骤</a></li>
+<li><a href="#hive-数据-bulkload-导入-hbase-注意事项">Hive 数据 bulkload 导入 HBase 注意事项</a></li>
+<li><a href="#hive-数据-bulkload-导入-hbase-核心代码">Hive 数据 bulkload 导入 Hbase 核心代码</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="hive-数据-bulkload-导入-hbase-原理">Hive 数据 bulkload 导入 HBase 原理</h3>
+<p>主要工作就是将Hive的数据格式转化为HBase中的数据格式。bulkload导入 HBase 绕过写memstore，直接写HFile,不影响线上业务，并且做到实时生效。</p>
+<h3 id="hive-数据-bulkload-导入-hbase-步骤">Hive 数据 bulkload 导入 HBase 步骤</h3>
+<h4 id="生成hfile">生成HFile</h4>
+<p>其实质就是一个mapreduce任务。
+map 阶段 ： 将Hive表中的数据转化为HBase中的KeyValue结构。
+reduce 阶段：  由于HFile要求写入的数据是按照(rowkey,family,column,ts)有序排列，所有这一步主要利用<code>TreeSet</code>对map阶段生成的keyvalue进行排序。</p>
+<h4 id="bulkload">BulkLoad</h4>
+<p>其实就是一个HDFS上的mv操作，将生成的HFile mv到HBASE表的相应分区内，及时生效，导入过程不影响线上数据读写操作。
+主要是调用Hbase的<code>LoadIncrementalHFiles</code>类。</p>
+<h3 id="hive-数据-bulkload-导入-hbase-注意事项">Hive 数据 bulkload 导入 HBase 注意事项</h3>
+<h4 id="数据格式">数据格式</h4>
+<p>一般在生成keyvalue的时候把Hive中的数据都变为了String类型。</p>
+<h4 id="hfile的-keyvalue必须有序">HFile的 KeyValue必须有序</h4>
+<p>因为HFile的 KeyValue 必须有序，所以要求Hive源数据中对于同一Rowkey下同一列族同一列的值不可以重复。</p>
+<h4 id="生成hfile的mr任务的reduce个数确定">生成HFile的MR任务的reduce个数确定</h4>
+<p><code>HFileOutputFormat.configureIncrementalLoad(job, table);</code></p>
+<p>默认我们可以通过此方法来确定生成HFile的MR任务的reduce个数，这个方法会读取Hbase表的splitkey来确定生成HFile的MR任务的reduce个数。</p>
+<h4 id="distcp">Distcp</h4>
+<p>如果Hive数据源使用的HDFS集群和HBase表使用的HDFS集群不是同一个集群，我们在生成HFile后还需要 通过<code>distcp</code> 将HFile 传输到HBase表所在的HDFS集群。</p>
+<h4 id="用户权限和安全认证问题">用户权限和安全认证问题</h4>
+<p>我们必须保证我们使用的用户拥有相应的Hbase集群以及HBase集群依赖的HDFS集群的读写权限。</p>
+<h4 id="避免单个hfile跨region">避免单个HFile跨region</h4>
+<p>如果HFile跨region,在BulkLoad的时候就会进行split,就会导致BulkLoad的速度比较慢。所以如果是我们自己确定splitkey的话一定要保证单个HFile不跨region</p>
+<h4 id="加速生成hfile的mr任务">加速生成HFile的MR任务</h4>
+<p>有时候可能HBase表的region数很少，导致由上述方法确定的生成HFile的MR任务的reduce个数很少，进而导致MR任务时间很长。这时候我们也可以根据生成HFile的个数划分splitkey，增加生成HFile的MR任务的reduce个数，减少MR任务时间。</p>
+<h3 id="hive-数据-bulkload-导入-hbase-核心代码">Hive 数据 bulkload 导入 Hbase 核心代码</h3>
+<p>公司代码不方面贴，就给大家展示一下Kylin里的代码</p>
+<h4 id="生成hfile的mapper">生成HFile的Mapper</h4>
+<pre><code>    @Override
+    public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
+        outputKey.set(key.getBytes(), 0, key.getLength());
+        KeyValue outputValue;
+
+        int n = keyValueCreators.size();
+        if (n == 1 &amp;&amp; keyValueCreators.get(0).isFullCopy) { // shortcut for simple full copy
+
+            outputValue = keyValueCreators.get(0).create(key, value.getBytes(), 0, value.getLength());
+            context.write(outputKey, outputValue);
+
+        } else { // normal (complex) case that distributes measures to multiple HBase columns
+
+            inputCodec.decode(ByteBuffer.wrap(value.getBytes(), 0, value.getLength()), inputMeasures);
+
+            for (int i = 0; i &lt; n; i++) {
+                outputValue = keyValueCreators.get(i).create(key, inputMeasures);
+                context.write(outputKey, outputValue);
+            }
+        }
+    }
+
+主要就是生成KeyValue，keyValueCreators的create方法如下：
+
+public KeyValue create(byte[] keyBytes, int keyOffset, int keyLength, byte[] value, int voffset, int vlen) {
+        return new KeyValue(keyBytes, keyOffset, keyLength, //
+                cfBytes, 0, cfBytes.length, //
+                qBytes, 0, qBytes.length, //
+                timestamp, KeyValue.Type.Put, //
+                value, voffset, vlen);
+    }
+</code></pre><h4 id="生成hfile的reducer">生成HFile的Reducer</h4>
+<pre><code>public class KeyValueSortReducer extends Reducer&lt;ImmutableBytesWritable, KeyValue, ImmutableBytesWritable, KeyValue&gt; {
+  protected void reduce(ImmutableBytesWritable row, java.lang.Iterable&lt;KeyValue&gt; kvs,
+      org.apache.hadoop.mapreduce.Reducer&lt;ImmutableBytesWritable, KeyValue, ImmutableBytesWritable, KeyValue&gt;.Context context)
+  throws java.io.IOException, InterruptedException {
+    TreeSet&lt;KeyValue&gt; map = new TreeSet&lt;KeyValue&gt;(KeyValue.COMPARATOR);
+    for (KeyValue kv: kvs) {
+      try {
+        map.add(kv.clone());
+      } catch (CloneNotSupportedException e) {
+        throw new java.io.IOException(e);
+      }
+    }
+    context.setStatus(&quot;Read &quot; + map.getClass());
+    int index = 0;
+    for (KeyValue kv: map) {
+      context.write(row, kv);
+      if (++index % 100 == 0) context.setStatus(&quot;Wrote &quot; + index);
+    }
+  }
+}
+主要就是利用 TreeSet 进行排序
+</code></pre>
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871f2afd2f092c392ca4d50
+                 data-title=Hive 数据 bulkload 导入 HBase
+                 data-url=hbase-bulkload>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

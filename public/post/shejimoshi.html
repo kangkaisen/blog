@@ -1,0 +1,1115 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|设计模式入门</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 设计模式入门</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-04-04</p>
+            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
+            <hr/>
+            <h3 id="设计模式">设计模式</h3>
+<ul>
+<li>模式是在某个情境下，针对某问题的某种解决方案</li>
+<li>模式不是代码，是针对特定问题的通用解决方案</li>
+<li>模式不是被发明，而是被发现</li>
+</ul>
+<h3 id="模式分类">模式分类</h3>
+<h4 id="创建型模式">创建型模式</h4>
+<p>创建型模式涉及到对象实例化，这类模式都提供一个方法，将客户从所需要实例化的对象中解耦。</p>
+<ul>
+<li>单件模式（Single Pattern）</li>
+<li>抽象工厂模式（Abstract Factory）</li>
+<li>建造者模式（Builder Pattern）</li>
+<li>工厂方法（Factory Method）</li>
+<li>原型模式（Protype Pattern）</li>
+</ul>
+<h4 id="行为型模式">行为型模式</h4>
+<p>类和对象如何交互和分配职责</p>
+<ul>
+<li><p>策略模式(Strategy) </p>
+</li>
+<li><p>状态模式(State) </p>
+</li>
+<li><p>责任链模式(Chain of Responsibility) </p>
+</li>
+<li><p>解释器模式(Interpreter) </p>
+</li>
+<li><p>命令模式(Command) </p>
+</li>
+<li><p>观察者模式(Observer) </p>
+</li>
+<li><p>备忘录模式(Memento) </p>
+</li>
+<li><p>迭代器模式(Iterator) </p>
+</li>
+<li><p>模板方法模式(Template Method) </p>
+</li>
+<li><p>访问者模式(Visitor) </p>
+</li>
+<li><p>中介者模式(Mediator) </p>
+</li>
+</ul>
+<h4 id="结构型模式">结构型模式</h4>
+<p>让你把类和对象组合到更大的对象中</p>
+<ul>
+<li>适配器模式（Adapter Pattern）</li>
+<li>桥接模式（Bridge Pattern）</li>
+<li>装饰模式（Decorator Pattern）</li>
+<li>组合模式（Composite Pattern）</li>
+<li>外观模式（Façade Pattern）</li>
+<li>享元模式（Flyweight Pattern）</li>
+<li>代理模式（Proxy Pattern）</li>
+</ul>
+<h3 id="良好的设计">良好的设计</h3>
+<ul>
+<li>可维护</li>
+<li>可扩展</li>
+<li>可复用</li>
+</ul>
+<h3 id="设计原则">设计原则</h3>
+<p>设计原则不可能完全遵循，但应该尽可能达到。</p>
+<h4 id="开闭原则">开闭原则</h4>
+<p>类应该对扩展开放，对修改关闭</p>
+<h4 id="里氏代换原则">里氏代换原则</h4>
+<p>子类可以扩展父类的功能，但不能改变父类原有的功能。</p>
+<h4 id="单一责任原则">单一责任原则</h4>
+<p>一个类应该只有一个引起变化的原因</p>
+<h4 id="依赖倒置原则">依赖倒置原则</h4>
+<p>要依赖抽象，不要依赖具体类</p>
+<h4 id="隔离变化">隔离变化</h4>
+<p>找出应用中可能发生变化的部分，和不需要改变的代码隔离开来</p>
+<h4 id="针对接口编程，而不是针对实现编程">针对接口编程，而不是针对实现编程</h4>
+<ul>
+<li>针对超类型编程</li>
+<li>利用多态</li>
+</ul>
+<h4 id="多用组合，少用继承">多用组合，少用继承</h4>
+<h4 id="为了交互对象之间的松耦合而努力">为了交互对象之间的松耦合而努力</h4>
+<h4 id="最少知识原则">最少知识原则</h4>
+<p>只和你的密友谈话</p>
+<h4 id="好莱坞原则">好莱坞原则</h4>
+<p>高层组件对待低层组件的方式是别调用我们，我们会调用你。
+避免高层组件和低层组件之间的环状引用。</p>
+<ul>
+<li>变量不可以持有具体类的引用</li>
+<li>不要让类派生自具体类，应该派生自抽象（接口或者抽象类）</li>
+<li>不要覆盖基类中已经实现的方法</li>
+</ul>
+<h2 id="观察者模式">观察者模式</h2>
+<h3 id="定义">定义</h3>
+<p>定义了对象之间一对多的依赖，当一个对象改变状态时，它的所有依赖者会收到通知并自动更新</p>
+<h3 id="气象站获取数据并显示">气象站获取数据并显示</h3>
+<h3 id="报纸的订阅">报纸的订阅</h3>
+<p>出版者+订阅者 = 观察者模式</p>
+<h3 id="主题-subject-观察者-observer">主题 Subject + 观察者 Observer</h3>
+<p>主题和观察者之间松耦合</p>
+<h3 id="推模式-主题向观察者主动推送消息">推模式:主题向观察者主动推送消息</h3>
+<h3 id="拉模式：观察者主动向主题请求消息">拉模式：观察者主动向主题请求消息</h3>
+<pre><code>public interface Subject {
+    //添加观察者
+    void attach(Observer o);
+    //删除观察者
+    void detach(Observer o);
+    //通知观察者
+    void notifyObservers();
+    //发生某事
+    void doSomeThings()
+}
+
+//观察者
+public interface Observer {
+
+    void update();
+}
+
+public class ConcreteSubject implements Subject {
+
+    ArrayList&lt;Observer&gt; observers = new ArrayList&lt;&gt;();
+
+    @Override
+    public void attach(Observer o) {
+        observers.add(o);
+    }
+
+    @Override
+    public void detach(Observer o) {
+        observers.remove(o);
+    }
+
+    @Override
+    public void notifyObservers() {
+        for (Observer o : observers) {
+            o.update();
+        }
+    }
+
+    public void doSomeThings(){
+        //doSomeThings
+        notifyObservers();//通知观察者
+    }
+}
+
+
+//具体观察者
+public class ConcreteObserver implements Observer {
+    @Override
+    public void update() {
+        System.out.println(&quot;我观察到subject发生了某事&quot;);
+    }
+}
+
+public static void main(String[] args) {
+        Subject cs = new ConcreteSubject();
+        //添加观察者
+        cs.attach(new ConcreteObserver());
+        //subject发生了某事，通知观察者
+        cs.doSomeThings();
+    }
+</code></pre><h2 id="装饰模式">装饰模式</h2>
+<h3 id="继承-设计子类行为，是编译时静态确定">继承 设计子类行为，是编译时静态确定</h3>
+<h3 id="组合扩展对象行为，可以运行时动态扩展">组合扩展对象行为，可以运行时动态扩展</h3>
+<h3 id="定义">定义</h3>
+<p>装饰者模式将责任附加到对象上，若要扩展功能，装饰者提供比继承更有弹性的方案
+增强功能。
+装饰者可以在所委托被装饰者的行为之前或者之后，加上自己的行为，以达到特定目的。</p>
+<h3 id="装饰者和被装饰者有共同的超类">装饰者和被装饰者有共同的超类</h3>
+<h3 id="利用继承获得-“类型匹配”">利用继承获得 “类型匹配”</h3>
+<h3 id="利用组合扩展行为">利用组合扩展行为</h3>
+<h3 id="应用">应用</h3>
+<ul>
+<li>Java I/O类</li>
+</ul>
+<h3 id="缺点">缺点</h3>
+<ul>
+<li>会产生大量的小类</li>
+<li>实例化组件时，会增加代码复杂度</li>
+</ul>
+<pre><code>//InputStream提供的基本方法(Component)
+public abstract class InputStream implements Closeable {
+
+}
+
+//默认目标实现类(ConcreteComponent)
+public class FileInputStream extends InputStream {
+
+}
+
+/*装饰实现类（FilterInputStream）一定是继承或实现原始接口(InputStream)的，内部有包含一个原始接口的超类(其实就是某个默认目标实现类)*/
+//Decorator
+public class FilterInputStream extends InputStream {
+    /**
+     * The input stream to be filtered.
+     */
+    protected volatile InputStream in;
+
+    protected FilterInputStream(InputStream in) {
+        this.in = in;
+    }
+}
+
+//具体装饰类(ConcreteDecorator)
+public class BufferedInputStream extends FilterInputStream {
+
+    public BufferedInputStream(InputStream in) {
+        this(in, DEFAULT_BUFFER_SIZE);
+    }
+}
+
+//具体装饰类(ConcreteDecorator)
+public class DataInputStream extends FilterInputStream implements DataInput {
+
+    public DataInputStream(InputStream in) {
+        super(in);
+    }
+}
+</code></pre><h2 id="简单工厂模式">简单工厂模式</h2>
+<h3 id="定义">定义</h3>
+<p>在简单工厂模式中，可以根据参数的不同返回不同类的实例。简单工厂模式专门定义一个类来负责创建其他类的实例，被创建的实例通常都具有共同的父类。</p>
+<p>简单工厂模式的要点在于：当你需要什么，只需要传入一个正确的参数，就可以获取你所需要的对象，而无须知道其创建细节。</p>
+<h3 id="模式结构">模式结构</h3>
+<p>Factory：工厂角色
+工厂角色负责实现创建所有实例的内部逻辑</p>
+<p>Product：抽象产品角色
+抽象产品角色是所创建的所有对象的父类，负责描述所有实例所共有的公共接口</p>
+<p>ConcreteProduct：具体产品角色
+具体产品角色是创建目标，所有创建的对象都充当这个角色的某个具体类的实例。
+<img src="http://design-patterns.readthedocs.io/zh_CN/latest/_images/SimpleFactory.jpg" alt="此处输入图片的描述"></p>
+<h3 id="适用场景">适用场景</h3>
+<p>在以下情况下可以使用简单工厂模式：</p>
+<p>工厂类负责创建的对象比较少：由于创建的对象较少，不会造成工厂方法中的业务逻辑太过复杂。
+客户端只知道传入工厂类的参数，对于如何创建对象不关心：客户端既不需要关心创建细节，甚至连类名都不需要记住，只需要知道类型所对应的参数。</p>
+<h3 id="典型应用">典型应用</h3>
+<pre><code>工具类java.text.DateFormat，它用于格式化一个本地日期或者时间。
+public final static DateFormat getDateInstance();
+public final static DateFormat getDateInstance(int style);
+public final static DateFormat getDateInstance(int style,Locale
+locale);
+
+获取不同加密算法的密钥生成器:
+KeyGenerator keyGen=KeyGenerator.getInstance(&quot;DESede&quot;);
+</code></pre><h3 id="总结">总结</h3>
+<p>创建型模式对类的实例化过程进行了抽象，能够将对象的创建与对象的使用过程分离。</p>
+<p>简单工厂模式又称为静态工厂方法模式，它属于类创建型模式。在简单工厂模式中，可以根据参数的不同返回不同类的实例。简单工厂模式专门定义一个类来负责创建其他类的实例，被创建的实例通常都具有共同的父类。</p>
+<p>简单工厂模式包含三个角色：工厂角色负责实现创建所有实例的内部逻辑；抽象产品角色是所创建的所有对象的父类，负责描述所有实例所共有的公共接口；具体产品角色是创建目标，所有创建的对象都充当这个角色的某个具体类的实例。</p>
+<p>简单工厂模式的要点在于：当你需要什么，只需要传入一个正确的参数，就可以获取你所需要的对象，而无须知道其创建细节。</p>
+<p>简单工厂模式最大的优点在于实现对象的创建和对象的使用分离，将对象的创建交给专门的工厂类负责，但是其最大的缺点在于工厂类不够灵活，增加新的具体产品需要修改工厂类的判断逻辑代码，而且产品较多时，工厂方法代码将会非常复杂。</p>
+<p>简单工厂模式适用情况包括：工厂类负责创建的对象比较少；客户端只知道传入工厂类的参数，对于如何创建对象不关心。</p>
+<h2 id="工厂方法模式">工厂方法模式</h2>
+<h3 id="定义">定义</h3>
+<p>在工厂方法模式中，工厂父类负责定义创建产品对象的公共接口，而工厂子类则负责生成具体的产品对象，这样做的目的是将产品类的实例化操作延迟到工厂子类中完成，即通过工厂子类来确定究竟应该实例化哪一个具体产品类。</p>
+<p>工厂方法模式是简单工厂模式的进一步抽象和推广。由于使用了面向对象的多态性，工厂方法模式保持了简单工厂模式的优点，而且克服了它的缺点。在工厂方法模式中，核心的工厂类不再负责所有产品的创建，而是将具体创建工作交给子类去做。这个核心类仅仅负责给出具体工厂必须实现的接口，而不负责哪一个产品类被实例化这种细节，这使得工厂方法模式可以允许系统在不修改工厂角色的情况下引进新产品。</p>
+<h3 id="模式结构">模式结构</h3>
+<p>Product：抽象产品
+ConcreteProduct：具体产品
+Factory：抽象工厂
+ConcreteFactory：具体工厂</p>
+<p><img src="http://design-patterns.readthedocs.io/zh_CN/latest/_images/FactoryMethod.jpg" alt="此处输入图片的描述"></p>
+<h3 id="特点">特点</h3>
+<ul>
+<li>利用对象继承</li>
+<li>负责将客户从具体类型中解耦</li>
+</ul>
+<pre><code>  // 产品接口，定义一系列产品应该实现的服务，即产品的共性 
+  interface IProduct { 
+    public void method01(); 
+    public void method02(); 
+  } 
+
+  // 具体的产品实现类 
+  class ConcreteProductA implements IProduct { 
+    public void method01() { 
+      System.out.println(&quot;ConcreteProductA method01() ...&quot;); 
+    } 
+    public void method02() { 
+      System.out.println(&quot;ConcreteProductA method02() ...&quot;); 
+    } 
+  } 
+
+  class ConcreteProductB implements IProduct { 
+    public void method01() { 
+      System.out.println(&quot;ConcreteProductB method01() ...&quot;); 
+    } 
+
+    public void method02() { 
+      System.out.println(&quot;ConcreteProductB method02() ...&quot;); 
+    } 
+  } 
+
+  // 抽象的工厂类，定义了其子类必须实现的createProduct()方法 
+  abstract class Factory { 
+    //运用了Java 中的泛型和反射技术 
+    public abstract &lt;T extends IProduct&gt; T createProduct(Class&lt;T&gt; c); 
+  } 
+
+  class ConcreteFactory extends Factory { 
+    public &lt;T extends IProduct&gt; T createProduct(Class&lt;T&gt; c) { 
+      T product = null; 
+      try { 
+        product = (T) Class.forName(c.getName()).newInstance(); 
+      } catch (Exception e) { 
+        e.printStackTrace(); 
+      } 
+      return product; 
+    } 
+  } 
+
+  public class Client { 
+    public static void main(String[] args) { 
+      //创建一个具体工厂 
+      Factory factory = new ConcreteFactory(); 
+      //根据参数中具体产品的.class名称来决定创建的产品类型 
+      IProduct product01 = factory.createProduct(ConcreteProductA.class); 
+      IProduct product02 = factory.createProduct(ConcreteProductB.class); 
+
+      product01.method01(); 
+      product01.method02(); 
+      product02.method01(); 
+      product02.method02(); 
+    } 
+}
+</code></pre><h3 id="总结">总结</h3>
+<p>工厂方法模式又称为工厂模式，它属于类创建型模式。在工厂方法模式中，工厂父类负责定义创建产品对象的公共接口，而工厂子类则负责生成具体的产品对象，这样做的目的是将产品类的实例化操作延迟到工厂子类中完成，即通过工厂子类来确定究竟应该实例化哪一个具体产品类。</p>
+<p>工厂方法模式包含四个角色：抽象产品是定义产品的接口，是工厂方法模式所创建对象的超类型，即产品对象的共同父类或接口；具体产品实现了抽象产品接口，某种类型的具体产品由专门的具体工厂创建，它们之间往往一一对应；抽象工厂中声明了工厂方法，用于返回一个产品，它是工厂方法模式的核心，任何在模式中创建对象的工厂类都必须实现该接口；具体工厂是抽象工厂类的子类，实现了抽象工厂中定义的工厂方法，并可由客户调用，返回一个具体产品类的实例。</p>
+<p>工厂方法模式是简单工厂模式的进一步抽象和推广。由于使用了面向对象的多态性，工厂方法模式保持了简单工厂模式的优点，而且克服了它的缺点。在工厂方法模式中，核心的工厂类不再负责所有产品的创建，而是将具体创建工作交给子类去做。这个核心类仅仅负责给出具体工厂必须实现的接口，而不负责产品类被实例化这种细节，这使得工厂方法模式可以允许系统在不修改工厂角色的情况下引进新产品。</p>
+<p>工厂方法模式的主要优点是增加新的产品类时无须修改现有系统，并封装了产品对象的创建细节，系统具有良好的灵活性和可扩展性；其缺点在于增加新产品的同时需要增加新的工厂，导致系统类的个数成对增加，在一定程度上增加了系统的复杂性。</p>
+<p>工厂方法模式适用情况包括：一个类不知道它所需要的对象的类；一个类通过其子类来指定创建哪个对象；将创建对象的任务委托给多个工厂子类中的某一个，客户端在使用时可以无须关心是哪一个工厂子类创建产品子类，需要时再动态指定。</p>
+<h2 id="抽象工厂模式">抽象工厂模式</h2>
+<h3 id="定义">定义</h3>
+<p>提供一个接口，用于创建相关或依赖对象的家族，而不需要明确指定具体类。</p>
+<p>有时候我们需要一个工厂可以提供多个产品对象，而不是单一的产品对象。</p>
+<h3 id="特点">特点</h3>
+<ul>
+<li>利用对象组合</li>
+<li>负责将客户从具体类型中解耦</li>
+<li>把一群相关的产品集合起来</li>
+<li>经常使用工厂方法模式来实现具体工厂</li>
+</ul>
+<h3 id="模式结构">模式结构</h3>
+<p>AbstractFactory：抽象工厂
+ConcreteFactory：具体工厂
+AbstractProduct：抽象产品
+Product：具体产品</p>
+<p><img src="http://design-patterns.readthedocs.io/zh_CN/latest/_images/AbatractFactory.jpg" alt="此处输入图片的描述"></p>
+<h3 id="应用">应用</h3>
+<ul>
+<li>创建产品的家族</li>
+</ul>
+<h3 id="代码">代码</h3>
+<pre><code>//CPU工厂接口
+public interface CPUFactory {
+    public void createCPU();
+}
+
+//IntelCPU工厂
+public class IntelCPU implements CPUFactory {
+    @Override
+    public void createCPU() {
+        System.out.println(&quot;Intel CPU&quot;);
+    }
+}
+
+//AMDCPU工厂
+public class AMDCPU implements CPUFactory {
+    @Override
+    public void createCPU() {
+        System.out.println(&quot;AMD CPU&quot;);
+    }
+}
+
+//创建抽象工厂类接口
+public interface Provider {
+    public CPUFactory createCPUFactory();
+}
+
+public class InterCPUFactory implements Provider {
+    @Override
+    public CPUFactory createCPUFactory() {
+        return new InterCPU();
+    }
+}
+
+public static void main(String[] args) {
+        //创建一个生产CPU工厂的工厂
+        Provider cpufactory = new InterCPUFactory();
+        //通过CPU工厂的工厂创建一个IntelCPU工厂
+        CPUFactory intelcpu = cpufactory.createCPUFactory();
+        //IntelCPU工厂生产intelCPU
+        intelcpu.createCPU();
+    }
+</code></pre><h2 id="建造者模式">建造者模式</h2>
+<h3 id="定义">定义</h3>
+<p><img src="http://www.hubwiz.com/course/5710cb2e08ce8b3d3a1430f1/img/builder.png" alt="此处输入图片的描述"></p>
+<p>1.产品类Product：一般是一个较为复杂的对象，也就是说创建对象的过程比较复杂，一般会有比较多的代码量。</p>
+<p>2.抽象建造者类Builder: 将建造的具体过程交与它的子类来实现，这样更容易扩展。</p>
+<p>3.建造者类ConcreteBuilder: 组建产品；返回组建好的产品。</p>
+<p>4.指导类Director: 负责调用适当的建造者来组建产品，指导类一般不与产品类发生依赖关系，与指导类直接交互的是建造者类。</p>
+<p>适用场景：需要生成的对象具有复杂的内部结构；需要生成的对象内部属性本身相互依赖。</p>
+<h3 id="代码">代码</h3>
+<pre><code>//抽象生产者
+public interface Builder {
+
+    void buildPartA();
+    void buildPartB();
+    void buildPartC();
+
+    Product buildProduct();
+}
+
+//具体生产者
+public class ConcreteBuilder implements Builder {
+
+    Product product;
+
+    @Override
+    public void buildPartA() {
+
+    }
+
+    @Override
+    public void buildPartB() {
+
+    }
+
+    @Override
+    public void buildPartC() {
+
+    }
+
+    @Override
+    public Product buildProduct() {
+        return product;
+    }
+}
+
+//产品由各个组件组成
+public class Product {
+
+    //partA
+    //partB
+    //partC
+}
+
+//指导者,产品生产流程规范
+public class Director {
+
+    Builder builder;
+    //由具体的生产者来生产产品
+    public Director(Builder builder) {
+        this.builder = builder;
+    }
+    //生产流程
+    public void buildProduct(){
+        builder.buildPartA();
+        builder.buildPartB();
+        builder.buildPartC();
+    }
+}
+
+
+public static void main(String[] args) {
+        //只需要关心具体建造者,无需关心产品内部构建流程。
+        //如果需要其他的复杂产品对象，只需要选择其他的建造者.
+        Builder builder = new ConcreteBuilder();
+        //把建造者注入指导者
+        Director director = new Director(builder);
+        //指导者负责流程把控
+        director.buildProduct();
+        // 建造者返回一个组合好的复杂产品对象
+        Product product = builder.buildProduct();
+    }
+</code></pre><h2 id="单例模式">单例模式</h2>
+<h3 id="定义">定义</h3>
+<p>确保一个类只有一个实例，并提供一个全局访问点。</p>
+<h3 id="注意点">注意点</h3>
+<p>多线程并发访问</p>
+<h3 id="应用">应用</h3>
+<p>1 需要频繁实例化然后销毁的对象。
+2 创建对象时耗时过多或者耗资源过多，但又经常用到的对象。
+3 有状态的工具类对象。
+4 频繁访问数据库或文件的对象。</p>
+<p>有许多对象我们只需要一个：</p>
+<ul>
+<li>线程池</li>
+<li>缓存</li>
+<li>对话框</li>
+<li>日志对象</li>
+<li>注册表对象</li>
+</ul>
+<h3 id="代码">代码</h3>
+<pre><code>class Solution {
+    /**
+     * @return: The same instance of this class every time
+     */
+
+    private Solution(){
+
+    }
+    private static class SingletonHolder {  
+        private static final Solution INSTANCE = new Solution();  
+    }  
+    public static  Solution getInstance() {
+        return SingletonHolder.INSTANCE; 
+    }
+}
+
+
+public static Singleton getInstance() {
+        //synchronized加锁同步会降低效率,这里先判断是否为空
+        //不为空则不需要加锁,提高程序效率
+    if (instance == null) {
+            synchronized (Singleton.class) {
+                if (instance == null) {
+                    instance = new Singleton();
+                }
+            }
+        }
+        return instance;
+}
+</code></pre><h2 id="命令模式">命令模式</h2>
+<h3 id="定义">定义</h3>
+<ul>
+<li>将请求封装成对象，以便使用不同的请求、日志、队列等来参数化其他对象。命令模式也支持撤销操作。</li>
+<li>把方法调用封装起来。</li>
+</ul>
+<h3 id="特点">特点</h3>
+<ul>
+<li>将 “动作的请求者” 从 “动作的执行者” 中解耦</li>
+<li>请求者可以是遥控器， 执行者是 各家厂商的某一个实例。</li>
+<li>被解耦的俩者通过命令对象来进行沟通，命令对象封装了接受者的一个或者一组动作。</li>
+</ul>
+<h3 id="应用">应用</h3>
+<ul>
+<li>遥控器API</li>
+<li>餐厅利用订单点餐</li>
+<li>队列请求</li>
+<li>日志请求</li>
+</ul>
+<h2 id="适配器模式">适配器模式</h2>
+<h3 id="定义">定义</h3>
+<p>适配器模式是将一个类的接口转换为客户期望的另一个类的接口，适配器可以让原本不兼容的类可以合作无间。
+<img src="http://www.hubwiz.com/course/5710cb2e08ce8b3d3a1430f1/img/adapter.png" alt="此处输入图片的描述"></p>
+<p>1.目标抽象角色(Target)：定义客户所期待的使用接口。(GVI接口)</p>
+<p>2.源角色(Adaptee)：需要被适配的接口。(HDMI接口)</p>
+<p>3.适配器角色(Adapter)：把源接口转换成符合要求的目标接口的设备。(HDMI-VGI转换器)</p>
+<p>4.客户端(client)：例子中指的VGI接口显示器。</p>
+<h3 id="特点">特点</h3>
+<ul>
+<li>转换接口。</li>
+<li>将不兼容的对象包装起来，使得兼容。</li>
+</ul>
+<h3 id="应用">应用</h3>
+<ul>
+<li>交流电适配器</li>
+<li>兼容现有库的代码</li>
+</ul>
+<pre><code>//HDMI接口，需要被适配的接口
+public interface HDMIPort {
+    void workByHDMI();
+}
+
+//VGI接口，客户端所期待的接口
+public interface VGIPort {
+    void workByVGI();
+}
+
+//将HDMI接口转换为VGI,这就是适配器
+public class HDMIToVGI implements VGIPort{
+
+    HDMIPort hdmiPort;
+
+    public HDMIToVGI(HDMIPort hdmiPort) {
+        this.hdmiPort = hdmiPort;
+    }
+    //将HDMI接口转换为VGI接口
+    @Override
+    public void workByVGI() {
+        hdmiPort.workByHDMI();
+    }
+}
+
+ public static void main(String[] args) {
+        //定义一个HDMI接口
+        HDMIPort hdmiPort = new HDMIPort() {
+            @Override
+            public void workByHDMI() {
+                //hdmi接口工作方式
+            }
+        };
+        //将HDMI接口转换为VGI接口
+        VGIPort vgiPort = new HDMIToVGI(hdmiPort);
+        //经过转换HDMI接口变成了VGI接口
+        vgiPort.workByVGI();
+    }
+</code></pre><h2 id="外观模式">外观模式</h2>
+<h3 id="定义">定义</h3>
+<p>为子系统中的一组统一的接口，用来访问子系统中的一群接口，
+定义了一个高层接口，这个接口使得这一子系统更加容易使用。</p>
+<h3 id="特点">特点</h3>
+<ul>
+<li>改变接口，简化接口。</li>
+<li>提供更直接简单的操作</li>
+<li>用户若有需要，也可以直接使用子系统的类</li>
+</ul>
+<h3 id="适配器模式和外观模式的区别">适配器模式和外观模式的区别</h3>
+<ul>
+<li>适配器模式的意图是 改变接口以符合用户期望。</li>
+<li>外观模式的意图是提供一个子系统的简化接口。</li>
+</ul>
+<pre><code>public class CPU {
+
+    public void startup(){
+        System.out.println(&quot;启动CPU&quot;);
+    }
+}
+
+public class Memory {
+
+    public void startup(){
+        System.out.println(&quot;启动内存&quot;);
+    }
+}
+
+public class Disk {
+
+    public void startup(){
+        System.out.println(&quot;启动硬盘&quot;);
+    }
+}
+
+
+//facade
+public class Computer {
+
+    CPU cpu;
+    Memory memory;
+    Disk disk;
+
+    public Computer(){
+        cpu = new CPU();
+        memory = new Memory();
+        disk = new Disk();
+    }
+
+    public void start(){
+        cpu.startup();
+        memory.startup();
+        disk.startup();
+    }
+}
+
+
+public static void main(String[] args) {
+        Computer computer = new Computer();
+        //启动computer是个很复杂的过程,我们并不需要知道其启动各个子系统的加载过程
+        //只需要调用computer为各个子系统提供统一的一个接口start()就可以启动computer了
+        computer.start();
+    }
+</code></pre><h2 id="模板方法模式">模板方法模式</h2>
+<h3 id="定义">定义</h3>
+<p>定义一个操作中的算法的骨架，而将步骤延迟到子类中。模板方法使得子类可以不改变一个算法的结构即可重定义算法的某些特定步骤</p>
+<h3 id="特点">特点</h3>
+<p>模板方法定义了一个算法的步骤，并允许子类为一个或多个方法提供实现。</p>
+<h3 id="钩子">钩子</h3>
+<ul>
+<li>被声明在抽象类中的方法，但只有空的或者默认的实现。</li>
+<li>当算法的这部分是可选的是，就使用钩子。</li>
+<li>钩子可以让子类能够有机会对模板方法中某些即将发生的步骤做出反应</li>
+<li>钩子也可以让子类有能力为抽象类做一些决定</li>
+</ul>
+<pre><code>//抽象模板类
+public abstract class AbstractSort {
+
+    public abstract void sort(int[] array);
+    //防止子类覆盖使用final修饰
+    public final void printArray(int[] array) {
+        sort(array);
+        for (int i = 0; i &lt; array.length; i++) {
+            System.out.println(array[i]);
+        }
+    }
+}
+
+
+//具体实现类
+public class QuickSort extends AbstractSort {
+    @Override
+    public void sort(int[] array) {
+        //使用快排算法实现
+    }
+}
+
+public class MergeSort extends AbstractSort {
+    @Override
+    public void sort(int[] array) {
+        //使用归并排序算法实现
+    }
+}
+
+public static void main(String[] args) {
+        int[] arr = {3,5,2,45,243,341,111,543,24};
+        //AbstractSort s = new MergeSort();
+        AbstractSort s = new QuickSort();
+        s.printArray(arr);
+    }
+</code></pre><h2 id="迭代器">迭代器</h2>
+<h3 id="定义">定义</h3>
+<ul>
+<li><p>提供一种方法顺序访问一个聚合对象中每个元素，而又不暴露内部的表示</p>
+</li>
+<li><p>封装“遍历每个集合内对象的过程”</p>
+</li>
+</ul>
+<h3 id="特点">特点</h3>
+<ul>
+<li>由不同的集合类型造成的遍历</li>
+<li>依赖一个名为迭代器的接口</li>
+<li>接口具有 havenext() 和next()方法。remove()方法可选</li>
+</ul>
+<h3 id="应用">应用</h3>
+<p>能够让客户遍历你的对象但又不可以窥视你存储对象的方式</p>
+<h2 id="组合模式">组合模式</h2>
+<h3 id="定义">定义</h3>
+<ul>
+<li>将对象组合成树形结构以表示“部分-整体”的层次结构。Composite使得用户对单个对象和组合对象的使用具有一致性。<h3 id="特点">特点</h3>
+</li>
+<li>在大多数情况下，我们可以忽略个别对象和对象组合的差别</li>
+<li>以单一责任设计原则换取透明性（个别对象和对象组合无差别）</li>
+</ul>
+<h2 id="状态模式">状态模式</h2>
+<h3 id="定义">定义</h3>
+<p>状态模式允许对象在内部状态改变时改变他的行为，对象看起来好像修改了它的类</p>
+<h3 id="特点">特点</h3>
+<ul>
+<li>状态机</li>
+<li>为每个状态封装一个状态类</li>
+<li>把每个状态的行为局部化到它自己的类中<h3 id="应用">应用</h3>
+</li>
+<li>糖果机</li>
+<li><p>游戏关卡</p>
+<h3 id="区别">区别</h3>
+<p>状态模式和策略模式的区别</p>
+</li>
+<li><p>意图不同</p>
+</li>
+</ul>
+<h2 id="策略模式">策略模式</h2>
+<h3 id="定义">定义</h3>
+<p>定义一系列的算法,把每一个算法封装起来, 并且使它们可相互替换。本模式使得算法可独立于使用它的客户而变化</p>
+<p>策略模式把对象本身和运算规则区分开来，其功能非常强大，因为这个设计模式本身的核心思想就是面向对象编程的多形性的思想。</p>
+<h3 id="作用">作用</h3>
+<p>在软件开发中也常常遇到类似的情况，实现某一个功能有多种算法或者策略，我们可以根据环境或者条件的不同选择不同的算法或者策略来完成该功能。</p>
+<h3 id="特点">特点</h3>
+<p>允许对象能够通过组合和委托来拥有不同的行为和算法。</p>
+<h3 id="应用">应用</h3>
+<ul>
+<li>一个菜单功能能够根据用户的“皮肤”首选项来决定是否采用水平的还是垂直的排列形式。同事可以灵活增加菜单那的显示样式</li>
+<li>出行旅游：我们可以有几个策略可以考虑：可以骑自行车，汽车，做火车，飞机。每个策略都可以得到相同的结果，但是它们使用了不同的资源。选择策略的依据是费用，时间，使用工具还有每种方式的方便程度 。</li>
+</ul>
+<h3 id="何时使用策略模式？">何时使用策略模式？</h3>
+<ul>
+<li>许多相关的类仅仅是行为有异</li>
+<li>需要使用一个算法的不同变体</li>
+<li>算法使用客户不应该知道的数据。可使用策略模式以避免暴露复杂的、与算法相关的数据结构。</li>
+<li>一个类定义了多种行为 , 并且这些行为在这个类的操作中以多个条件语句的形式出现</li>
+</ul>
+<h3 id="组成">组成</h3>
+<ul>
+<li><p>抽象策略角色：策略类，通常由一个接口或者抽象类实现。</p>
+</li>
+<li><p>具体策略角色：包装了相关的算法和行为。</p>
+</li>
+<li><p>环境角色：持有一个策略类的引用，最终给客户端用的。</p>
+</li>
+</ul>
+<h3 id="java代码实现">Java代码实现</h3>
+<pre><code>#定义一个Strategy接口，其中定义一个方法，用于计算。
+　
+　public interface Strategy
+{
+    public int calculate(int a, int b);
+
+}
+
+#定义具体的算法类，实现Strategy接口，算法类中的算法各自不同：加减乘等，但是外部调用形式符合接口的定义。
+//加法
+public class AddStrategy implements Strategy
+{
+
+    @Override
+    public int calculate(int a, int b)
+    {        
+        return a + b;
+    }
+
+}
+//减法
+public class SubtractStrategy implements Strategy
+{
+
+    @Override
+    public int calculate(int a, int b)
+    {
+
+        return a - b;
+    }
+
+}
+
+// 乘法
+public class MultiplyStrategy implements Strategy
+{
+
+    @Override
+    public int calculate(int a, int b)
+    {    
+        return a * b;
+    }
+
+}
+
+#定义具体的环境角色，持有Strategy接口的引用，并且有get和set方法可以完成策略更换。在环境角色中调用接口的方法完成动作。
+
+public class Environment
+{
+    private Strategy strategy;
+
+    public Environment(Strategy strategy)
+    {
+        this.strategy = strategy;
+    }
+
+    public Strategy getStrategy()
+    {
+        return strategy;
+    }
+
+    public void setStrategy(Strategy strategy)
+    {
+        this.strategy = strategy;
+    }
+
+    public int calculate(int a, int b)
+    {
+        return strategy.calculate(a, b);
+    }
+}
+
+#这样在Client外部调用时，只需向环境角色设置相应的算法类，然后就可以得到相应的结果。
+
+public class Client
+{
+    public static void main(String[] args)
+    {
+
+        AddStrategy addStrategy = new AddStrategy();
+        Environment environment = new Environment(addStrategy);        
+        System.out.println(environment.calculate(4, 3));
+
+        //减法
+        SubtractStrategy subStrategy = new SubtractStrategy();
+        environment.setStrategy(subStrategy);
+        System.out.println(environment.calculate(4, 3));
+
+        //乘法
+        MultiplyStrategy multiplyStrategy = new MultiplyStrategy();
+        environment.setStrategy(multiplyStrategy);
+        System.out.println(environment.calculate(4, 3));
+    }
+
+}
+</code></pre><h3 id="python-代码实现">Python 代码实现</h3>
+<pre><code>#!/usr/bin/python
+#环境角色
+class Duck:
+    def display(self):
+        pass
+
+    def setFlyBehavior(self,fb):
+        self.flyBehavior = fb
+
+    def setQuackBehavior(self,qb):
+        self.quackBehavior = qb
+
+    def performQuack(self):
+        self.quackBehavior.quack()
+
+    def performFly(self):
+        self.flyBehavior.fly()
+
+
+
+#抽象策略角色
+class FlyBehavior:
+    def fly(self):
+        pass
+#具体策略角色
+class FlyWithWings(FlyBehavior):
+    def fly(self):
+        print &quot;Fly with wings.&quot;
+#具体策略角色
+class FlyNoWay(FlyBehavior):
+    def fly(self):
+        print &quot;Fly no way.&quot;
+
+
+#抽象策略角色
+class QuackBehavior:
+    def quack(self):
+        pass
+#具体策略角色
+class Quack(QuackBehavior):
+    def quack(self):
+        print &quot;gua gua&quot;
+#具体策略角色
+class Squeak(QuackBehavior):
+    def quack(self):
+        print &quot;zhi zhi&quot;
+#具体策略角色
+class MuteQuack(QuackBehavior):
+    def quack(self):
+        print &quot;nothing&quot;
+
+
+#客户端
+class MallardDuck(Duck):
+    def __init__(self):
+        self.setFlyBehavior(FlyWithWings())
+        self.setQuackBehavior(Squeak())
+
+    def display(self):
+        print &quot;MallardDuck&quot;
+
+class RedheadDuck(Duck):
+    def __init__(self):
+        self.setFlyBehavior(FlyWithWings())
+        self.setQuackBehavior(Quack())
+
+    def display(self):
+        print &quot;RedheadDuck&quot;
+
+class RubberDuck(Duck):
+    def __init__(self):
+        self.setFlyBehavior(FlyNoWay())
+        self.setQuackBehavior(MuteQuack())
+
+    def display(self):
+        print &quot;RubberDuck&quot;
+
+class DecoyDuck(Duck):
+    def __init__(self):
+        self.setFlyBehavior(FlyWithWings())
+        self.setQuackBehavior(MuteQuack())
+
+    def display(self):
+        print &quot;DecoyDuck&quot;
+
+
+for n in MallardDuck(),RedheadDuck(),RubberDuck(),DecoyDuck():
+    n.display()
+    n.performFly()
+    n.performQuack()
+    print
+
+n.setFlyBehavior(FlyNoWay())
+n.setQuackBehavior(Quack())
+n.display()
+n.performFly()
+n.performQuack()
+</code></pre><h2 id="代理模式">代理模式</h2>
+<ul>
+<li>远程代理</li>
+<li>虚拟代理</li>
+</ul>
+<h3 id="定义">定义</h3>
+<ul>
+<li>代理模式为另一个对象提供一个替身或者占位符以控制对这个对象的访问。</li>
+</ul>
+<h3 id="应用">应用</h3>
+<ul>
+<li>控制对象访问</li>
+<li>java.long.reflect 动态代理</li>
+<li>防火墙代理</li>
+<li>智能引用代理</li>
+<li>缓存代理</li>
+<li>同步代理</li>
+<li>写入时复制代理（Copy-On-Write）</li>
+</ul>
+<h2 id="复合模式">复合模式</h2>
+<p>多个模式一起组合适用</p>
+<h2 id="mvc模式">MVC模式</h2>
+<ul>
+<li>模型是主题，视图和控制器都是观察者</li>
+<li>视图委托控制器处理用户行为，对于视图来说，控制器是策略。</li>
+<li>视图是GUI组件的组合</li>
+<li>使用适配器将模型适配为符合现有视图和控制器的需要的模型</li>
+</ul>
+<h3 id="model-模型">model 模型</h3>
+<ul>
+<li>模型实现数据模型和对数据的操纵</li>
+<li>模型对视图和控制器一无所知</li>
+</ul>
+<h3 id="view-视图">view  视图</h3>
+<ul>
+<li>UI</li>
+</ul>
+<h3 id="control-控制器">control 控制器</h3>
+<ul>
+<li>负责和模型和交互来传递用户请求</li>
+<li>将用户输入传递给模型作为动作</li>
+</ul>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871ed64d2f092c392ca4d45
+                 data-title=设计模式入门
+                 data-url=shejimoshi>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

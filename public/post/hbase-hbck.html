@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|HBase HBCK 简介</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> HBase HBCK 简介</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-04-03</p>
+            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
+            <hr/>
+            <h3 id="hbck是做什么的">hbck是做什么的</h3>
+<p>hbck 是一个检查和修复表，region一致性和完整性的工具</p>
+<h3 id="什么是region的一致性">什么是region的一致性</h3>
+<ul>
+<li>HDFS的region目录下的.regioninfo 文件 有效</li>
+<li>meta表行的数据和.regioninfo 文件的数据一致</li>
+<li>每个region部署在唯一的regionserver,并被分配给状态合适的master</li>
+</ul>
+<h3 id="hbck如何检查region的一致性">hbck如何检查region的一致性</h3>
+<p>region一致性是通过检查hbase:meta表，region server上部署的 region，HDFS上的.regioninfo 文件三者是否全部一致来判断的。</p>
+<h3 id="hcbk如何修复region的一致性">hcbk如何修复region的一致性</h3>
+<p>（region的一致性修复要求HBase在线以便hbck可以和master和regionserver沟通。）</p>
+<p>通过hbase:meta表和分配region来修复region的一致性</p>
+<p>（大多数region的一致性信息是短暂的）</p>
+<h3 id="什么是表的一致性">什么是表的一致性</h3>
+<p>扫描HDFS中表的每个region目录中的 .regioninfo 文件，每个表的一致性可以凭此来验证。</p>
+<h3 id="hbck如何检查表的一致性">hbck如何检查表的一致性</h3>
+<p>表的一致性是通过表的每一个region的所有可能rowkey来判断的。具体查看是否有空的，向后（不一致，过时）的region，region之间是否有空洞，region之间是否有重叠。</p>
+<h3 id="hcbk如何修复表的一致性">hcbk如何修复表的一致性</h3>
+<p>对于表的一致性修复：会扫描HDFS中表的每个region目录中的 .regioninfo 文件。</p>
+<p>如果有任何孤立的region（没有.regioninfo 文件）或者空洞，新的region就会被建立。</p>
+<p>向后的region和空的退化的region（endkey==startkey）会被清除。</p>
+<p>如果有任何重叠的region，一个新的region会被建立，并且所有数据都会合并到新的region。</p>
+<h3 id="hcbk如何修复表的完整性">hcbk如何修复表的完整性</h3>
+<p>（表的完整性修复仅仅需要通过HDFS离线完成，HBase的master和regionserver可以不必运行。）
+具体是通过改造hbase:meta表，合并和新建region来完成的</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871eb4ed2f092c392ca4d41
+                 data-title=HBase HBCK 简介
+                 data-url=hbase-hbck>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

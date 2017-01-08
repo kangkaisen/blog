@@ -1,0 +1,484 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Git基本命令</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Git基本命令</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-04-03</p>
+            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#git基础">git基础</a></li>
+<li><a href="#自动补全">自动补全</a></li>
+<li><a href="#git-配置">git 配置</a></li>
+<li><a href="#git是什么">git是什么</a></li>
+<li><a href="#建立仓库">建立仓库</a></li>
+<li><a href="#提交更新">提交更新</a></li>
+<li><a href="#忽略文件">忽略文件</a></li>
+<li><a href="#git-删除">git 删除</a></li>
+<li><a href="#移动文件">移动文件</a></li>
+<li><a href="#查看log">查看log</a></li>
+<li><a href="#查看-ignore-文件">查看 ignore 文件</a></li>
+<li><a href="#查看仓库状态">查看仓库状态</a></li>
+<li><a href="#git-diff">git diff</a></li>
+<li><a href="#git-checkout">git checkout</a></li>
+<li><a href="#git-分支">git 分支</a></li>
+<li><a href="#git-rebase">git rebase</a></li>
+<li><a href="#本地无法直接-git-push-时">本地无法直接 git push 时</a></li>
+<li><a href="#遇到冲突时的分支合并">遇到冲突时的分支合并</a></li>
+<li><a href="#改变和同步">改变和同步</a></li>
+<li><a href="#远程仓库">远程仓库</a></li>
+<li><a href="#git-fetch">git fetch</a></li>
+<li><a href="#git-tag">git tag</a></li>
+<li><a href="#git-patch">git patch</a></li>
+<li><a href="#git-查看某个文件所有历史版本">git 查看某个文件所有历史版本</a></li>
+<li><a href="#git-reset-hard-恢复">git reset --hard 恢复</a></li>
+<li><a href="#git-恢复单个文件的历史版本">git 恢复单个文件的历史版本</a></li>
+<li><a href="#代码回滚-撤销一个commit">代码回滚 撤销一个commit</a></li>
+<li><a href="#撤销-pull-操作">撤销 pull 操作</a></li>
+<li><a href="#修改最后一次提交">修改最后一次提交</a></li>
+<li><a href="#俩个commit-合为一个">俩个commit 合为一个</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="git基础">git基础</h3>
+<p>直接记录快照，而非差异比较
+近乎所有操作都是本地执行</p>
+<h4 id="时刻保持数据完整性">时刻保持数据完整性</h4>
+<p>在保存到 Git 之前，所有数据都要进行内容的校验和（checksum）计算，并将此结果作为数据的唯一标识和索引
+Git 使用 SHA-1 算法计算数据的校验和，通过对文件的内容或目录的结构计算出一个 SHA-1 哈希值，作为指纹字符串
+该字串由 40 个十六进制字符（0-9 及 a-f）组成
+所有保存在 Git 数据库中的东西都是用此哈希值来作索引的，而不是靠文件名。</p>
+<h4 id="文件的三种状态">文件的三种状态</h4>
+<p>在 Git 内都只有三种状态：已提交（committed），已修改（modified）和已暂存（staged）。</p>
+<p>已提交表示该文件已经被安全地保存在本地数据库中了；已修改表示修改了某个文件，但还没有提交保存；已暂存表示把已修改的文件放在下次提交时要保存的清单中。</p>
+<p>文件流转的三个工作区域：Git 的工作目录，暂存区域，以及本地仓库。</p>
+<p>.git 的目录是 Git 用来保存元数据和对象数据库的地方</p>
+<p>基本的 Git 工作流程如下：</p>
+<p>在工作目录中修改某些文件。
+对修改后的文件进行快照，然后保存到暂存区域。
+提交更新，将保存在暂存区域的文件快照永久转储到 Git 目录中。</p>
+<h3 id="自动补全">自动补全</h3>
+<pre><code>下载 Git 的源代码，进入 contrib/completion 目录
+cp git-completion.bash ~/.git-completion.bash
+source ~/.git-completion.bash
+</code></pre><h3 id="git-配置">git 配置</h3>
+<pre><code>$ git config --global user.name &quot;John Doe&quot;
+$ git config --global user.email johndoe@example.com
+$ git config --global core.editor emacs
+$ git config --global merge.tool vimdiff
+
+git help config
+</code></pre><h3 id="git是什么">git是什么</h3>
+<p>Git是分布式版本控制系统
+<img src="http://static.zybuluo.com/kangkaisen/s968pdwxuu4fo0w0srkuc1av/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202016-04-03%20%E4%B8%8B%E5%8D%8811.24.38.png" alt="屏幕快照 2016-04-03 下午11.24.38.png-289.6kB"></p>
+<h3 id="建立仓库">建立仓库</h3>
+<pre><code>#全局设置
+git config --global user.name &quot;kangkaisen&quot;
+git config --global user.email &quot;kangkaisen@live.com&quot;
+
+#创建版本库
+git init projectname
+
+# 克隆
+git clone [-b 分支名] git@github.com:michaelliao/gitskills.git [新目录名]
+</code></pre><h3 id="提交更新">提交更新</h3>
+<pre><code>工作目录下面的所有文件都不外乎这两种状态：已跟踪或未跟踪
+
+已跟踪的文件是指本来就被纳入版本控制管理的文件，在上次快照中有它们的记录，工作一段时间后，它们的状态可能是未更新，已修改或者已放入暂存区。
+
+只要在 “Changes to be committed” 这行下面的，就说明是已暂存状态。
+
+其实 git add 的潜台词就是把目标文件快照放入暂存区域，也就是 add file into staged area，同时未曾跟踪过的文件标记为需要跟踪
+
+出现在 “Changes not staged for commit” 这行下面，说明已跟踪文件的内容发生了变化，但还没有放到暂存区。要暂存这次更新，需要运行 git add 命令
+</code></pre><p><img src="http://static.zybuluo.com/kangkaisen/26zqabwawwmkdhe4r69pn9gm/git%20file%20status.png" alt="git file status.png-15.8kB"></p>
+<h3 id="忽略文件">忽略文件</h3>
+<p>.gitignore</p>
+<pre><code># 此为注释 – 将被 Git 忽略
+# 忽略所有 .a 结尾的文件
+*.a
+# 但 lib.a 除外
+!lib.a
+# 仅仅忽略项目根目录下的 TODO 文件，不包括 subdir/TODO
+/TODO
+# 忽略 build/ 目录下的所有文件
+build/
+# 会忽略 doc/notes.txt 但不包括 doc/server/arch.txt
+doc/*.txt
+# ignore all .txt files in the doc/ directory
+doc/**/*.txt
+</code></pre><h3 id="git-删除">git 删除</h3>
+<pre><code>
+git rm --cached readme.txt
+删除暂存区域但不删除当前工作目录
+</code></pre><h3 id="移动文件">移动文件</h3>
+<pre><code>git mv file_from file_to
+
+mv README.txt README
+git rm README.txt
+git add README
+
+
+git add -A .
+将批量移动的文件提交到暂存区
+</code></pre><h3 id="查看log">查看log</h3>
+<pre><code>git log 
+
+-p 选项展开显示每次提交的内容差异
+-2 则仅显示最近的两次更新
+
+git log --pretty=format:&quot;%h - %an, %ar : %s&quot;
+
+git log --oneline
+显示log简要信息
+
+git log --oneline -n3
+
+git log --stat
+显示log中哪些文件被更改了，以及每个文件相对的增删行数。
+
+git log --patch
+显示log中每次提交的具体改动
+
+git log --graph --all --decorate --oneline
+显示提交的分支演变
+</code></pre><h3 id="查看-ignore-文件">查看 ignore 文件</h3>
+<pre><code>git ls-files --others --ignored --exclude-standard
+</code></pre><h3 id="查看仓库状态">查看仓库状态</h3>
+<pre><code>## 仓库当前的状态
+git status
+
+## 查看修改内容
+git diff (filename)
+
+## 查看提交历史
+git log
+
+## 查看文件更改历史
+git log --pretty=oneline 文件名
+
+## 查看某个文件的某次修改详细信息
+git show log_id
+
+git log --oneline fail_on_empty -1
+</code></pre><h3 id="git-diff">git diff</h3>
+<pre><code>git diff
+显示您的工作目录和staged之间的差异.
+
+git diff --cached
+显示index和最近的commit之间的差异.
+
+git diff HEAD
+显示您的工作目录和最新的commit之间的差异
+
+git diff --word-diff
+按单词显示差异
+</code></pre><h3 id="git-checkout">git checkout</h3>
+<pre><code>git checkout这个命令有三个不同的作用：检出文件、检出提交和检出分支。
+</code></pre><h3 id="git-分支">git 分支</h3>
+<p>Git 中的分支实际上仅是一个包含所指对象校验和（40 个字符长度 SHA-1 字串）的文件，所以创建和销毁一个分支就变得非常廉价。说白了，新建一个分支就是向一个文件写入 41 个字节（外加一个换行符）</p>
+<pre><code>### 创建分支
+git branch dev
+
+### 切换分支
+git checkout dev
+
+### 创建并切换分支
+git checkout -b dev 
+
+git checkout -b KYLIN-1323 github/KYLIN-1323 
+
+
+### 命令查看当前分支
+git branch
+
+### 查看所有分支
+git branch -va
+
+### 合并指定分支到当前分支
+git merge dev  
+
+单线的历史分支不存在任何需要解决的分歧，所以这种合并过程可以称为快进（Fast forward）。
+
+### 删除分支
+git branch -d dev 
+
+git branch -D zerorow
+### 推送分支
+git push origin dev
+
+### 删除远程分支
+git push origin :serverfix
+</code></pre><h3 id="git-rebase">git rebase</h3>
+<pre><code>有了 rebase 命令，就可以把在一个分支里提交的改变移到另一个分支里重放一遍。
+
+衍合能产生一个更为整洁的提交历史
+
+git rebase --onto master server client
+取出 client 分支，找出 client 分支和 server 分支的共同祖先之后的变化，然后把它们在 master 上重演一遍
+
+$ git checkout master
+$ git merge client
+
+git rebase [主分支] [特性分支] 命令会先取出特性分支 server，然后在主分支 master 上重演：
+
+git rebase master server
+$ git checkout master
+$ git merge server
+
+如果把衍合当成一种在推送之前清理提交历史的手段，而且仅仅衍合那些尚未公开的提交对象，就没问题。如果衍合那些已经公开的提交对象，并且已经有人基于这些提交对象开展了后续开发工作的话，就会出现叫人沮丧的麻烦。
+</code></pre><h3 id="本地无法直接-git-push-时">本地无法直接 git push 时</h3>
+<p>git pull --rebase 后再push</p>
+<h3 id="遇到冲突时的分支合并">遇到冲突时的分支合并</h3>
+<p>任何包含未解决冲突的文件都会以未合并（unmerged）的状态列出。</p>
+<pre><code>git merge --abort
+</code></pre><h3 id="改变和同步">改变和同步</h3>
+<pre><code>## 把文件添加到仓库
+git add readme.txt
+
+git add -u
+## 把文件提交到仓库
+git commit -m &quot;wrote a readme file&quot;
+
+第一步是用git add把文件添加进去，实际上就是把文件修改添加到暂存区；
+第二步是用git commit提交更改，实际上就是把暂存区的所有内容提交到当前分支。
+
+## 版本回退
+git reset HEAD 文件名
+git reset --hard HEAD^
+git reset --hard 3628164
+git reset --hard origin/mt_1.5-staging
+
+## 丢弃工作区的修改
+git checkout -- readme.txt  
+
+命令git checkout --readme.txt意思就是，把readme.txt文件在工作区的修改全部撤销，这里有两种情况：
+
+一种是readme.txt自修改后还没有被放到暂存区，现在，撤销修改就回到和版本库一模一样的状态；
+
+一种是readme.txt已经添加到暂存区后，又作了修改，现在，撤销修改就回到添加到暂存区后的状态。
+
+## 删除
+git rm test.txt
+
+### 误删恢复
+git checkout -- test.txt
+
+## 创建SSH key
+ ssh-keygen -t rsa -C &quot;youremail@example.com&quot;
+ 在用户主目录里找到.ssh目录，里面有id_rsa和id_rsa.pub两个文件，这两个就是SSH Key的秘钥对，id_rsa是私钥，不能泄露出去，id_rsa.pub是公钥，可以放心地告诉任何人。
+## 关联远程库
+ git remote add origin git@github.com:michaelliao/learngit.git
+ 远程库的名字就是origin
+## 向远程推送修改
+ git push -u origin master 第一次
+ git push origin master
+
+## 保存工作现场
+git stash
+
+## 回到工作现场
+git stash pop
+
+## 查看远程库
+git remote
+
+git remote -v
+
+git remote rm origin
+## 从远程抓取分支
+git pull
+</code></pre><h3 id="远程仓库">远程仓库</h3>
+<pre><code>git remote -v
+
+git remote add [remote-name] git://github.com/paulboone/ticgit.git
+
+git remote show origin
+
+git remote rename pb paul
+
+git remote rm paul
+</code></pre><h3 id="git-fetch">git fetch</h3>
+<pre><code>git fetch [remote-name]
+
+git fetch --all
+</code></pre><h3 id="git-tag">git tag</h3>
+<pre><code>git tag
+
+git tag -l &#39;v1.4.2.*&#39;
+
+git tag -a v1.4 -m &#39;my version 1.4&#39;
+
+签署标签
+git tag -s v1.5 -m &#39;my signed 1.5 tag&#39;
+
+验证标签
+git tag -v v1.4.2.1
+
+git push origin v1.5
+</code></pre><h3 id="git-patch">git patch</h3>
+<pre><code>git checkout -b 分支名
+
+检查 patch 是否 没有冲突
+git apply --check fail_on_empty.patch
+
+
+生成patch
+
+git format-patch github-master --stdout &gt; KYLIN-1965.patch
+
+
+           Ignore changes in whitespace at EOL.
+
+       -b, --ignore-space-change
+           Ignore changes in amount of whitespace. This ignores whitespace at line end, and considers all other
+           sequences of one or more whitespace characters to be equivalent.
+
+       -w, --ignore-all-space
+
+git format-patch mt_1.5-staging --stdout &gt; KYLIN-1323.patch
+
+合入patch1
+git cherry-pick bd22e60
+
+
+合入patch2
+git am 0001-limit-log-function.patch
+
+git am -3 --ignore-whitespace
+</code></pre><h3 id="git-查看某个文件所有历史版本">git 查看某个文件所有历史版本</h3>
+<pre><code>git log --follow -p 文件名
+
+git show  356f6def9d3
+</code></pre><h3 id="git-reset-hard-恢复">git reset --hard 恢复</h3>
+<pre><code>git reflog
+
+git reset --hard 对应的commit。
+</code></pre><h3 id="git-恢复单个文件的历史版本">git 恢复单个文件的历史版本</h3>
+<pre><code>git log file
+
+记录下需要恢复的commit版本号：如 9aa51d89799716aa68cff3f30c26f8815408e926
+
+git reset 9aa51d89799716aa68cff3f30c26f8815408e926 file
+
+git commit -m &quot;llll&quot;
+</code></pre><h3 id="代码回滚-撤销一个commit">代码回滚 撤销一个commit</h3>
+<p>git revert可以用在公共分支上，git reset应该用在私有分支上。</p>
+<p>git revert当作撤销已经提交的更改，而git reset HEAD用来撤销没有提交的更改</p>
+<pre><code>
+想完全舍弃你没有提交的改动
+git reset --hard HEAD~2 舍弃最近俩次的提交
+
+
+Revert撤销一个提交的同时会创建一个新的提交
+git revert HEAD~2
+</code></pre><h3 id="撤销-pull-操作">撤销 pull 操作</h3>
+<pre><code>git reset --hard
+</code></pre><h3 id="修改最后一次提交">修改最后一次提交</h3>
+<pre><code>git commit -m &quot;cuboid.size.ratio&quot; --amend
+git push origin kangkaisen -f
+</code></pre><h3 id="俩个commit-合为一个">俩个commit 合为一个</h3>
+<pre><code>git rebase -i &lt;不變動的commit的SHA-1&gt;
+编辑 message 
+要合并的commit 前 输入 s
+wq 保存
+输入新的commit message
+
+rebase 历史记录的清晰
+</code></pre>
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871ebb1d2f092c392ca4d42
+                 data-title=Git基本命令
+                 data-url=git>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

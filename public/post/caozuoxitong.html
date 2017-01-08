@@ -1,0 +1,430 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|操作系统基础概念</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 操作系统基础概念</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-04-03</p>
+            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#计算机系统概述">计算机系统概述</a><ul>
+<li><a href="#基本构成">基本构成</a></li>
+<li><a href="#中断">中断</a></li>
+<li><a href="#多中断的处理方式">多中断的处理方式</a></li>
+<li><a href="#高速缓冲存储器">高速缓冲存储器</a></li>
+<li><a href="#存储器的层次结构">存储器的层次结构</a></li>
+<li><a href="#高速缓存的设计">高速缓存的设计</a></li>
+<li><a href="#io操作的三种技术">I/O操作的三种技术</a></li>
+</ul>
+</li>
+<li><a href="#操作系统概述">操作系统概述</a><ul>
+<li><a href="#操作系统的内核">操作系统的内核</a></li>
+<li><a href="#多道程序设计">多道程序设计</a></li>
+<li><a href="#实地址和虚地址">实地址和虚地址</a></li>
+<li><a href="#内存管理的任务">内存管理的任务</a></li>
+<li><a href="#操作系统的控制结构">操作系统的控制结构</a></li>
+</ul>
+</li>
+<li><a href="#进程">进程</a><ul>
+<li><a href="#进程状态">进程状态</a></li>
+<li><a href="#进程阻塞和挂起">进程阻塞和挂起</a></li>
+<li><a href="#进程抢占">进程抢占</a></li>
+<li><a href="#进程映像">进程映像</a></li>
+<li><a href="#交换">交换</a></li>
+<li><a href="#进程间通信">进程间通信</a></li>
+<li><a href="#进程控制块">进程控制块</a></li>
+<li><a href="#用户模式和内核模式">用户模式和内核模式</a></li>
+<li><a href="#创建新进程的步骤">创建新进程的步骤</a></li>
+<li><a href="#模式切换和进程切换的区别">模式切换和进程切换的区别</a></li>
+</ul>
+</li>
+<li><a href="#线程-和-进程的-区别-联系">线程 和 进程的 区别 联系</a><ul>
+<li><a href="#二者联系">⼆者联系：</a></li>
+<li><a href="#二者区别">⼆者区别：</a></li>
+<li><a href="#线程和进程的区别">线程和进程的区别</a></li>
+<li><a href="#多进程和多线程对比">多进程和多线程对比</a></li>
+</ul>
+</li>
+<li><a href="#互斥和同步">互斥和同步</a><ul>
+<li><a href="#临界区">临界区</a></li>
+<li><a href="#同步机制应遵循的准则">同步机制应遵循的准则</a></li>
+<li><a href="#pv">PV</a></li>
+<li><a href="#记录型信号量">记录型信号量</a></li>
+</ul>
+</li>
+<li><a href="#死锁和饥饿">死锁和饥饿</a><ul>
+<li><a href="#死锁的条件">死锁的条件</a></li>
+</ul>
+</li>
+<li><a href="#内存管理">内存管理</a><ul>
+<li><a href="#内部碎片和外部碎片">内部碎片和外部碎片</a></li>
+<li><a href="#逻辑地址相对地址和物理地址">逻辑地址、相对地址和物理地址</a></li>
+<li><a href="#页和帧">页和帧</a></li>
+<li><a href="#页和段">页和段</a></li>
+</ul>
+</li>
+<li><a href="#虚拟内存">虚拟内存</a><ul>
+<li><a href="#简单分页与虚拟分页">简单分页与虚拟分页</a></li>
+<li><a href="#页表项">页表项</a></li>
+<li><a href="#驻留集和工作集">驻留集和工作集</a></li>
+</ul>
+</li>
+<li><a href="#单处理器调度">单处理器调度</a></li>
+<li><a href="#多处理器和实时调度">多处理器和实时调度</a></li>
+<li><a href="#io管理和磁盘调度">I/O管理和磁盘调度</a></li>
+<li><a href="#文件管理">文件管理</a><ul>
+<li><a href="#文件组织">文件组织</a></li>
+<li><a href="#文件分配方法">文件分配方法</a></li>
+</ul>
+</li>
+</ul>
+<!-- toc stop -->
+<h2 id="计算机系统概述">计算机系统概述</h2>
+<h3 id="基本构成">基本构成</h3>
+<ul>
+<li>CPU </li>
+<li>内存 </li>
+<li>I/O </li>
+<li>系统总线</li>
+</ul>
+<h3 id="中断">中断</h3>
+<p>中断：其他模块（I/O，存储器）中断 处理器正常处理过程 的机制。</p>
+<ul>
+<li>程序中断</li>
+<li>时钟中断</li>
+<li>硬件失效中断</li>
+<li>I/O中断</li>
+</ul>
+<h3 id="多中断的处理方式">多中断的处理方式</h3>
+<p>第一种方法是当正在处理一个中断时，禁止再发生中断。</p>
+<p>第二种方法是定义中断优先级，允许高优先级的中断打断低优先级的中断
+处理器的运行。</p>
+<h3 id="高速缓冲存储器">高速缓冲存储器</h3>
+<p>高速缓冲存储器是比主存小而快的存储器，用以协调主存跟处理器，作为最接近储存地址的缓冲区。</p>
+<h3 id="存储器的层次结构">存储器的层次结构</h3>
+<p>考虑因素： 价格， 容量， 访问时间</p>
+<p>速度： 寄存器 &gt; 高速缓存 &gt; 内存 &gt; 磁盘</p>
+<h3 id="高速缓存的设计">高速缓存的设计</h3>
+<ul>
+<li>高速缓存大小</li>
+<li>置换算法</li>
+<li>块大小</li>
+<li>写策略</li>
+<li>映射函数</li>
+<li>高速缓存的级数</li>
+</ul>
+<h3 id="i-o操作的三种技术">I/O操作的三种技术</h3>
+<ul>
+<li>可编程I/O</li>
+<li>中断驱动I/O</li>
+<li>直接存储访问</li>
+</ul>
+<h2 id="操作系统概述">操作系统概述</h2>
+<ul>
+<li>作为 用户/计算机 接口</li>
+<li>作为资源管理器</li>
+</ul>
+<p>批处理（多道程序设计）的目标 : 充分使用处理器
+分时的目标： 减少响应时间</p>
+<h3 id="操作系统的内核">操作系统的内核</h3>
+<p>内核是操作系统最常使用的部分，它存在于主存中并在特权模式下运行，响应进程调度和设备中断。</p>
+<h3 id="多道程序设计">多道程序设计</h3>
+<p>多道程序设计是一种处理操作，它在两个或多个程序间交错处理每个进程。</p>
+<h3 id="实地址和虚地址">实地址和虚地址</h3>
+<p>虚地址指的是存在于虚拟内存中的地址，它有时候在磁盘中有时候在主存中。 实地址指的是主存中的地址。</p>
+<h3 id="内存管理的任务">内存管理的任务</h3>
+<ul>
+<li>进程隔离</li>
+<li>内存自动分配和管理</li>
+<li>支持模块化程序设计</li>
+<li>保护和访问控制</li>
+<li>长期存储</li>
+</ul>
+<h3 id="操作系统的控制结构">操作系统的控制结构</h3>
+<p>操作系统维持着四种不同类型的表：内存，I/O，文件，进程</p>
+<p>内存，I/O和文件是代表进程而被管理的，因此进程表必须有对这些资源的直接或者间接引用。</p>
+<h2 id="进程">进程</h2>
+<p>进程是操作系统对正在运行的程序的一种抽象</p>
+<h3 id="进程状态">进程状态</h3>
+<ul>
+<li>运行态：该进程正在执行</li>
+<li>就绪态：进程做好了准备，只要有机会就开始执行 </li>
+<li>阻塞态：进程在某些事件发生前不能执行，如I/O操作完成</li>
+<li>新建态：刚刚创建的进程，操作系统还没有把它加入到可执行进程组中</li>
+<li>退出态：操作系统从可执行进程组中释放出的进程，或者是因为它自身停止了，或者是因为某种原因被取消</li>
+</ul>
+<h3 id="进程阻塞和挂起">进程阻塞和挂起</h3>
+<p>阻塞：进程是否等待一个事件
+挂起：进程是否已经被换出内存</p>
+<h3 id="进程抢占">进程抢占</h3>
+<p>处理器为了执行另外的进程而终止当前正在执行的进程，这就叫进程抢占</p>
+<h3 id="进程映像">进程映像</h3>
+<ul>
+<li>用户数据</li>
+<li>用户程序</li>
+<li>系统栈</li>
+<li>进程控制块</li>
+</ul>
+<h3 id="交换">交换</h3>
+<p>交换是指把主存中某个进程的一部分或者全部内容转移到磁盘。当主存中没有处于就绪态的进程时，操作系统就把一个阻塞的进程换出到磁盘中的挂起队列，从而使另一个进程可以进入主存执行</p>
+<h3 id="进程间通信">进程间通信</h3>
+<p>1、管道：管道是单向的、先进先出的、无结构的、固定大小的字节流，它把一个进程的标准输出和另一个进程的标准输入连接在一起。写进程在管道的尾端写入数据，读进程在管道的道端读出数据。数据读出后将从管道中移走，其它读进程都不能再读到这些数据。管道提供了简单的流控制机制。进程试图读空管道时，在有数据写入管道前，进程将一直阻塞。同样地，管道已经满时，进程再试图写管道，在其它进程从管道中移走数据之前，写进程将一直阻塞。</p>
+<p>无名管道：管道是一种半双工的通信方式，数据只能单向流动，而且只能在具有亲缘关系（通常是指父子进程关系）的进程间使用。</p>
+<p>命名管道：命名管道也是半双工的通信方式，在文件系统中作为一个特殊的设备文件而存在，但是它允许无亲缘关系进程间的通信。当共享管道的进程执行完所有的I/O操作以后，命名管道将继续保存在文件系统中以便以后使用。</p>
+<p>2、信号量：信号量是一个计数器，可以用来控制多个进程对共享资源的访问。它常作为一种锁机制，防止某进程正在访问共享资源时，其它进程也访问该资源。因此，主要作为进程间以及同一进程内不同线程之间的同步手段。</p>
+<p>3、消息队列：消息队列是由消息的链表，存放在内核中并由消息队列标识符标识。消息队列克服了信号传递信息少、管道只能承载无格式字节流以及缓冲区大小受限等缺点。</p>
+<p>4、信号：信号是一种比较复杂的通信方式，用于通知接收进程某个事件已经发生。</p>
+<p>5、共享内存：共享内存就是映射一段能被其它进程所访问的内存，这段共享内存由一个进程创建，但多个进程都可以访问。共享内存是最快的IPC方式，它是针对其它进程间通信方式运行效率低而专门设计的。它往往与其它通信机制（如信号量）配合使用，来实现进程间的同步和通信。</p>
+<p>6、套接字：套接字也是一种进程间通信机制，与其它通信机制不同的是，它可用于不同机器间的进程通信。</p>
+<h3 id="进程控制块">进程控制块</h3>
+<p>进程标识，处理器状态信息，进程控制信息</p>
+<h3 id="用户模式和内核模式">用户模式和内核模式</h3>
+<p>用户模式下可以执行的指令和访问的内存区域都受到限制。这是为了防止操作系统受到破坏或者修改。而在内核模式下则没有这些限制，从而使它能够完成其功能</p>
+<h3 id="创建新进程的步骤">创建新进程的步骤</h3>
+<ol>
+<li>给新进程分配一个唯一的进程标识号。</li>
+<li>给进程分配空间。</li>
+<li>初始化进程控制块。</li>
+<li>设置正确的连接。</li>
+<li>创建或扩充其他的数据结构。</li>
+</ol>
+<h3 id="模式切换和进程切换的区别">模式切换和进程切换的区别</h3>
+<p>发生模式切换可以不改变当前正处于运行态的进程的状态。发生进程切换时，一个正在执行的进程被中断，操作系统指定另一个进程为运行态。进程切换需要保存更多的状态信息。</p>
+<h2 id="线程-和-进程的-区别-联系">线程 和 进程的 区别 联系</h2>
+<p>进程是系统进⾏资源分配和调度的基本独⽴单位；
+线程是进程的⼀个实体，是CPU调度和分派的基本单位。</p>
+<h3 id="⼆者联系：">⼆者联系：</h3>
+<ol>
+<li><p>⼀个线程只属于⼀个进程，⼀个进程中可以有多个线程 </p>
+</li>
+<li><p>资源分配给进程，进程内的线程共享该进程的资源 </p>
+</li>
+<li><p>多进程和多线程在执⾏过程中都需要⼀定的同步机制进⾏同步</p>
+</li>
+</ol>
+<h3 id="⼆者区别：">⼆者区别：</h3>
+<ol>
+<li><p>本质：进程是拥有系统资源的基本单位，⽽线程是调度和分配的基本单位 </p>
+</li>
+<li><p>地址空间和其他资源：进程间（⼀般）相互独⽴，⽽同⼀进程的各线程之间共享进程资源 </p>
+</li>
+<li><p>通信：进程间通信根据场景不同会使⽤不同的通信⼿段(信号、共享内存、管道、套接字等）,⽽线程通常使⽤共享内存⽅式并需要⼀定的同步与互斥⼿段辅助 </p>
+</li>
+<li><p>系统开销：进程在创建和切换的开销远⼤于线程，但进程相⽐线程更加健壮（因为进程之间相互独⽴）</p>
+</li>
+</ol>
+<h3 id="线程和进程的区别">线程和进程的区别</h3>
+<p>从概念上：
+进程：一个程序对一个数据集的动态执行过程，是分配资源的基本单位。
+线程：一个进程内的基本调度单位。线程的划分尺度小于进程，一个进程包含一个或者更多的线程。</p>
+<p>从执行过程中来看：
+进程：拥有独立的内存单元，而多个线程共享内存，从而提高了应用程序的运行效率。
+线程：每一个独立的线程，都有一个程序运行的入口、顺序执行序列、和程序的出口。但是线程不能够独立的执行，必须依存在应用程序中，由应用程序提供多个线程执行控制。</p>
+<p>从逻辑角度来看（重要区别）：
+多线程的意义在于一个应用程序中，有多个执行部分可以同时执行。但是，操作系统并没有将多个线程看做多个独立的应用，来实现进程的调度和管理及资源分配。</p>
+<h3 id="多进程和多线程对比">多进程和多线程对比</h3>
+<h4 id="数据共享、同步">数据共享、同步</h4>
+<p>继承数据是分开的:共享复杂，需要用IPC;同步简单。</p>
+<p>多线程共享进程数据：共享简单；同步复杂。</p>
+<h4 id="内存、cpu">内存、CPU</h4>
+<p>进程占用内存多，切换复杂，CPU利用率低</p>
+<p>线程占用内存少，切换简单，CPU利用率高</p>
+<h4 id="创建销毁、切换">创建销毁、切换</h4>
+<p>进程创建销毁、切换复杂，速度慢 </p>
+<p>线程创建销毁、切换简单，速度快 </p>
+<h4 id="编程调试">编程调试</h4>
+<p>进程编程简单，调试简单</p>
+<p>线程编程复杂，调试复杂</p>
+<h4 id="可靠性">可靠性</h4>
+<p>进程间不会相互影响 </p>
+<p>一个线程挂掉将导致整个进程挂掉</p>
+<h4 id="分布式">分布式</h4>
+<p>进程适应于多核、多机分布 ；如果一台机器不够，扩展到多台机器比较简单
+线程适应于多核分布</p>
+<p>1 需要频繁创建销毁的优先用线程。</p>
+<p>2 需要进行大量计算的优先使用线程。</p>
+<p>3 强相关的处理用线程，弱相关的处理用进程。</p>
+<p>4 可能扩展到多机分布的用进程，多核分布的用线程。
+5 都满足需求的情况下，用你最熟悉、最拿手的方式。</p>
+<h2 id="互斥和同步">互斥和同步</h2>
+<h3 id="临界区">临界区</h3>
+<p>临界资源就是一次只允许一个进程访问的资源
+<strong>所谓临界区就是进程中访问临界资源的那段程序代码</strong></p>
+<h3 id="同步机制应遵循的准则">同步机制应遵循的准则</h3>
+<p>空闲让进，忙则等待，有限等待，让权等待</p>
+<h3 id="pv">PV</h3>
+<p>P,V操作是因为Dijkstra是荷兰人，P指的是荷兰语中的“proberen”，意为“测试”，而V指的是荷兰语中的“verhogen”，意为“增加”。</p>
+<pre><code>P(S):   while (S≤0)  {do nothing};
+
+        S=S-1;
+
+V(S):   S=S+1;
+</code></pre><p>但是这样明显违反了“让权等待的原则”</p>
+<h3 id="记录型信号量">记录型信号量</h3>
+<pre><code>P(S):   S.value = S.value-1;
+    if(S.value &lt; 0)
+       block(S,Q);
+
+V(S):   S.value = S.value + 1;
+    if(S.value &lt;= 0)
+        wakeup(S,Q);
+</code></pre><p>P操作相当于“等待一个信号”，而V操作相当于“发送一个信号”，在实现同步过程中，V操作相当于发送一个信号说合作者已经完成了某项任务，在实现互斥过程中，V操作相当于发送一个信号说临界资源可用了。实际上，在实现互斥时，P,V操作相当于申请资源和释放资源。</p>
+<p><strong>同步与互斥实现的P,V操作虽然都是成对出现，但是互斥的P,V操作出现在同一个进程的程序里，而同步的P,V操作出现在不同进程的程序中</strong></p>
+<h2 id="死锁和饥饿">死锁和饥饿</h2>
+<ul>
+<li>死锁预防</li>
+<li>死锁避免</li>
+<li>死锁检测</li>
+</ul>
+<h3 id="死锁的条件">死锁的条件</h3>
+<ul>
+<li>互斥</li>
+<li>占有且等待</li>
+<li>非抢占 </li>
+<li>循环等待</li>
+</ul>
+<h2 id="内存管理">内存管理</h2>
+<h3 id="内部碎片和外部碎片">内部碎片和外部碎片</h3>
+<p>内部碎片是指由于被装入的数据块小于分区大小而导致的分区内部所浪费的空间。外部碎片是与动态分区相关的一种现象，它是指在所有分区外的存储空间会变成越来越多的碎片的</p>
+<h3 id="逻辑地址、相对地址和物理地址">逻辑地址、相对地址和物理地址</h3>
+<p>逻辑地址是指与当前数据在内存中的物理分配地址无关的访问地址，在执行对内存的访问之前必须把它转化成物理地址。</p>
+<p>相对地址是逻辑地址的一个特例，是相对于某些已知点（通常是程序的开始处）的存储单元。</p>
+<p>物理地址或绝对地址是数据在主存中的实际位置。</p>
+<h3 id="页和帧">页和帧</h3>
+<p>在分页系统中，进程和磁盘上存储的数据被分成大小固定相等的小块，叫做页。而主存被分成了同样大小的小块，叫做帧。一页恰好可以被装入一帧中。</p>
+<h3 id="页和段">页和段</h3>
+<p>分段是细分用户程序的另一种可选方案。采用分段技术，程序和相关的数据被划分成一组段。尽管有一个最大段长度，但并不需要所有的程序的所有段的长度都相等</p>
+<h2 id="虚拟内存">虚拟内存</h2>
+<h3 id="简单分页与虚拟分页">简单分页与虚拟分页</h3>
+<p>简单分页：一个程序中的所有的页都必须在主存储器中程序才能正常运行，除非使用覆盖技术。</p>
+<p>虚拟内存分页：不是程序的每一页都必须在主存储器的帧中来使程序运行，页在需要的时候进行读取。</p>
+<h3 id="页表项">页表项</h3>
+<ul>
+<li>帧号：用来表示主存中的页来按顺序排列的号码。 </li>
+<li>存在位（P）：表示这一页是否当前在主存中。 </li>
+<li>修改位（M）：表示这一页在放进主存后是否被修改过。</li>
+</ul>
+<h3 id="驻留集和工作集">驻留集和工作集</h3>
+<p>一个进程的驻留集是指当前在主存中的这个进程的页的个数。</p>
+<p>一个进程的工作集是指这个进程最近被使用过的页的个数。</p>
+<h2 id="单处理器调度">单处理器调度</h2>
+<ul>
+<li>短程调度</li>
+<li>中程调度</li>
+<li>长程调度</li>
+</ul>
+<h2 id="多处理器和实时调度">多处理器和实时调度</h2>
+<h2 id="i-o管理和磁盘调度">I/O管理和磁盘调度</h2>
+<h2 id="文件管理">文件管理</h2>
+<h3 id="文件组织">文件组织</h3>
+<ul>
+<li>堆</li>
+<li>顺序文件</li>
+<li>索引顺序文件</li>
+<li>索引文件</li>
+<li>直接或者散列文件</li>
+</ul>
+<h3 id="文件分配方法">文件分配方法</h3>
+<ul>
+<li>连续文件</li>
+<li>链接文件</li>
+<li>索引文件</li>
+</ul>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871ecded2f092c392ca4d44
+                 data-title=操作系统基础概念
+                 data-url=caozuoxitong>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

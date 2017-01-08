@@ -1,0 +1,484 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|阿里云ECS的Hadoop2.6.0|Zookeeper3.4.6|Hbase0.98.13集群搭建</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 阿里云ECS的Hadoop2.6.0|Zookeeper3.4.6|Hbase0.98.13集群搭建</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-04-10</p>
+            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
+            <hr/>
+            <p>今天小梦从阿里云ECS裸机开始给大家一步一步演示一下Hadoop2.6.0|Zookeeper3.4.6|Hbase；0.98.13集群搭建。</p>
+<!-- toc -->
+<ul>
+<li><a href="#1修改hostname">1：修改hostname</a></li>
+<li><a href="#2挂载数据盘">2:挂载数据盘</a></li>
+<li><a href="#3修改etchosts">3：修改/etc/hosts</a></li>
+<li><a href="#4ssh免密码登录">4:SSH免密码登录</a></li>
+<li><a href="#5安装jdk17">5:安装JDK1.7</a></li>
+<li><a href="#6安装maven只在kks1节点上安装即可">6:安装maven:(只在kks1节点上安装即可)</a></li>
+<li><a href="#7下载hadoop">7：下载Hadoop</a></li>
+<li><a href="#8修改hadoop-envsh">8:修改hadoop-env.sh</a></li>
+<li><a href="#9core-sitexml">9:core-site.xml</a></li>
+<li><a href="#10hdfs-sitexml">10:hdfs-site.xml</a></li>
+<li><a href="#11yarn-sitexml">11:yarn-site.xml</a></li>
+<li><a href="#12mapred-sitexml">12:mapred-site.xml</a></li>
+<li><a href="#13slaves">13:slaves</a></li>
+<li><a href="#14fairschedulerxml">14:fairscheduler.xml</a></li>
+<li><a href="#15yarn-envsh">15:yarn-env.sh</a></li>
+<li><a href="#16复制到其余主机">16:复制到其余主机</a></li>
+<li><a href="#17启动集群">17：启动集群</a></li>
+<li><a href="#18zookeeper安装">18：zookeeper安装</a></li>
+<li><a href="#19在data目录下创建myid文件">19:在data目录下创建myid文件</a></li>
+<li><a href="#20在conf目录下建立zoocfg文件">20：在conf目录下建立zoo.cfg文件</a></li>
+<li><a href="#21在每个节点上启动zookeeper">21：在每个节点上启动zookeeper</a></li>
+<li><a href="#22hbase安装">22：Hbase安装</a></li>
+<li><a href="#23hbase-envsh">23：hbase-env.sh</a></li>
+<li><a href="#24hbase-sitexml">24：hbase-site.xml</a></li>
+<li><a href="#25regionservers">25：regionservers</a></li>
+<li><a href="#26复制到其他节点">26：复制到其他节点</a></li>
+<li><a href="#27启动集群">27：启动集群</a></li>
+</ul>
+<!-- toc stop -->
+<p>我的集群情况如下：
+依次是公网IP，内网IP，hostname，HDFS节点，HBase节点，ZK，Yarn节点</p>
+<pre><code>120.24.83.53  10.169.132.145 kks1 namenode hmatser zookeeper ResourceManager
+120.24.50.76  10.45.162.55 kks2  datanode  regionserver zookeeper  NodeManager
+120.24.50.27 10.45.162.0  kks3   datanode regionserver zookeeper    NodeManager SecondaryNameNode
+120.24.51.109  10.45.165.59 kks4 datanode regionserver NodeManager
+</code></pre><h3 id="1：修改hostname">1：修改hostname</h3>
+<pre><code>vim /etc/sysconfig/network
+修改：HOSTNAME=kks1
+sudo hostname kks1
+
+重启即可。
+</code></pre><h3 id="2-挂载数据盘">2:挂载数据盘</h3>
+<pre><code>fdisk -l
+fdisk /dev/xvdb
+依次输入“n”，“p” “1”，两次回车，“wq&quot;
+fdisk -l
+
+mkfs.ext3 /dev/xvdb1
+echo &#39;/dev/xvdb1 /mnt ext3 defaults 0 0&#39; &amp;gt;&amp;gt; /etc/fstab
+mount -a
+df -h
+</code></pre><h3 id="3：修改-etc-hosts">3：修改/etc/hosts</h3>
+<pre><code>vim /etc/hosts
+10.169.132.145 kks1
+10.45.162.55 kks2
+10.45.162.0 kks3
+10.45.165.59 kks4
+</code></pre><h3 id="4-ssh免密码登录">4:SSH免密码登录</h3>
+<pre><code>A为本地主机(即用于控制其他主机的机器) ;
+B为远程主机(即被控制的机器Server), 假如ip为172.24.253.2 ;
+A和B的系统都是Linux
+
+在A上的命令:
+# ssh-keygen -t rsa (连续三次回车,即在本地生成了公钥和私钥,不设置密码)
+# ssh root@172.24.253.2 &quot;mkdir .ssh;chmod 0700 .ssh&quot; (需要输入密码， 注:必须将.ssh的权限设为700)
+# scp ~/.ssh/id_rsa.pub root@172.24.253.2:.ssh/id_rsa.pub (需要输入密码)
+
+ssh root@kks1 &quot;mkdir .ssh;chmod 0700 .ssh&quot;
+scp ~/.ssh/id_rsa.pub root@kks1:.ssh/id_rsa.pub
+在B上的命令:
+# touch /root/.ssh/authorized_keys (如果已经存在这个文件, 跳过这条)
+# chmod 600 ~/.ssh/authorized_keys (# 注意： 必须将~/.ssh/authorized_keys的权限改为600, 该文件用于保存ssh客户端生成的公钥，可以修改服务器的ssh服务端配置文件/etc/ssh/sshd_config来指定其他文件名）
+# cat /root/.ssh/id_rsa.pub &amp;gt;&amp;gt; /root/.ssh/authorized_keys (将id_rsa.pub的内容追加到 authorized_keys 中, 注意不要用 &amp;gt; ，否则会清空原有的内容，使其他人无法使用原有的密钥登录)
+</code></pre><h3 id="5-安装jdk17">5:安装JDK1.7</h3>
+<pre><code>yum install java-1.7.0-openjdk-devel.x86_64 -y
+</code></pre><h3 id="6-安装maven-只在kks1节点上安装即可-">6:安装maven:(只在kks1节点上安装即可)</h3>
+<pre><code>wget http://ftp.tsukuba.wide.ad.jp/software/apache/maven/maven-3/3.3.1/binaries/apache-maven-3.3.1-bin.tar.gz
+maven下载到home目录下，则运行：
+echo export PATH=&#39;$PATH&#39;:/home/maven/bin &amp;gt;&amp;gt; /etc/profile
+配置好环境变量后，运行：source /etc/profile
+运行：mvn --version，如系统打印maven版本信息，则配置成功
+</code></pre><h3 id="7：下载hadoop">7：下载Hadoop</h3>
+<pre><code>wget http://apache.cs.utah.edu/hadoop/common/hadoop-2.6.0/hadoop-2.6.0.tar.gz
+</code></pre><h3 id="8-修改hadoop-envsh">8:修改hadoop-env.sh</h3>
+<pre><code>export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.79.x86_64
+export HADOOP_PID_DIR=/var/hadoop/pids
+</code></pre><p><strong>注1：为了避免以后 sbin/stop-dfs.sh等命令失效，强烈建议设置HADOOP_PID_DIR</strong></p>
+<p><strong>注2：以后所有配置的目录尽量在启动集群前都建立好。</strong></p>
+<h3 id="9-core-sitexml">9:core-site.xml</h3>
+<pre><code>&lt;configuration&gt;
+&lt;property&gt;
+&lt;name&gt;fs.defaultFS&lt;/name&gt;
+&lt;value&gt;hdfs://kks1:8020&lt;/value&gt;
+&lt;/property&gt;
+&lt;/configuration&gt;
+</code></pre><h3 id="10-hdfs-sitexml">10:hdfs-site.xml</h3>
+<pre><code>&lt;configuration&gt;
+
+&lt;property&gt;
+&lt;name&gt;dfs.namenode.name.dir&lt;/name&gt;
+&lt;value&gt;file:///home/hadoop/hdfs/name&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+&lt;name&gt;dfs.datanode.data.dir&lt;/name&gt;
+&lt;value&gt;file:///home/hadoop/hdfs/data&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+&lt;name&gt;dfs.namenode.secondary.http-address&lt;/name&gt;
+&lt;value&gt;kks3:9001&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;/configuration&gt;
+</code></pre><h3 id="11-yarn-sitexml">11:yarn-site.xml</h3>
+<pre><code>&lt;configuration&gt;
+
+&lt;!-- Site specific YARN configuration properties --&gt;
+&lt;property&gt;
+&lt;description&gt;The hostname of the RM.&lt;/description&gt;
+&lt;name&gt;yarn.resourcemanager.hostname&lt;/name&gt;
+&lt;value&gt;kks1&lt;/value&gt;
+&lt;/property&gt;    
+
+&lt;property&gt;
+&lt;description&gt;The address of the applications manager interface in the RM.&lt;/description&gt;
+&lt;name&gt;yarn.resourcemanager.address&lt;/name&gt;
+&lt;value&gt;${yarn.resourcemanager.hostname}:8032&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+&lt;description&gt;The address of the scheduler interface.&lt;/description&gt;
+&lt;name&gt;yarn.resourcemanager.scheduler.address&lt;/name&gt;
+&lt;value&gt;${yarn.resourcemanager.hostname}:8030&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+&lt;description&gt;The http address of the RM web application.&lt;/description&gt;
+&lt;name&gt;yarn.resourcemanager.webapp.address&lt;/name&gt;
+&lt;value&gt;${yarn.resourcemanager.hostname}:8088&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+&lt;description&gt;The https adddress of the RM web application.&lt;/description&gt;
+&lt;name&gt;yarn.resourcemanager.webapp.https.address&lt;/name&gt;
+&lt;value&gt;${yarn.resourcemanager.hostname}:8090&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+&lt;name&gt;yarn.resourcemanager.resource-tracker.address&lt;/name&gt;
+&lt;value&gt;${yarn.resourcemanager.hostname}:8031&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+&lt;description&gt;The address of the RM admin interface.&lt;/description&gt;
+&lt;name&gt;yarn.resourcemanager.admin.address&lt;/name&gt;
+&lt;value&gt;${yarn.resourcemanager.hostname}:8033&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+&lt;description&gt;The class to use as the resource scheduler.&lt;/description&gt;
+&lt;name&gt;yarn.resourcemanager.scheduler.class&lt;/name&gt;
+&lt;value&gt;org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+&lt;name&gt;yarn.scheduler.fair.allocation.file&lt;/name&gt;
+&lt;value&gt;/home/hadoop/etc/hadoop/fairscheduler.xml&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+&lt;name&gt;yarn.nodemanager.local-dirs&lt;/name&gt;
+&lt;value&gt;/home/hadoop/yarn/local&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+&lt;description&gt;Whether to enable log aggregation&lt;/description&gt;
+&lt;name&gt;yarn.log-aggregation-enable&lt;/name&gt;
+&lt;value&gt;true&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+&lt;description&gt;Where to aggregate logs to.&lt;/description&gt;
+&lt;name&gt;yarn.nodemanager.remote-app-log-dir&lt;/name&gt;
+&lt;value&gt;/tmp/logs&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+&lt;name&gt;yarn.nodemanager.resource.memory-mb&lt;/name&gt;
+&lt;value&gt;30720&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+&lt;name&gt;yarn.nodemanager.resource.cpu-vcores&lt;/name&gt;
+&lt;value&gt;12&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+&lt;description&gt;the valid service name should only contain a-zA-Z0-9_ and can not start with numbers&lt;/description&gt;
+&lt;name&gt;yarn.nodemanager.aux-services&lt;/name&gt;
+&lt;value&gt;mapreduce_shuffle&lt;/value&gt;
+&lt;/property&gt;
+&lt;/configuration&gt;
+</code></pre><h3 id="12-mapred-sitexml">12:mapred-site.xml</h3>
+<pre><code>&lt;configuration&gt;
+
+&lt;!-- MR YARN Application properties --&gt;
+
+&lt;property&gt;
+&lt;name&gt;mapreduce.framework.name&lt;/name&gt;
+&lt;value&gt;yarn&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;!-- jobhistory properties --&gt;
+&lt;property&gt;
+&lt;name&gt;mapreduce.jobhistory.address&lt;/name&gt;
+&lt;value&gt;kks2:10020&lt;/value&gt;
+&lt;description&gt;MapReduce JobHistory Server IPC host:port&lt;/description&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+&lt;name&gt;mapreduce.jobhistory.webapp.address&lt;/name&gt;
+&lt;value&gt;kks2:19888&lt;/value&gt;
+&lt;description&gt;MapReduce JobHistory Server Web UI host:port&lt;/description&gt;
+&lt;/property&gt;
+
+&lt;/configuration&gt;
+</code></pre><h3 id="13-slaves">13:slaves</h3>
+<pre><code>kks2
+kks3
+kks4
+</code></pre><h3 id="14-fairschedulerxml">14:fairscheduler.xml</h3>
+<pre><code>&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;allocations&gt;
+
+  &lt;queue name=&quot;infrastructure&quot;&gt;
+      &lt;minResources&gt;102400 mb, 50 vcores &lt;/minResources&gt;
+          &lt;maxResources&gt;153600 mb, 100 vcores &lt;/maxResources&gt;
+              &lt;maxRunningApps&gt;200&lt;/maxRunningApps&gt;
+                  &lt;minSharePreemptionTimeout&gt;300&lt;/minSharePreemptionTimeout&gt;
+                      &lt;weight&gt;1.0&lt;/weight&gt;
+                          &lt;aclSubmitApps&gt;root,yarn,search,hdfs&lt;/aclSubmitApps&gt;
+                            &lt;/queue&gt;
+
+   &lt;queue name=&quot;tool&quot;&gt;
+         &lt;minResources&gt;102400 mb, 30 vcores&lt;/minResources&gt;
+               &lt;maxResources&gt;153600 mb, 50 vcores&lt;/maxResources&gt;
+                  &lt;/queue&gt;
+
+   &lt;queue name=&quot;sentiment&quot;&gt;
+         &lt;minResources&gt;102400 mb, 30 vcores&lt;/minResources&gt;
+               &lt;maxResources&gt;153600 mb, 50 vcores&lt;/maxResources&gt;
+                  &lt;/queue&gt;
+
+&lt;/allocations&gt;
+</code></pre><h3 id="15-yarn-envsh">15:yarn-env.sh</h3>
+<pre><code>export YARN_PID_DIR=/var/hadoop/pids
+</code></pre><h3 id="16-复制到其余主机">16:复制到其余主机</h3>
+<pre><code>scp -r hadoop root@kks2:/home
+scp -r hadoop root@kks3:/home
+scp -r hadoop root@kks4:/home
+</code></pre><h3 id="17：启动集群">17：启动集群</h3>
+<pre><code>注意：所有操作均在Hadoop部署目录下进行。
+
+在kks1上，对其进行格式化，并启动：
+bin/hdfs namenode -format
+
+sbin/hadoop-daemon.sh start namenode
+
+在kks1上，启动所有datanode
+sbin/hadoop-daemons.sh start datanode
+
+启动YARN：
+sbin/start-yarn.sh
+
+至此，Hadoop 搭建完毕。 可用jps命令查看jvm进程。
+
+以后关闭，停闭集群可以使用以下命令：
+sbin/stop-dfs.sh
+
+sbin/start-dfs.sh
+
+sbin/start-yarn.sh
+
+sbin/stop-yarn.sh
+</code></pre><h3 id="18：zookeeper安装">18：zookeeper安装</h3>
+<pre><code>wget http://mirrors.cnnic.cn/apache/zookeeper/zookeeper-3.4.6/zookeeper-3.4.6.tar.gz
+
+tar -zvxf zookeeper-..jar
+cd zookeeper 目录
+mkdir data
+mkdir datalog
+</code></pre><h3 id="19-在data目录下创建myid文件">19:在data目录下创建myid文件</h3>
+<pre><code>在kks1,kks2,kks3上依次为1,2,3。
+</code></pre><h3 id="20：在conf目录下建立zoocfg文件">20：在conf目录下建立zoo.cfg文件</h3>
+<pre><code># The number of milliseconds of each tick
+tickTime=2000
+# The number of ticks that the initial
+# synchronization phase can take
+initLimit=10
+# The number of ticks that can pass between
+# sending a request and getting an acknowledgement
+syncLimit=5
+# the directory where the snapshot is stored.
+# do not use /tmp for storage, /tmp here is just
+# example sakes.
+dataDir=/home/zookeeper/data
+dataLogDir=/home/zookeeper/datalog
+# the port at which the clients will connect
+clientPort=2181
+# the maximum number of client connections.
+# increase this if you need to handle more clients
+#maxClientCnxns=60
+#
+# Be sure to read the maintenance section of the
+# administrator guide before turning on autopurge.
+#
+# http://zookeeper.apache.org/doc/current/zookeeperAdmin.html#sc_maintenance
+#
+# The number of snapshots to retain in dataDir
+#autopurge.snapRetainCount=3
+# Purge task interval in hours
+# Set to &quot;0&quot; to disable auto purge feature
+#autopurge.purgeInterval=1
+server.1=kks1:2888:3888
+server.2=kks2:2888:3888
+server.3=kks3:2888:3888
+</code></pre><h3 id="21：在每个节点上启动zookeeper">21：在每个节点上启动zookeeper</h3>
+<pre><code>bin/zkServer.sh stop
+bin/zkServer.sh start
+bin/zkServer.sh status 查看节点状态
+</code></pre><h3 id="22：hbase安装">22：Hbase安装</h3>
+<pre><code>wget http://mirrors.koehn.com/apache/hbase/0.98.13/hbase-0.98.13-hadoop2-bin.tar.gz
+</code></pre><h3 id="23：hbase-envsh">23：hbase-env.sh</h3>
+<pre><code>vim hbase-env.sh
+export HBASE_MANAGES_ZK=false
+export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.79.x86_64
+export HBASE_PID_DIR=/var/hadoop/pids
+</code></pre><h3 id="24：hbase-sitexml">24：hbase-site.xml</h3>
+<pre><code>&lt;configuration&gt;
+&lt;property&gt;
+&lt;name&gt;hbase.rootdir&lt;/name&gt;
+&lt;value&gt;hdfs://kks1:8020/hbase&lt;/value&gt;
+&lt;/property&gt;
+&lt;property&gt;
+&lt;name&gt;hbase.cluster.distributed&lt;/name&gt;
+&lt;value&gt;true&lt;/value&gt;
+&lt;/property&gt;
+&lt;property&gt;
+ &lt;name&gt;hbase.zookeeper.property.clientPort&lt;/name&gt;
+  &lt;value&gt;2181&lt;/value&gt;
+   &lt;/property&gt; 
+   &lt;property&gt;
+   &lt;name&gt;hbase.zookeeper.quorum&lt;/name&gt;
+   &lt;value&gt;kks1,kks2,kks3&lt;/value&gt;
+   &lt;/property&gt;
+   &lt;property&gt;
+   &lt;name&gt;zookeeper.session.timeout&lt;/name&gt;
+   &lt;value&gt;120000&lt;/value&gt;
+   &lt;/property&gt;
+   &lt;property&gt;
+   &lt;name&gt;hbase.zookeeper.property.dataDir&lt;/name&gt;
+   &lt;value&gt;/home/hbase/data&lt;/value&gt;
+   &lt;/property&gt;
+&lt;/configuration&gt;
+</code></pre><h3 id="25：regionservers">25：regionservers</h3>
+<pre><code>kks2
+kks3
+kks4
+</code></pre><h3 id="26：复制到其他节点">26：复制到其他节点</h3>
+<pre><code>scp -r hbase root@kks4:/home
+</code></pre><h3 id="27：启动集群">27：启动集群</h3>
+<pre><code>bin/start-hbase.sh
+
+bin/stop-hbase.sh
+</code></pre><p>至此HBase集群搭建完毕。</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871f116d2f092c392ca4d4c
+                 data-title=阿里云ECS的Hadoop2.6.0|Zookeeper3.4.6|Hbase0.98.13集群搭建
+                 data-url=aliyun>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,516 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|HBase 基本概念</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> HBase 基本概念</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-04-08</p>
+            <p>分类: <a href="../tag/未分类.html" target="_blank" >未分类</a></p>
+            <hr/>
+            <p>注：以下图片均来自互联网</p>
+<!-- toc -->
+<ul>
+<li><a href="#hbase是什么">HBase是什么</a></li>
+<li><a href="#hbase-vs-hdfs">HBase VS HDFS</a></li>
+<li><a href="#hbase-vs-rdbms">HBase VS RDBMS</a><ul>
+<li><a href="#rdbms的优点">RDBMS的优点</a></li>
+<li><a href="#rdbms的缺陷">RDBMS的缺陷</a></li>
+<li><a href="#列式存储">列式存储</a></li>
+</ul>
+</li>
+<li><a href="#hbase-特性">Hbase 特性</a></li>
+<li><a href="#hbase架构">Hbase架构</a><ul>
+<li><a href="#client">Client</a></li>
+<li><a href="#zookeeper">Zookeeper</a></li>
+<li><a href="#master">Master</a></li>
+<li><a href="#region-server">Region Server</a></li>
+</ul>
+</li>
+<li><a href="#hbase数据模型">HBase数据模型</a><ul>
+<li><a href="#row-key">Row Key</a></li>
+<li><a href="#column-family">Column Family</a></li>
+<li><a href="#column">Column</a></li>
+<li><a href="#version-number">Version Number</a></li>
+<li><a href="#value-cell">Value (Cell)</a></li>
+</ul>
+</li>
+<li><a href="#hbase物理模型">Hbase物理模型</a><ul>
+<li><a href="#keyvalue格式">KeyValue格式</a></li>
+<li><a href="#hfile格式">HFile格式</a></li>
+</ul>
+</li>
+<li><a href="#hbase-一致性模型">HBase 一致性模型</a></li>
+<li><a href="#hbase-容错性">HBase 容错性</a><ul>
+<li><a href="#master容错">Master容错</a></li>
+<li><a href="#regionserver容错">RegionServer容错</a></li>
+<li><a href="#zookeeper容错">Zookeeper容错</a></li>
+</ul>
+</li>
+<li><a href="#hbase支持的操作">HBase支持的操作</a></li>
+<li><a href="#write-ahead-log-wal">Write-Ahead-Log （WAL）</a></li>
+<li><a href="#hbase应用">Hbase应用</a><ul>
+<li><a href="#何时使用hbase">何时使用Hbase</a></li>
+<li><a href="#hbase-不适用场景">Hbase 不适用场景</a></li>
+<li><a href="#hbase应用场景">Hbase应用场景</a></li>
+</ul>
+</li>
+<li><a href="#hbase编程">HBase编程</a></li>
+<li><a href="#hbase-schema-设计">HBase Schema 设计</a></li>
+<li><a href="#高级特性">高级特性</a><ul>
+<li><a href="#过滤器-filter">过滤器 Filter</a></li>
+<li><a href="#计数器">计数器</a></li>
+<li><a href="#协处理器">协处理器</a></li>
+</ul>
+</li>
+<li><a href="#hbase-核心概念">Hbase 核心概念</a><ul>
+<li><a href="#lsm-树">LSM 树</a></li>
+<li><a href="#split">split</a></li>
+<li><a href="#compaction">compaction</a></li>
+<li><a href="#flush">flush</a></li>
+</ul>
+</li>
+<li><a href="#region-定位">Region 定位</a></li>
+<li><a href="#meta-表">META 表</a></li>
+</ul>
+<!-- toc stop -->
+<h2 id="hbase是什么">HBase是什么</h2>
+<p>HBase构建在 HDFS 之上的分布式列式键值存储系统。
+HBase内部管理的文件全部存储在HDFS中。</p>
+<p>![Hadoop.jpg-39.3kB][1]</p>
+<h2 id="hbase-vs-hdfs">HBase VS HDFS</h2>
+<p>HDFS适合批处理场景</p>
+<ul>
+<li>不支持数据随机查找</li>
+<li>不适合增量数据处理</li>
+<li>不支持数据更新</li>
+</ul>
+<h2 id="hbase-vs-rdbms">HBase VS RDBMS</h2>
+<p>![hbase-rdbms.jpg-25.5kB][2]</p>
+<p>范式化和反范式化
+事务(单行：多行ACID)
+索引(RowKey: 健全索引)</p>
+<h3 id="rdbms的优点">RDBMS的优点</h3>
+<ul>
+<li>SQL</li>
+<li>索引</li>
+<li>事务</li>
+<li>轻量</li>
+<li>久经考验</li>
+</ul>
+<h3 id="rdbms的缺陷">RDBMS的缺陷</h3>
+<ul>
+<li>高并发读写的瓶颈</li>
+<li>可扩展性的限制</li>
+<li>事务一致性的负面影响</li>
+</ul>
+<h3 id="列式存储">列式存储</h3>
+<p>列式存储概念出现的基础：对于特定的查询，不是所有值都是必需的。</p>
+<ul>
+<li>以列为单位聚合数据，然后将列值顺序地存入磁盘</li>
+<li>数据类型一致，数据特征相似，更利于压缩</li>
+<li>大量降低系统I/O</li>
+</ul>
+<p>![20141115094556515.png-50.3kB][3]</p>
+<h2 id="hbase-特性">Hbase 特性</h2>
+<ul>
+<li>容量巨大
+单表可以有百亿行，百万列</li>
+<li>面向列</li>
+<li>稀疏性
+空值不占用存储空间</li>
+<li>扩展性
+由HDFS决定。
+热扩展</li>
+<li>高可靠性<ul>
+<li>WAL和Replication机制</li>
+<li>HDFS</li>
+<li>ZooKeeper</li>
+</ul>
+</li>
+<li>高性能<ul>
+<li>LSM数据结构</li>
+<li>Rowkey有序排列</li>
+</ul>
+</li>
+<li>无模式</li>
+<li>数据多版本</li>
+<li>数据类型单一    </li>
+<li>TTL</li>
+</ul>
+<h2 id="hbase架构">Hbase架构</h2>
+<p>![52297ef305db9.jpg-500.2kB][4]</p>
+<h3 id="client">Client</h3>
+<ul>
+<li>包含访问 HBase 的接口，并维护 cache 来加快对 HBase 的访问</li>
+<li>通过RPC机制和Master，Region Server通信</li>
+</ul>
+<h3 id="zookeeper">Zookeeper</h3>
+<ul>
+<li>保证任何时候，集群中只有一个 master </li>
+<li>存贮所有 Region 的寻址入口  </li>
+<li>实时监控 Region server 的上线和下线信息。并实时通知给 Master </li>
+<li>存储 HBase 元数据信息 </li>
+<li>HBase中可以启动多个HMaster，通过Zookeeper的Master Election机制保证总有一个Master运行</li>
+</ul>
+<h3 id="master">Master</h3>
+<ul>
+<li>为 Region server 分配 region </li>
+<li>负责 Region server 的负载均衡  </li>
+<li>发现挂掉的 Region server 并重新分配其上的 region </li>
+<li>负责表的建立，删除等操作</li>
+</ul>
+<p>(由于master只维护表和region的元数据，而不参与表数据IO的过程，master下线仅导致所有元数据的修改被冻结(无法创建删除表，无法修改表的schema，无法进行region的负载均衡，无法处理region上下线，无法进行region的合并，唯一例外的是region的split可以正常进行，因为只有region server参与)，表的数据读写还可以正常进行。
+因此master下线短时间内对整个hbase集群没有影响。)</p>
+<h3 id="region-server">Region Server</h3>
+<ul>
+<li>Region server 维护 region ，处理对这些 region 的 IO 请求  </li>
+<li>Region server 负责切分在运行过程中变得过大的 region </li>
+<li>Region Server 提供了行锁</li>
+</ul>
+<p>![21103732-a31b01647de0446a90ca4138d4d22eea.png-134.8kB][5]</p>
+<p>HRegionServer:HRegion:HStore = Column Family
+HStore:</p>
+<ul>
+<li>MemStore:用户数据首先写入MemStore。 (<strong>flush操作</strong>)</li>
+<li>StoreFile:Hfile  (<strong>compact操作  split操作</strong>)
+<strong>Hbase 只有增加数据，所有更新和删除都是在 compact 过程中进行的。
+用户写操作只要写入内存就可以立即返回，保证I/O高性能。</strong></li>
+</ul>
+<p><strong>这台rs上的所有region共享相同的HLog files。
+知道到目前为止，哪些数据已经被持久化了。</strong></p>
+<p><strong>每个 update（或者说edit）都会
+被写到 log ，当通知客户端成功后， rs 把数据再加载到内存中。</strong></p>
+<h2 id="hbase数据模型">HBase数据模型</h2>
+<p>![t01486bbafeff6db16e.png-26.9kB][6]</p>
+<p>![shell.png-265.5kB][7]</p>
+<h3 id="row-key">Row Key</h3>
+<p>行键，Table的主键，Table中的记录按照Row Key排序。类型为Byte array </p>
+<ul>
+<li>不宜过长</li>
+<li>分布均匀</li>
+</ul>
+<h3 id="column-family">Column Family</h3>
+<p>列簇，Table在水平方向有一个或者多个Column Family组成，一个Column Family中可以由任意多个Column组成</p>
+<h3 id="column">Column</h3>
+<p>列 格式为：familyName:columnName。 
+列名称是编码在cell中的。
+不同的cell可以拥有不同的列。</p>
+<h3 id="version-number">Version Number</h3>
+<p>版本号。默认值是系统时间戳。类型为long</p>
+<h3 id="value-cell-">Value (Cell)</h3>
+<p>具体的值。类型为Byte array </p>
+<h2 id="hbase物理模型">Hbase物理模型</h2>
+<h3 id="keyvalue格式">KeyValue格式</h3>
+<pre><code>{HBASE_HMOE}/bin/hbase hfile -p -f /hbase/data/default/kks1/68639b7c80a31bf91448d26bb7af17b7/cf/74e43a51ebd14007870ac58658330aeb
+</code></pre><pre><code>
+K: 1/cf:age/1445860350861/Put/vlen=2/mvcc=0 V: 20
+K: 1/cf:city/1445860381005/Put/vlen=4/mvcc=0 V: xian
+K: 1/cf:name/1445860341592/Put/vlen=10/mvcc=0 V: kangkaisen
+K: 2/cf:age/1445860401501/Put/vlen=3/mvcc=0 V: 200
+K: 2/cf:city/1445860411217/Put/vlen=7/mvcc=0 V: beijing
+K: 2/cf:name/1445860390752/Put/vlen=4/mvcc=0 V: kang
+K: 3/cf:age/1445860419363/Put/vlen=4/mvcc=0 V: 2000
+K: 3/cf:name/1445860428949/Put/vlen=6/mvcc=0 V: llllll
+K: 4/cf:age/1446016552833/Put/vlen=2/mvcc=0 V: 23
+K: 4/cf:city/1446016565367/Put/vlen=4/mvcc=0 V: xian
+K: 5/cf:city/1446016578471/Put/vlen=3/mvcc=0 V: xan
+K: 6/cf:age/1446016593194/Put/vlen=2/mvcc=0 V: 24
+K: 7/cf:name/1446016604500/Put/vlen=8/mvcc=0 V: xiaoming
+</code></pre><p>![此处输入图片的描述][8]</p>
+<h3 id="hfile格式">HFile格式</h3>
+<pre><code>{HBASE_HOME}/bin/hbase hfile -m -f /hbase/data/default/kks1/68639b7c80a31bf91448d26bb7af17b7/cf/74e43a51ebd14007870ac58658330aeb
+</code></pre><pre><code>Block index size as per heapsize: 392
+reader=/hbase/data/default/kks1/68639b7c80a31bf91448d26bb7af17b7/cf/74e43a51ebd14007870ac58658330aeb,
+    compression=none,
+    cacheConf=CacheConfig:disabled,
+    firstKey=1/cf:age/1445860350861/Put,
+    lastKey=3/cf:name/1445860428949/Put,
+    avgKeyLen=18,
+    avgValueLen=5,
+    entries=8,
+    length=1211
+Trailer:
+    fileinfoOffset=448,
+    loadOnOpenDataOffset=343,
+    dataIndexCount=1,
+    metaIndexCount=0,
+    totalUncomressedBytes=1123,
+    entryCount=8,
+    compressionCodec=NONE,
+    uncompressedDataIndexSize=31,
+    numDataIndexLevels=1,
+    firstDataBlockOffset=0,
+    lastDataBlockOffset=0,
+    comparatorClassName=org.apache.hadoop.hbase.KeyValue$KeyComparator,
+    majorVersion=2,
+    minorVersion=3
+Fileinfo:
+    BLOOM_FILTER_TYPE = ROW
+    DELETE_FAMILY_COUNT = \x00\x00\x00\x00\x00\x00\x00\x00
+    EARLIEST_PUT_TS = \x00\x00\x01P\xA3\xFD\xF7X
+    KEY_VALUE_VERSION = \x00\x00\x00\x01
+    LAST_BLOOM_KEY = 3
+    MAJOR_COMPACTION_KEY = \x00
+    MAX_MEMSTORE_TS_KEY = \x00\x00\x00\x00\x00\x00\x00\x00
+    MAX_SEQ_ID_KEY = 10
+    TIMERANGE = 1445860341592....1445860428949
+    hfile.AVG_KEY_LEN = 18
+    hfile.AVG_VALUE_LEN = 5
+    hfile.LASTKEY = \x00\x013\x02cfname\x00\x00\x01P\xA3\xFFL\x95\x04
+Mid-key: \x00\x011\x02cfage\x00\x00\x01P\xA3\xFE\x1B\x8D\x04
+Bloom filter:
+    BloomSize: 8
+    No of Keys in bloom: 3
+    Max Keys for bloom: 6
+    Percentage filled: 50%
+    Number of chunks: 1
+    Comparator: RawBytesComparator
+Delete Family Bloom filter:
+    Not present
+</code></pre><p>![HFilev1.png-66.6kB][9]</p>
+<p>![a112.png-80.5kB][10]</p>
+<p>物理上，表是按列族分开存储的，每个 Column Family 存储在 HDFS 上的一个单独文件中(因此最好将具有共同I/O特性的列放在一个 Column Family中)</p>
+<p>HBase 为每个值维护了多级索引，即： <strong>RowKey, column family, column name, timestamp</strong></p>
+<p><strong>Table 中的所有行都按照 RowKey 的字典序排列</strong></p>
+<p>Table 在行的方向上分割为多个Region
+![hbase 表结构.jpg-135.3kB][11]</p>
+<p>Region 按大小分割的，每个表开始只有一个 region ，随着数据增多， region 不断增大，当增大到一个阀值的时候，region就会等分会两个新的region，之后会有越来越多的region</p>
+<p><strong>Region 是 HBase 中分布式存储和负载均衡的最小单元</strong>,Region 实际上是rowkey 排序后的按规则分割的连续的存储空间,不同Region分布到不同RegionServer上</p>
+<p>![17345043259.jpg-28kB][12]</p>
+<p><strong>Region 虽然是分布式存储的最小单元，但并不是存储的最小单元。</strong> </p>
+<ol>
+<li>Region 由一个或者多个 Store 组成，每个 Store 保存一个columns family  </li>
+<li>每个 Strore 又由一个 MemStore 和 0 至多个 StoreFile 组成  </li>
+<li>MemStore 存储在内存中， StoreFile 存储在 HDFS 上。</li>
+</ol>
+<p>![21103732-a31b01647de0446a90ca4138d4d22eea.png-134.8kB][13]</p>
+<h2 id="hbase-一致性模型">HBase 一致性模型</h2>
+<p>HBase 是强一致性的。</p>
+<ul>
+<li>WAL</li>
+<li>行操作的存取操作是原子的。</li>
+</ul>
+<h2 id="hbase-容错性">HBase 容错性</h2>
+<h3 id="master容错">Master容错</h3>
+<ul>
+<li>Zookeeper重新选择一个新的Master</li>
+<li>无Master过程中,数据读取仍照常进行</li>
+<li>无master过程中,region切分、负载均衡等无法进行</li>
+</ul>
+<h3 id="regionserver容错">RegionServer容错</h3>
+<ul>
+<li>定时向Zookeeper汇报心跳</li>
+<li>Master将该RegionServer上的Region重新分配到其他RegionServer上</li>
+<li>WAL由Master进行分割并派送给新的RegionServer</li>
+</ul>
+<h3 id="zookeeper容错">Zookeeper容错</h3>
+<ul>
+<li>Zookeeper是一个可靠地服务</li>
+<li>一般配置3或5个Zookeeper实例</li>
+</ul>
+<h2 id="hbase支持的操作">HBase支持的操作</h2>
+<ul>
+<li>所有操作均基于Rowkey</li>
+<li>支持CRUD 和SCAN</li>
+<li>没有内置join操作，可以使用MapReduce解决。</li>
+</ul>
+<h2 id="write-ahead-log-（wal）">Write-Ahead-Log （WAL）</h2>
+<ul>
+<li>用户每次写入 MemStore 的同时，也会写一份数据到HLOG文件中。只有当写入成功后才通知客户端该操作成功。</li>
+<li>每个RegionServer只有一个HLOG文件</li>
+<li>HLOG文件定期会滚动更新，并删除旧的文件（已持久化到StoreFile中的数据）</li>
+<li>日志文件回放 集群启动时或服务失效时</li>
+<li>日志拆分
+##Hbase应用</li>
+</ul>
+<h3 id="何时使用hbase">何时使用Hbase</h3>
+<ul>
+<li>键值对的数据存储</li>
+<li>有序的数据存储</li>
+<li>存储大量数据(PB级数据)且能保证良好的访问性能</li>
+<li>高并发写入，瞬间写入量很大 </li>
+<li>业务场景简单(无交叉列，交叉表，事务， 连接等)</li>
+<li>可以优雅的数据扩展</li>
+</ul>
+<h3 id="hbase-不适用场景">Hbase 不适用场景</h3>
+<p>• 事务
+• join、group by等关系查询不计算
+• 不按rowkey查询数据
+• 高并发随机读
+• 低延迟随机读</p>
+<h3 id="hbase应用场景">Hbase应用场景</h3>
+<ul>
+<li>淘宝指数</li>
+<li>淘宝交易历史记录查询系统</li>
+<li>FB消息系统（聊天系统，邮件系统）
+一个较小的临时数据集，是经常变化的
+一个不断增加的数据集，是很少被访问的</li>
+<li>搜索引擎应用</li>
+<li>增量数据存储
+OpenTSDB
+FB Like按钮</li>
+<li>内容推荐引擎系统：搜狐</li>
+<li>用户模型服务：电商行业</li>
+</ul>
+<h2 id="hbase编程">HBase编程</h2>
+<ul>
+<li>Native Java API </li>
+<li>HBase Shell </li>
+<li>Thrift Gateway (多语言编程)</li>
+<li>REST Gateway </li>
+<li>MapReduce </li>
+</ul>
+<h2 id="hbase-schema-设计">HBase Schema 设计</h2>
+<p>重点是RowKey设计</p>
+<h2 id="高级特性">高级特性</h2>
+<h3 id="过滤器-filter">过滤器 Filter</h3>
+<p>Scan.setFilter
+所有的过滤器都在服务端生效,叫做谓词下推。
+数据仍然需要从硬盘读进RegionServer,过滤器在RegionServer里发挥作用
+过滤器也可以自定义</p>
+<p>![20130917172215593-43.4kB][14]</p>
+<h3 id="计数器">计数器</h3>
+<p>如果没有计数器，用户需要针对一行加锁，读取一行的值，然后再加上特定的值，然后再写回并释放锁，尤其是当客户端进程崩溃之后，尚未释放的锁需要等待超时恢复，这样在一个高负载的系统中会引起灾难性后果。</p>
+<p>计数器就是读取并修改（Read and modify），保证一次客户端操作的原子性。</p>
+<p>将列作为计数器
+通过Check-And-Save保证写操作原子性
+便于给某些在线应用提供实时统计功能</p>
+<h3 id="协处理器">协处理器</h3>
+<p>允许用户在region服务器上运行自己的代码，也就是允许用户执行region级操作。
+用途： 辅助索引， 权限控制</p>
+<ul>
+<li>observer
+类似触发器或者回调函数
+在特定事件发生后执行</li>
+<li>endpoint
+类似存储过程
+通过RPC,调用regionserver端的计算过程</li>
+</ul>
+<h2 id="hbase-核心概念">Hbase 核心概念</h2>
+<h3 id="lsm-树">LSM 树</h3>
+<p>![20130508094524405-27kB][15]</p>
+<p>RDBMS 通常是寻道型的
+LSM树 属于传输型的
+LSM树 会使用日志文件</p>
+<p>为长期具有很高记录更新频率的文件提供低成本的索引机制
+<strong>LSM 树 最适合 索引插入 比 查询操作 更常见的操作</strong>
+<strong>主题思想是划分不同等级的树</strong>
+LSM树和B+树相比，LSM树牺牲了部分读性能，用来大幅提高写性能。</p>
+<p>LSM树的设计思想非常朴素：<strong>将对数据的修改增量保持在内存中，达到指定的大小限制后将这些修改操作顺序批量写入磁盘</strong>，不过读取的时候稍微麻烦，需要合并磁盘中历史数据和内存中最近修改操作，所以写入性能大大提升，读取时可能需要先看是否命中内存，否则需要访问较多的磁盘文件。(<strong>极端的说，基于LSM树实现的HBase的写性能比Mysql高了一个数量级，读性能低了一个数量级</strong>)</p>
+<p><strong>LSM树原理把一棵大树拆分成N棵小树，它首先写入内存中，随着小树越来越大，内存中的小树会flush到磁盘中，磁盘中的树定期可以做merge操作，合并成一棵大树，以优化读性能。</strong></p>
+<h3 id="split">split</h3>
+<p>当store的store file集合中总文件长度太大时(超过配置的阈值)，这个region会一分为二.</p>
+<p>父 region 下线，新分裂的俩个子 region 会被Master 分配到相应的 RegionServer.</p>
+<p>![Image_2_.png-13kB][16]</p>
+<h3 id="compaction">compaction</h3>
+<p>minor compaction 将部分小文件合并成大文件
+majar compaction 
+合并所有文件为一个
+操作的是此列族的全量数据，所以可以做物理删除。但是也由于是全量数据，执行起来耗费时间也会比价长</p>
+<h3 id="flush">flush</h3>
+<p>用空的新memstore 获取更新数据，将满的旧memstore写入磁盘。</p>
+<h2 id="region-定位">Region 定位</h2>
+<p>第一次读取：
+步骤1：读取ZooKeeper中META表的位置。
+步骤2：读取META表中用户表的位置。
+步骤3：读取数据。</p>
+<p>如果已经读取过一次，则root表和.META都会缓存到本地，直接去用户表的位置读取数据。</p>
+<h2 id="meta-表">META 表</h2>
+<p>当我们从客户端读取，写入数据的时候，我们需要知道数据的 Rowkey是在哪个Region以及我们需要的Region是在哪个RegionServer上。
+而这正是HBase Meta表所记录的信息。</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871eee8d2f092c392ca4d47
+                 data-title=HBase 基本概念
+                 data-url=笔记>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

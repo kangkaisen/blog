@@ -1,0 +1,221 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Apache Kylin 精确去重指标优化历程</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Apache Kylin 精确去重指标优化历程</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2017-01-04</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#问题背景">问题背景</a></li>
+<li><a href="#优化1-将精确去重指标拆分hbase列族">优化1 将精确去重指标拆分HBase列族</a></li>
+<li><a href="#优化2-移除不必要的tostring避免bitmap-deserialize">优化2 移除不必要的toString避免bitmap deserialize</a></li>
+<li><a href="#优化3-获取bitmap的字节长度时避免deserialize">优化3 获取bitmap的字节长度时避免deserialize</a></li>
+<li><a href="#优化4-无需上卷聚合的精确去重查询优化">优化4 无需上卷聚合的精确去重查询优化</a></li>
+<li><a href="#总结">总结</a></li>
+<li><a href="#反思">反思</a></li>
+<li><a href="#相关kylin-jira">相关Kylin JIRA</a></li>
+</ul>
+<!-- toc stop -->
+<p>本文记录了我将Apache Kylin超高基数的精确去重指标查询提速数十倍的过程，大家有任何建议或者疑问欢迎讨论。</p>
+<h3 id="问题背景">问题背景</h3>
+<p>某业务方的cube有12个维度，35个指标，其中13个是精确去重指标，并且有一半以上的精确去重指标单天基数在千万级别，cube单天数据量1.5亿行左右。</p>
+<p>但是业务方的一个结果仅有21行的精确去重查询竟然需要12秒多：</p>
+<pre><code>SELECT A, B, count(distinct uuid), 
+FROM table
+WHERE dt = 17150
+GROUP BY A, B
+</code></pre><p>其中HBase端耗时6秒多，Kylin的query server端耗时5秒多。</p>
+<p><strong>精确去重指标已经在美团点评生产环境大规模使用</strong>，我印象中精确去重的查询的确比普通的Sum指标慢一点，但也是挺快的。这个查询慢的如此离谱，我就决定分析一下，这个查询到底慢在哪。</p>
+<h3 id="优化1-将精确去重指标拆分hbase列族">优化1 将精确去重指标拆分HBase列族</h3>
+<p>我首先确认了这个cube的维度设计是合理的，这个查询也精准匹配了cuboid，并且在HBase端也只扫描了21行数据。</p>
+<p>那么问题来了， <strong>为什么在HBase端只扫描21行数据需要6秒多</strong>？一个显而易见的原因是<strong>Kylin的精确去重指标是用bitmap存储的明细数据，而这个cube有13个精确去重指标，并且基数都很大</strong>。</p>
+<p>我从两方面验证了这个猜想：</p>
+<ol>
+<li>同样SQL的查询Sum指标只需要120毫秒，并且HBase端Scan仅需2毫秒。</li>
+<li>我用HBase HFile命令行工具查看并计算出HFile单个<code>KeyValue</code>的大小，发现普通的指标列族的每个KeyValue大小是<code>29B</code>，精确去重指标列族的每个KeyValue大小是<code>37M</code>。</li>
+</ol>
+<p>所以我第一个优化就是<strong>将精确去重指标拆分到多个HBase列族</strong>，优化后效果十分明显。查询时间从<code>12秒</code>多减少到<code>5.7秒</code>左右，HBase端耗时从6秒多减少到<code>1.3秒</code>左右，不过query server耗时依旧有<code>4.5</code>秒多。</p>
+<h3 id="优化2-移除不必要的tostring避免bitmap-deserialize">优化2 移除不必要的toString避免bitmap deserialize</h3>
+<p>Kylin的query server耗时依旧有<code>4.5</code>秒多，我猜测肯定还是和bitmap比较大有关，但是为什么bitmap大会导致如此耗时呢？ </p>
+<p>为了分析query server端查询处理的时间到底花在了哪，我利用<a href="http://blog.takipi.com/oracle-java-mission-control-the-ultimate-guide/">Java Mission Control</a>进行了性能分析。</p>
+<p>JMC分析很简单，在Kylin的启动进程中增加以下参数：</p>
+<pre><code>-XX:+UnlockCommercialFeatures -XX:+FlightRecorder -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:StartFlightRecording=delay=20s,duration=300s,name=kylin,filename=myrecording.jfr,settings=profile
+</code></pre><p>获得myrecording.jfr文件后，我们在本机执行<code>jmc</code>命令，然后打开myrecording.jfr文件就可以进行性能分析。</p>
+<p>热点代码的分析如图：
+<img src="http://static.zybuluo.com/kangkaisen/aodxncytsgkjsblz8saxa8eh/the%20expensive%20toString.png" alt="the expensive toString.png-354.7kB"></p>
+<p>从图中我们可以发现，耗时最多的代码竟然是<strong>一个毫无意义的toString</strong>。</p>
+<pre><code>Preconditions.checkState(comparator.compare(last, fetched) &lt;= 0, &quot;Not sorted! last: &quot; + last + &quot; fetched: &quot; + fetched);
+</code></pre><p>代码中的<code>last</code> 和 <code>fetched</code>就是一个bitamp。
+<strong>去掉这个toString之后，query server的耗时直接减少1秒多。</strong></p>
+<h3 id="优化3-获取bitmap的字节长度时避免deserialize">优化3 获取bitmap的字节长度时避免deserialize</h3>
+<p>在优化2去掉无意义的toString之后，热点代码已经变成了对<strong>bitmap的deserialize</strong>。</p>
+<p>不过bitmap的deserialize共有两处，一处是bitmap本身的deserialize，一处是在获取bitmap的字节长度时。</p>
+<p>于是很自然的想法就是是在<strong>获取bitmap的字节长度时避免deserialize bitmap</strong>，当时有两种思路：</p>
+<ol>
+<li>在serialize bitmap时就写入bitmap的字节长度</li>
+<li>在<code>MutableRoaringBitmap</code>序列化的头信息中获取bitmap的字节长度。(Kylin的精确去重使用的bitmap是<a href="https://github.com/RoaringBitmap/RoaringBitmap">RoaringBitmap</a>)</li>
+</ol>
+<p>我最终确认思路2不可行，采用了思路1。</p>
+<p>思路1中一个显然的问题就是如何保证向前兼容，我向前兼容的方法就是根据<code>MutableRoaringBitmap</code> deserialize时的cookie头信息来确认版本，并在新的serialize方式中写入了版本号，便于之后序列化方式的更新和向前兼容。</p>
+<p>经过这个优化后，Kylin query server端的耗时<strong>再次减少1秒多</strong>。</p>
+<h3 id="优化4-无需上卷聚合的精确去重查询优化">优化4 无需上卷聚合的精确去重查询优化</h3>
+<p>从精确去重指标在美团点评大规模使用以来，我们发现部分用户的应用场景并没有跨segment上卷聚合的需求，即只需要查询单天的去重值，或是每次全量构建的cube，也无需跨segment上卷聚合。</p>
+<p>所以我们希望<strong>对无需上卷聚合的精确去重查询进行优化</strong>，当时我考虑了两种可行的方案：</p>
+<h4 id="方案1：-精确去重指标新增一种返回类型">方案1： 精确去重指标新增一种返回类型</h4>
+<p>一个极端的做法是对<strong>无需跨segment上卷聚合的精确去重查询，我们只存储最终的去重值</strong>。</p>
+<p><strong>优点：</strong></p>
+<ol>
+<li>存储成本会极大降低。</li>
+<li>查询速度会明显提高。</li>
+</ol>
+<p><strong>缺点：</strong></p>
+<ol>
+<li>无法支持上卷聚合，与Kylin指标的设计原则不符合。</li>
+<li>无法支持segment的merge，因为<strong>要进行merge必须要存储明细的bitmap</strong>。</li>
+<li>新增一种返回类型，对不清楚的用户可能会有误导。</li>
+<li>查询需要上卷聚合时直接报错，用户体验不好，尽管使用这种返回类型的前提是无需上聚合卷。</li>
+</ol>
+<p><strong>实现难点：</strong>
+如果能够接受以上缺点，实现成本并不高，目前没有想到明显的难点。</p>
+<h4 id="方案2：serialize-bitmap的同时写入distinct-count值。">方案2：serialize bitmap的同时写入distinct count值。</h4>
+<p><strong>优点：</strong></p>
+<ol>
+<li>对用户无影响。</li>
+<li>符合现在Kylin指标和查询的设计。</li>
+</ol>
+<p><strong>缺点：</strong></p>
+<ol>
+<li>存储依然需要存储明细的bitmap。</li>
+<li>查询速度提升有限，因为即使不进行任何bitmap serialize，bitmap本身太大也会导致HBase scan，网络传输等过程变慢。</li>
+</ol>
+<p><strong>实现难点：</strong>
+<code>如何根据是否需要上卷聚合来确定是否需要serialize bitmap？</code>
+我开始的思路是从查询过程入手，<strong>确认在整个查询过程中，哪些地方需要进行上卷聚合</strong>。</p>
+<p>为此，我仔细阅读了Kylin query server端的查询代码，HBase Coprocessor端的查询代码，看了<code>Calcite</code>的example例子。发现在HBase端，Kylin query server端，cube build时都有可能需要指标的聚合。</p>
+<p>此时我又意识到一个问题：
+<code>即使我清晰的知道了何时需要聚合，我又该如何把是否聚合的标记传递到精确去重的反序列方法中呢？</code></p>
+<p>现在精确去重的deserialize方法参数只有一个<code>ByteBuffer</code>，<strong>如果加参数，就要改变整个kylin指标deserialize的接口，这将会影响所有指标类型，并会造成大范围的改动。</strong> 所以我把这个思路放弃了。</p>
+<p>后来我&quot;灵光一闪&quot;，想到<strong>既然我的目标是优化无需上卷的精确去重指标，那为什么还要费劲去deserialize出整个bitmap呢，我只要个<code>distinct count值</code>不就完了</strong>。</p>
+<p>所以我的目标就集中在<code>BitmapCounter</code>本身的deserialize上，并联想到我提升了<strong>Kylin前端加载速度十倍以上的核心思想</strong>：<strong><code>延迟加载</code></strong>，就改变了<code>BitmapCounter</code>的deserialize方法，<strong>默认只读出distinct count值，不进行bitmap的deserialize，并将那个buffer保留，等到的确需要上卷聚合的时候再根据buffer deserialize 出bitmap</strong>。</p>
+<p>当然，这个思路可行有一个前提，就是<strong>buffer内存拷贝的开销是远小于bitmap deserialize的开销</strong>，庆幸的是事实的确如此。</p>
+<p>最终经过这个优化，对于无需上卷聚合的精确去重查询，查询速度也有了较大提升。</p>
+<p><strong>显然，如你所见，这个优化加速查询的同时加大了需要上卷聚合的精确去重查询的内存开销</strong>。我的想法是</p>
+<ol>
+<li>对于超大数据集并且需要上卷的精确去重查询，用户在分析查询时返回的结果行数应该不会太多。</li>
+<li>我们需要做好query server端的内存控制。</li>
+</ol>
+<h3 id="总结">总结</h3>
+<p>我通过总共 <code>4</code>个优化，在向前兼容的前提下，后端仅通过<code>100</code>多行的代码改动，对Kylin超高基数的精确去重指标查询有了明显提升，测试中最明显的查询有<code>50</code>倍左右的提升。</p>
+<p>大家有任何好的建议或者疑问欢迎在相关的JIRA中讨论。</p>
+<h3 id="反思">反思</h3>
+<ol>
+<li>我们应该善于利用各类命令和工具，快速分析和定位问题。</li>
+<li>重写<code>toString</code>，<code>hashCode</code>，<code>equals</code>等方法时一定要轻量化，不要有复杂的操作。</li>
+<li>设计序列化，通信协议，存储格式时，一定要有版本信息，便于之后的更新和向前兼容。</li>
+</ol>
+<h3 id="相关kylin-jira">相关Kylin JIRA</h3>
+<ul>
+<li><a href="https://issues.apache.org/jira/browse/KYLIN-2308">KYLIN-2308 Allow user to set more columnFamily in web</a> 优化1</li>
+<li><a href="https://issues.apache.org/jira/browse/KYLIN-2337">KYLIN-2337 Remove expensive toString in SortedIteratorMergerWithLimit</a> 优化2</li>
+<li><a href="https://issues.apache.org/jira/browse/KYLIN-2349">KYLIN-2349 Serialize BitmapCounter with peekLength</a> 优化3</li>
+<li><a href="https://issues.apache.org/jira/browse/KYLIN-2353">KYLIN-2353 Serialize BitmapCounter with distinct count</a> 优化4</li>
+</ul>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871fbcbd2f092c392ca4d65
+                 data-title=Apache Kylin 精确去重指标优化历程
+                 data-url=kylin-distinct-count>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

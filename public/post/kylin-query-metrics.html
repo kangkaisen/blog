@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Apache Kylin 查询指标</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Apache Kylin 查询指标</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-08-27</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <p>Kylin 1.5.4版本将支持收集查询指标到JMX，本文将介绍收集查询指标的原因，查询指标的具体内容和含义，查询指标的日常作用，如何收集查询指标。</p>
+<!-- toc -->
+<ul>
+<li><a href="#kylin为什么需要查询指标">Kylin为什么需要查询指标？</a></li>
+<li><a href="#kylin查询指标的具体内容和含义">Kylin查询指标的具体内容和含义</a></li>
+<li><a href="#kylin查询指标的日常作用">Kylin查询指标的日常作用</a></li>
+<li><a href="#如何收集kylin查询指标">如何收集Kylin查询指标</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="kylin为什么需要查询指标？">Kylin为什么需要查询指标？</h3>
+<p>目前Kylin作为新美大的核心OLAP服务，已经在几乎所有的新美大业务线使用。其中几个业务线已经将Kylin作为B端（数百万商家）线上查询服务，所以我们必须保证Kylin服务的高可靠，高可用，高性能。为了向用户提供Kylin查询服务的SLA，我们必须要有相应的查询指标。</p>
+<h3 id="kylin查询指标的具体内容和含义">Kylin查询指标的具体内容和含义</h3>
+<p>为了能够根据查询服务节点，业务线，具体业务来统计相关查询指标，我们将查询指标分为了Server，Project，Cube3个层次。</p>
+<p>以<code>QueryCount</code> 这个指标为例，这个指标最终会生成3种相关的Metrics：</p>
+<pre><code>Hadoop:name=Server_Total,service=Kylin.QueryCount 
+Hadoop:name=learn_kylin,service=Kylin.QueryCount 
+Hadoop:name=learn_kylin,service=Kylin,sub=kylin_sales_cube.QueryCount
+
+其中Server_Total代表整个server,
+learn_kylin代表project name,
+kylin_sales_cube 代表 cube name.
+</code></pre><h4 id="kylin关键查询指标说明">Kylin关键查询指标说明</h4>
+<ul>
+<li><code>QueryCount</code>：查询总次数；</li>
+<li><code>QueryFailCount</code>：查询失败总次数；</li>
+<li><code>QuerySuccessCount</code>：查询成功总次数；</li>
+<li><code>CacheHitCount</code>： 查询缓存命中次数；</li>
+<li><code>QueryLatency{60s,360s,3600s}{50,75,90,95,99}thePercentile</code>：1分钟，10分钟，1小时内的查询百分位时延；（这3个时间间隔可以通过参数<code>kylin.query.metrics.percentiles.intervals</code>来配置）</li>
+<li><code>QueryLatencyAvgTime，QueryLatencyIMaxTime，QueryLatencyIMinTime</code>：查询时延的均值，最大值，最小值；</li>
+<li><code>ScanRowCount</code>： 查询读取HBase行数的相关指标；</li>
+<li><code>ResultRowCount</code>：查询返回结果行数的相关指标。</li>
+</ul>
+<h3 id="kylin查询指标的日常作用">Kylin查询指标的日常作用</h3>
+<p>查询指标除了可以给业务方提供SLA指标，在日常运维中，我们也依靠查询指标来产出Kylin查询日报和Kylin查询的监控Screen。</p>
+<p>Kylin查询的监控Screen如图所示：</p>
+<p>通过Kylin查询日报我们可以了解每个Query Server， 每个Project的查询总次数，查询失败率，查询时延等查询信息。通过查询的监控Screen我们可以实时掌握Kylin的查询服务情况。</p>
+<p>通过Kylin查询指标我们可以知道在目前新美大的kylin查询中，90%的查询时延在0.5秒内，99%的查询时延在2秒内，查询失败率极低，不过缓存命中次数同样极低，缓存几乎没有作用。</p>
+<h3 id="如何收集kylin查询指标">如何收集Kylin查询指标</h3>
+<p>在 Kylin 1.5.4版中，我们可以通过将参数<code>kylin.query.metrics.enabled</code>设为<code>true</code>来将查询指标收集到JMX。</p>
+<p>查询指标收集到JMX后，我们就可以通过任意的JMX Metrics收集工具来收集Kylin的查询指标，将查询指标上报到公司的监控系统中。唯一需要注意的是，<strong>Kylin的查询指标是分为Server，Project，Cube3个层次的，而这种层次关系是通过动态的<code>ObjectName</code>来实现的，所以在获取<code>ObjectName</code>时需要正则匹配。</strong></p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871f564d2f092c392ca4d56
+                 data-title=Apache Kylin 查询指标
+                 data-url=kylin-query-metrics>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

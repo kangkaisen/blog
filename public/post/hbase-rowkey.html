@@ -1,0 +1,536 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|HBase Rowkey设计</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> HBase Rowkey设计</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-04-09</p>
+            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#建立schema">建立Schema</a></li>
+<li><a href="#列族的数量">列族的数量</a><ul>
+<li><a href="#列族的基数">列族的基数</a></li>
+</ul>
+</li>
+<li><a href="#rowkey-设计">Rowkey 设计</a><ul>
+<li><a href="#热点">热点</a></li>
+<li><a href="#单调递增-rwokey时间连续序列">单调递增 rwokey(时间连续序列)</a></li>
+<li><a href="#尽量减少行和列的大小">尽量减少行和列的大小</a></li>
+</ul>
+</li>
+<li><a href="#版本号">版本号</a><ul>
+<li><a href="#最大版本号">最大版本号</a></li>
+<li><a href="#最小版本号">最小版本号</a></li>
+</ul>
+</li>
+<li><a href="#schema-design-case-studies">Schema Design Case Studies</a><ul>
+<li><a href="#日志数据和时间序列数据">日志数据和时间序列数据</a></li>
+<li><a href="#日志数据和增强型时间序列数据">日志数据和增强型时间序列数据</a></li>
+<li><a href="#case-study-customerorder">Case Study - Customer/Order</a></li>
+<li><a href="#case-study-tallwidemiddle-schema-design">Case Study - &quot;Tall/Wide/Middle&quot; Schema Design</a></li>
+<li><a href="#case-study-list-data">Case Study - List Data</a></li>
+</ul>
+</li>
+</ul>
+<!-- toc stop -->
+<h2 id="建立schema">建立Schema</h2>
+<p>Hbase 模式建立或更新可以通过 Hbase shell 工具或者使用Hbase Java API 中的 Admin类。</p>
+<p>当列族发生变动时 hbase表必须处于 disabled 状态。例如：</p>
+<pre><code>Configuration config = HBaseConfiguration.create();
+Admin admin = new Admin(conf);
+String table = &quot;myTable&quot;;
+
+admin.disableTable(table);
+
+HColumnDescriptor cf1 = ...;
+admin.addColumn(table, cf1);      // 增加新列族
+HColumnDescriptor cf2 = ...;
+admin.modifyColumn(table, cf2);    //  修改列族
+
+admin.enableTable(table);
+</code></pre><h2 id="列族的数量">列族的数量</h2>
+<p>Hbase目前对俩个或3个列族的处理不是很好，所以我们应尽可以保持列族数量少。目前  flushing 和 compactions 操作是以每一个 region 为基础的，所以如果一个列族大部分数据进行 flush 操作，将导致临近的列族也会 flush，即使它的数据量很小。当许多列族存在 flush 和 compaction操作时，会导致大量的 I/O 请求。（可以通过改变 flush 和 compaction 操作以列族为基础 来解决。）</p>
+<p>查看 <a href="http://hbase.apache.org/book.html#compaction">compaction</a> 可以获取 compaction 更多信息。</p>
+<p>尽可能只使用一个列族，引入第2，3个列族当且仅当你的数据访问是在列级别的。例如：你的一次数据访问只会请求同一列族的数据，但不会跨列族请求。</p>
+<h3 id="列族的基数">列族的基数</h3>
+<p>当一个表有多个列族时，应意识到 基数（例如：行数）的问题。 如果列族A 有100 万行，列族B 有10 亿行，那么列族A的数据很可能会分散到很多的region ，这会使列族A的scan 操作效率降低。</p>
+<h2 id="rowkey-设计">Rowkey 设计</h2>
+<h3 id="热点">热点</h3>
+<p>hbase 中的行是以 rowkey 的字典序排序的，这种设计优化了scan 操作，可以将相关的 行 以及会被一起读取的行 存取在临近位置，便于 scan 。 然而，糟糕的 rowkey 设计是 热点 的源头。
+热点发生在大量的客户端直接访问集群的一个或极少数节点。访问可以是读，写，或者其他操作。大量访问会使 热点region 所在的单个机器超出自身承受能力，引起性能下降甚至是 region 不可用。这也会影响同一个  regionserver  的其他 regions，由于主机无法服务其他region 的请求。设计良好的数据访问模式以使集群被充分，均衡的利用。</p>
+<p>为了避免写热点，设计 rowkey 使得 不同行在同一个 region,但是在更多数据情况下，数据应该被写入集群的多个region，而不是一个。下面是一些常见的避免 热点的方法以及它们的优缺点：</p>
+<h4 id="加盐">加盐</h4>
+<p>这里的加盐不是密码学中的加盐，而是在rowkey 的前面增加随机数。具体就是给 rowkey 分配一个随机前缀 以使得它和之前排序不同。分配的前缀种类数量应该和你想使数据分散到不同的 region 的数量一致。 如果你有一些 热点 rowkey 反复出现在其他分布均匀的 rwokey 中，加盐是很有用的。考虑下面的例子：它将写请求分散到多个 RegionServers，但是对读造成了一些负面影响。</p>
+<h4 id="加盐例子">加盐例子</h4>
+<p>假如你有下列 rowkey，你表中每一个 region 对应字母表中每一个字母。
+以 &#39;a&#39; 开头是同一个region, &#39;b&#39;开头的是同一个region。在表中，所有以 &#39;f&#39;开头的都在同一个 region， 它们的 rowkey 像下面这样：</p>
+<pre><code>foo0001
+foo0002
+foo0003
+foo0004
+</code></pre><p>现在，假如你需要将上面这个 region 分散到 4个 region。你可以用4个不同的盐：&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;d&#39;.在这个方案下，每一个字母前缀都会在不同的 region 中。加盐之后，你有了下面的 rowkey:</p>
+<pre><code>a-foo0003
+b-foo0001
+c-foo0004
+d-foo0002
+</code></pre><p>所以，你可以向4个不同的 region 写，理论上说，如果所有人都向同一个region 写的话，你将拥有之前4倍的吞吐量。</p>
+<p>现在，如果再增加一行，它将随机分配a,b,c,d中的一个作为前缀，并以一个现有行作为尾部结束：</p>
+<pre><code>a-foo0003
+b-foo0001
+c-foo0003
+c-foo0004
+d-foo0002
+</code></pre><p>因为分配是随机的，所以如果你想要以字典序取回数据，你需要做更多工作。加盐这种方式增加了写时的吞吐量，但是当读时有了额外代价。</p>
+<h4 id="哈希">哈希</h4>
+<p>除了加盐，你也可以使用哈希，哈希会使同一行永远用同一个前缀加盐。哈希也可以使负载分散到整个集群，但是读却是可以预测的。使用确定的哈希可以让客户端重构完成的 rowkey，使用Get 操作获取正常的获取某一行数据。</p>
+<h4 id="哈希例子">哈希例子</h4>
+<p>像在加盐方法中给出的那个例子，你可以使用某种哈希方法使得 foo0003 这样的 rowkey 的前缀永远是  ‘a&#39;,然后，为了取得某一行，你可以通过哈希获得 相应的 rowkey.
+你也可以优化哈希方法，使得某些rowkey 永远在同一个 region.</p>
+<h4 id="翻转key">翻转key</h4>
+<p>第三种防止热点的方法是翻转固定长度或者数字格式的rowkey。这样可以使得rowkey中经常改变的部分（最没意义的部分）放在前面。这样可以有效的随机 rowkey,但是牺牲了 rowkey 的有序性。</p>
+<h3 id="单调递增-rwokey-时间连续序列-">单调递增 rwokey(时间连续序列)</h3>
+<p>在《Hadoop 权威指南》中，有一个优化的注意点：当所有客户端一段时间内一致写入某一个region,然后再接着写入下一个 region。例如：像单调递增的 rowkey（时间戳） ，就会发生这种现象。
+可以查看 Kai Lan的漫画  <a href="http://ikaisays.com/2011/01/25/app-engine-datastore-tip-monotonically-increasing-values-are-bad/">monotonically increasing values are bad</a>. 说明了为什么单调递增的rowkey 在分布式表格系统（Hbase）中是有问题的。这种单调递增的rowkey 堆积在同一个region 的问题可以通过 随机化 输入记录来缓和。但通常来讲我们应该避免使用时间戳或者序列（1，2，3）来作为主键。</p>
+<p>如果你的确需要在Hbase存储时间序列数据，可以学习 <a href="http://opentsdb.net/">OpenTSDB</a>，它是个成功的例子。链接<a href="http://opentsdb.net/schema.html">schema</a>有一页描述了OpenTSDB在hbase中使用的模式。OpenTSDB中的key模式是：<code>[元数据类型][时间戳]</code>，初看起来这似乎违反了不使用时间戳作为rowkey的原则，然而，区别是时间戳并没有在rowkey的关键位置，而且这个设计假设拥有许多元数据类型。因此，即使有连续的混合着元数据的输入数据，它们也会Put进入表中不同的regions.</p>
+<h3 id="尽量减少行和列的大小">尽量减少行和列的大小</h3>
+<p>在Hbase中，value永远是和它的key一起传输的。当具体的值在系统间传输时，它的rowkey,列名，时间戳也会一起传输。如果你的rowkey和列名很大，甚至可以和具体的值相比较，那么你将会遇到一些有趣的情况。HBase storefiles中的索引（有助于随机访问）最终占据了HBase 分配的大量内存，因为具体的值和他的key很大。可以增加 block 大小使得 storefiles 索引在更大的时间间隔增加，或者修改表的模式以减小rowkey 和 列名的大小。压缩也有助于更大的索引。</p>
+<p>大多时候较小的低效率是无关紧要的，但是在这种情况下，任何访问模式都需要列族名，列名，rowkey，所以它们会被访问数十亿次在你的数据中。</p>
+<h4 id="列族">列族</h4>
+<p>尽可能使列族名越短越好，最好是一个字符。（例如：&#39;d&#39; 代表data/default）。</p>
+<h4 id="属性">属性</h4>
+<p>冗长的属性名（&quot;myVeryImportantAttribute&quot;）是易读的,但是更短的属性名(&quot;via&quot;)存储在HBase中更好。</p>
+<h4 id="rowkey-长度">Rowkey 长度</h4>
+<p>让 Rowkey 越短越好是合理的，这对必需的数据访问（get,scan）是有益的。但是当短 key 对数据访问是无用时它不及长 key 拥有更好的get/scan属性。当设计 rowkey 时，我们需要权衡，折中。</p>
+<h4 id="字节-模式">字节 模式</h4>
+<p>长整形是 8 字节，你可以存储无符号数至到18,446,744,073,709,551,615 用 8 字节。如果你用字符串形式存储，一个字符一个字节，你需要将近3倍的字节。</p>
+<p>不信?下面是你可以直接运行的样例代码：</p>
+<pre><code>// long
+//
+long l = 1234567890L;
+byte[] lb = Bytes.toBytes(l);
+System.out.println(&quot;long bytes length: &quot; + lb.length);   // returns 8
+
+String s = String.valueOf(l);
+byte[] sb = Bytes.toBytes(s);
+System.out.println(&quot;long as string length: &quot; + sb.length);    // returns 10
+
+// hash
+//
+MessageDigest md = MessageDigest.getInstance(&quot;MD5&quot;);
+byte[] digest = md.digest(Bytes.toBytes(s));
+System.out.println(&quot;md5 digest bytes length: &quot; + digest.length);    // returns 16
+
+String sDigest = new String(digest);
+byte[] sbDigest = Bytes.toBytes(sDigest);
+System.out.println(&quot;md5 digest as string length: &quot; + sbDigest.length);    // returns 26
+</code></pre><p>不幸的是，用二进制类型会使你的数据在代码之外难以阅读，例如，当你增加一个值时，下面是你在shell 中看到的：</p>
+<pre><code>hbase(main):001:0&gt; incr &#39;t&#39;, &#39;r&#39;, &#39;f:q&#39;, 1
+COUNTER VALUE = 1
+
+hbase(main):002:0&gt; get &#39;t&#39;, &#39;r&#39;
+COLUMN                                        CELL
+ f:q                                          timestamp=1369163040570, value=\x00\x00\x00\x00\x00\x00\x00\x01
+1 row(s) in 0.0310 seconds
+</code></pre><p>shell 会尽力打印字符串，但是这种情况下，它只能打印 16进制。 这也会在你的 rowkey 中发生。如果你知道存的是什么那当然没什么，但是如果任意数据存放在具体的值中，那将难以阅读。这也需要权衡。</p>
+<h4 id="翻转时间戳">翻转时间戳</h4>
+<p>一个常见的数据库处理问题是快递获取数据的最近版本，使用翻转的时间戳作为rowkey的一部分对这个问题十分有用，可以将<code>Long.MAX_VALUE - timestamp</code>追加到key的末尾，例如：<code>[key][reverse_timestamp]</code></p>
+<p>表中[key]的最新值可以通过scan [key]获得 [key]的第一条记录，因为Hbase中 rowkey 是有序的，最新的 [key]在任何更旧的[key]之前，所以第一条记录就是最新的。</p>
+<p>这个技巧可以替代 使用 多版本数据，多版本数据会永久（很长时间)保存数据的所有版本。同时，这个技巧用一个scan操作就可以获得数据的所有版本。</p>
+<h4 id="rowkey-和-列族">rowkey 和 列族</h4>
+<p>rowkey 对于 列族是可见的，因此，同一个rowkey 可以无冲突存在 表中的每一个列族。</p>
+<h4 id="rowkey-的不变性">rowkey 的不变性</h4>
+<p>rowkey 是不可以改变的，改变的唯一方式是删除这行，再插入这行。这是相当普遍的问题，所以第一次正确获取 rowkey 是值得的，</p>
+<h4 id="rowkey-和-region-分裂的关系">rowkey 和 region 分裂的关系</h4>
+<p>如果你要预分你的表，理解你的 rowkey 如何以 region 的边界分布是十分重要的，考虑这个例子，使用可显示的16进制字符作为 key 的关键位置。（例如&quot;0000000000000000&quot; to &quot;ffffffffffffffff&quot;）
+对10个region 运行这些key 序列通过 Bytes.split(这是一种分裂策略当创建region 通过 <code>Admin.createTable(byte[] startKey, byte[] endKey, numRegions 方式时)</code>将会产生下面的结果：</p>
+<pre><code>48 48 48 48 48 48 48 48 48 48 48 48 48 48 48 48                                // 0
+54 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10 -10                 // 6
+61 -67 -67 -67 -67 -67 -67 -67 -67 -67 -67 -67 -67 -67 -67 -68                 // =
+68 -124 -124 -124 -124 -124 -124 -124 -124 -124 -124 -124 -124 -124 -124 -126  // D
+75 75 75 75 75 75 75 75 75 75 75 75 75 75 75 72                                // K
+82 18 18 18 18 18 18 18 18 18 18 18 18 18 18 14                                // R
+88 -40 -40 -40 -40 -40 -40 -40 -40 -40 -40 -40 -40 -40 -40 -44                 // X
+95 -97 -97 -97 -97 -97 -97 -97 -97 -97 -97 -97 -97 -97 -97 -102                // _
+102 102 102 102 102 102 102 102 102 102 102 102 102 102 102 102                // f
+</code></pre><p>注意：主要的字节是右边的注释。第一个分裂是‘0’，最后一个分裂是‘f&#39;.
+一切都很好，不是吗?不要急于下结论</p>
+<p>问题是所有数据都堆积在前俩个 和最后一个 region，因此产生了 热点问题。为了理解原因，可以查看 <a href="http://www.asciitable.com/">ASCII Table</a>.字符&#39;0&#39;对应字节 48，字符&#39;f&#39;对应字节102，所以字节58-96没有对应的字符，因为字符值只有&#39;0&#39;-&#39;9&#39;,&#39;a&#39;-&#39;f&#39;.所以，中间的 region 永远不会被使用。 因此，针对这个字符空间，为了预分裂，我们必须自己定义如何分裂。</p>
+<ul>
+<li>经验1：预分裂表通常是很好的方法，但是你应该使得所有的 region 都可以 对应 所有的 分裂字符。然而在这个演示例子中问题是使用了16进制的字符空间，同样的问题也会在任意的字符空间发生，所以我们必须熟悉我们数据才能进行正确的预分裂。</li>
+<li>经验2：虽然通常不建议，但是使用16进制的字符空间也可以使得所有的region 对应所有的字符。</li>
+</ul>
+<p>下面这个例子展示了如何使用 16进制字符空间进行合适的预分region：</p>
+<pre><code>public static boolean createTable(Admin admin, HTableDescriptor table, byte[][] splits)
+throws IOException {
+  try {
+    admin.createTable( table, splits );
+    return true;
+  } catch (TableExistsException e) {
+    logger.info(&quot;table &quot; + table.getNameAsString() + &quot; already exists&quot;);
+    // the table already exists...
+    return false;
+  }
+}
+
+public static byte[][] getHexSplits(String startKey, String endKey, int numRegions) {
+  byte[][] splits = new byte[numRegions-1][];
+  BigInteger lowestKey = new BigInteger(startKey, 16);
+  BigInteger highestKey = new BigInteger(endKey, 16);
+  BigInteger range = highestKey.subtract(lowestKey);
+  BigInteger regionIncrement = range.divide(BigInteger.valueOf(numRegions));
+  lowestKey = lowestKey.add(regionIncrement);
+  for(int i=0; i &lt; numRegions-1;i++) {
+    BigInteger key = lowestKey.add(regionIncrement.multiply(BigInteger.valueOf(i)));
+    byte[] b = String.format(&quot;%016x&quot;, key).getBytes();
+    splits[i] = b;
+  }
+  return splits;
+}
+</code></pre><h2 id="版本号">版本号</h2>
+<h3 id="最大版本号">最大版本号</h3>
+<p>行的最大版本是通过 HColumnDescriptor定义在每一个列族的，默认的最大版本号是1.这是一个重要的参数，因为Hbase不会覆盖一行的值，而是每一行根据时间戳存储多个值。超过最大版本号的值将在 major compactions 时被删除，最大版本号可以根据你应用的需求增大或者减小。</p>
+<p>不推荐设置 最大版本号 为很大的值（数百甚至更多），除非旧的数据对你而言十分重要。因为太多的版本会使 StoreFile 很大。</p>
+<h3 id="最小版本号">最小版本号</h3>
+<p>像最大版本号一样，最小版本号也是通过 HColumnDescriptor定义在每一个列族。默认的最小的版本号是0，意味着这个功能是禁用的。最小版本号参数，TTL参数一般组合起来和版本号一起完成这个功能：保留T分钟内的数据，但是至多N个版本，最少M个版本。其中，M是最小版本号，M&lt;N.这个参数应该当列族的TTL参数开启时使用，而且一定要小于正常的版本号。</p>
+<h2 id="schema-design-case-studies">Schema Design Case Studies</h2>
+<p>下面将讨论一些典型的hbase数据使用案例，可以学习 rwokey 和整体结构的的设计。
+注意：这仅仅是可能方法的说明，不是详尽的列表。我们需要熟悉我们的数据，明确我们的需求。</p>
+<p>有以下的案例：</p>
+<ul>
+<li>日志数据/时间序列数据</li>
+<li>日志数据/增强型时间序列数据</li>
+<li>顾客数据/订单数据</li>
+<li>高，宽，中型的Schema Design</li>
+<li>表格数据</li>
+</ul>
+<h3 id="日志数据和时间序列数据">日志数据和时间序列数据</h3>
+<p>假设如下的数据元素可以被获得：</p>
+<ul>
+<li>主机名</li>
+<li>时间戳</li>
+<li>日志事件</li>
+<li>值/消息</li>
+</ul>
+<p>我们可以上面数据保存在hbase的LOG_DATA表中，但是 rowkey是什么呢？从上面的数据，rwokey 可以是 主机名，时间戳，日志事件。但具体的呢？</p>
+<h4 id="时间戳在rowkey-的主要位置">时间戳在rowkey 的主要位置</h4>
+<p> rowkey ：[timestamp][hostname][log-event] 会遇到之前提到的单调递增rowkey 问题。</p>
+<p> 有一个经常提到的“桶”时间戳方法，通过对时间戳取模来实现。如果时间方向的scan操作十分重要，这种方法是十分有用的。必须注意桶的数量，以为需要同样数量的scan 操作返回结果。</p>
+<pre><code> long bucket = timestamp % numBuckets;
+</code></pre><p> 现在rowkey 设计如下：</p>
+<pre><code> [bucket][timestamp][hostname][log-event]
+</code></pre><p>像上面提到的，要选择一个时间范围内的数据，scan 操作需要对每一个 桶执行，假如有100个桶，就需要100个scan才能获得完整的数据。所以我们需要一个权衡。</p>
+<h4 id="主机名在rwokey-的关键位置">主机名在rwokey 的关键位置</h4>
+<p>rowkey <code>[hostname][log-event][timestamp]</code>是一个备选，如果有大量的主机名需要读写，如果通过主机名的scan 操作是主要的这种方式就很有用。</p>
+<h4 id="时间戳，翻转时间戳">时间戳，翻转时间戳</h4>
+<p>如果获取最新的数据是最主要的访问数据方式，那么存储 时间戳 或者翻转时间戳<code>（timestamp = Long.MAX_VALUE – timestamp）</code>，可以通过 <code>scan [hostname][log-event]</code>快速获取最新的数据。</p>
+<p><strong>没有一种方法是错的，要看最合适的情况。</strong></p>
+<h4 id="变长还是固定长度的-rowkey">变长还是固定长度的 rowkey</h4>
+<p>我们应该十分明确 rwokey 是存储在Hbase 的每一列的，如果主机名是 a,事件类型是 e1，那么最终的rowkey 长度就会十分小。然而，如果存储的主机名是myserver1.mycompany.com ，事件类型是 com.package1.subpackage2.subsubpackage3.ImportantService呢？</p>
+<p>所以使用一些代替在 rowkey 是有意义的，至少有俩种方法：哈希和数字化。在主机名在 rwokey 关键位置的例子中，可能看起来像这样：</p>
+<ul>
+<li>用哈希合成 rwokey:</li>
+</ul>
+<pre><code>[MD5 hash of hostname] = 16 bytes
+
+[MD5 hash of event-type] = 16 bytes
+
+[timestamp] = 8 bytes
+</code></pre><ul>
+<li>用数字 合成rowkey：</li>
+</ul>
+<p>这种方法，除了 LOG_DATA 之外，我们还需要一张查找表 LOG_TYPES。LOG_TYPES的主键可以是：</p>
+<pre><code>[type] (表明是 hostname 还是 event-type)
+
+[bytes] （ hostname or event-type的 原始字节长度）
+</code></pre><p>所以最终的复合rowkey 如下：</p>
+<pre><code>[ hostname 对应的长整形] = 8 bytes
+
+[event-typ 对应的长整形] = 8 bytes
+
+[timestamp] = 8 bytes
+</code></pre><p>无论是使用 哈希 还是数字，hostname，event-typ的原始值都可以存储在列值中。</p>
+<h3 id="日志数据和增强型时间序列数据">日志数据和增强型时间序列数据</h3>
+<p>OpenTSDB 中的方法是有效的，OpenTSDB 做的是重写数据将一定时间周期内的行数据批量才能存入列中，详细的解释，可以查看：</p>
+<p>一般情况下数据是这样存储的：</p>
+<pre><code>[hostname][log-event][timestamp1]
+[hostname][log-event][timestamp2]
+[hostname][log-event][timestamp3]
+</code></pre><p>OpenTSDB 重写会会是这样：</p>
+<pre><code>[hostname][log-event][timerange]
+</code></pre><p>上面的每一个的log-event都存入列中，还有相对于 timerange（例如：每5分钟）的时间偏移量。</p>
+<p>这显然是十分高级的处理技巧，但是hbase让这成为可能。</p>
+<h3 id="case-study-customer-order">Case Study - Customer/Order</h3>
+<p>假如hbase 被用来存储 顾客和订单信息，将由俩类主要记录类型：顾客记录类型和订单记录类型。
+顾客记录包含如下信息：</p>
+<ul>
+<li>顾客 ID</li>
+<li>顾客 name</li>
+<li>地址（城市，国家，邮编）</li>
+<li>手机号等
+订单记录包含如下信息：</li>
+<li>顾客ID</li>
+<li>订单ID</li>
+<li>交易日期</li>
+<li>一系列运送的地点和信息</li>
+</ul>
+<p>假设顾客ID 和订单信息的组合可以唯一确定一笔订单，这俩个属性将会组合为 rwokey. 一个特别的 ORDER表达的rowkey 如下：</p>
+<pre><code>[customer number][order number]
+</code></pre><p>然而，还有更多的设计需要做决定：原始的值是rowkey的最佳选择吗？</p>
+<p>这里我们遇到了之前 日志数据案例的相同问题， customer number 的字符空间是什么？格式是什么？（数字型的，数字字母混合的）在hbase中使用定长 rowkey 是有益的，rowkey 也需要支持 字符空间的合理分布，相似的选项出现了：</p>
+<p>用哈希组合 rowkey:</p>
+<pre><code>[MD5 of customer number] = 16 bytes
+
+[MD5 of order number] = 16 bytes
+</code></pre><p>用哈希，数字组合 rowkey:</p>
+<pre><code>[customer number 的长整形] = 8 bytes
+
+[MD5 of order number] = 16 bytes
+</code></pre><h4 id="单表？多表？">单表？多表？</h4>
+<p>传统的方法是为 顾客和订单 建立各自的表，另一个选项是将所有的记录存入一张表。（例如：CUSTOMER++）</p>
+<p>顾客记录的 rowkey：</p>
+<pre><code>[customer-id]
+
+[type] = 类型 `1&#39; 代表 customer record type
+</code></pre><p>订单记录的 rowkey:</p>
+<pre><code>[customer-id]
+
+[type] = 类型 `2&#39; 代表 for order record type
+
+[order]
+</code></pre><p>特殊的CUSTOMER++方法的优点是可以通过 customer-id 组织所有不同类型的数据。（例如：1次scan 就可以获得 一个顾客的所有信息）缺点是不容易 scan 特殊的 记录类型。</p>
+<h4 id="订单对象设计">订单对象设计</h4>
+<p>现在我们需要考虑订单对象的建模，假设类结构如下：
+Order：
+一个 Order 有许多  ShippingLocations（运送位置）
+LineItem
+一个 ShippingLocations 有多个 LineItem
+存储这种数据有多种选择：</p>
+<ul>
+<li>完全范式化
+用这种方法，将分成3个独立的表：ORDER，SHIPPING_LOCATION和 LINE_ITEM.
+ORDER 表的rowkey 在上面已经提到，
+SHIPPING_LOCATION表的 复合 rowkey 如下：</li>
+</ul>
+<pre><code>[order-rowkey]
+
+[shipping location number] (例如：第一个位置，第二个等等)
+</code></pre><p>LINE_ITEM 表的 复合rowkey 如下：</p>
+<pre><code>[order-rowkey]
+
+[shipping location number] (例如：第一个位置，第二个等等)
+
+[line item number] (例如：, 第一个 lineitem,第二个等等)
+</code></pre><p>这个范式化设计和RDBMS很想，但这不是你使用 hbase的唯一选择。这种方法下，你要获取任何一个订单信息，你需要：</p>
+<ol>
+<li>从order表中获取订单</li>
+<li>scan SHIPPING_LOCATION 表获取订单的ShippingLocation 信息</li>
+<li>scan LINE_ITEM 表 获取 每一个ShippingLocation的具体信息</li>
+</ol>
+<p>就算 RDBMS 会在幕后都做这些，但是你必须认识到一个现实：那就是在hbase中没有join.</p>
+<ul>
+<li><p>用单表存储所有记录
+在这种方法中：所有信息都会存储在ORDER表中：</p>
+<ul>
+<li><p>ORDER 的rowkey 设计如下：</p>
+<pre><code>[order-rowkey]
+
+[ORDER record type]
+</code></pre></li>
+<li><p>ShippingLocation 的复合 rowkey 如下：</p>
+<pre><code>[order-rowkey]
+
+[SHIPPING record type]
+
+[shipping location number] (e.g., 1st location, 2nd, etc.)
+</code></pre></li>
+<li><p>LineItem 的复合 rowkey 如下：</p>
+<pre><code>[order-rowkey]
+
+[LINE record type]
+
+[shipping location number] (e.g., 1st location, 2nd, etc.)
+
+[line item number] (e.g., 1st lineitem, 2nd, etc.)
+</code></pre></li>
+</ul>
+</li>
+<li>反范式化：
+一种上面单表的变体方法是反范式化，摊平一些对象层次结构，例如折叠ShippingLocation 属性到 每一个 LineItem 实例。</li>
+</ul>
+<p>LineItem 的复合 rowkey 如下：</p>
+<pre><code>[order-rowkey]
+
+[LINE record type]
+
+[line item number] (e.g., 1st lineitem, 2nd, etc., 必须意识到 line item number 对于整个 表式唯一的)
+</code></pre><p>LineItem  列族情况如下：</p>
+<pre><code>itemNumber
+
+quantity
+
+price
+
+shipToLine1 (denormalized from ShippingLocation)
+
+shipToLine2 (denormalized from ShippingLocation)
+
+shipToCity (denormalized from ShippingLocation)
+
+shipToState (denormalized from ShippingLocation)
+
+shipToZip (denormalized from ShippingLocation)
+</code></pre><p>这种设计的优点是没有复杂的对象层次，缺点是任何信息的更新将会十分复杂。</p>
+<h4 id="二进制大对象">二进制大对象</h4>
+<p>这种方法是把整个表作为一个二进制大对象，例如： ORDER 表的rwokey设计和之前一样，有一个 &quot;order&quot; 的单列是一个可以反序列化为
+Order, ShippingLocations, and LineItems.的对象。</p>
+<p>可以有许多选择： JSON, XML, Java Serialization, Avro, Hadoop Writables。 它们的原理都是一样的：将对象用二进制编码。这种方法必须注意向后兼容性，即使对象模型改变了，我们也可以从hbase 读取对象的旧版本。</p>
+<p>优点是可以用最小的IO管理复杂的对象，（例如：hbase 中 get 每个 order）确定值前面提到的向后兼容性，序列化的语言依赖（例如：Java Serialization 只能在java客户端工作），事实上，你想要获得二级制大对象的任意小的信息，你都必须反序列化整个对象，而且你很难用像hive这样的框架去处理你自定义的对象。</p>
+<h3 id="case-study-quot-tall-wide-middle-quot-schema-design">Case Study - &quot;Tall/Wide/Middle&quot; Schema Design</h3>
+<p>这章主要考虑高表和宽表，这是一些参考和注意点，每一个应用都需要考虑它自己的需求。</p>
+<h4 id="rows-vs-versions">Rows vs. Versions</h4>
+<p>一个常见的问题是我们应该选择rowkey 还是版本号，典型的场景就是我们需要保留一行数据的的许多版本。用rowkey的方法就是将时间戳作为 rowkey 的一部分，那样每一次数据的更新都不会覆盖。</p>
+<p><strong>通常来讲，我们选择 rowkey</strong></p>
+<h4 id="rows-vs-columns">Rows vs. Columns</h4>
+<p>另一个常见问题是我们应该用 行还是 列。这个问题的典型场景就是1行有100万个列好，还是100万行每行只有1列好？
+<strong>通常来将，我们选择 rowkey</strong>
+要清楚的是，在这个场景下选择rowkey就会有很宽的表，并不是标准使用案例的数十个或数百个表。但是也有一种折中方案，那就是下面的”Rows as Columns“。</p>
+<h4 id="rows-as-columns">Rows as Columns</h4>
+<p>在选择行或者列的折中方案是将分开的行数据打包存进列中，对一定数量的行，OpenTSDB 是最好的例子，用单行数据代表一个时间范围，离散时间按照 列处理。这个方法一般比较复杂，需要重写你的数据，优点是I/O很高效。</p>
+<h3 id="case-study-list-data">Case Study - List Data</h3>
+<p>下面例子是一个相当普遍的问题，如何处理每个用户列表数据在hbase.
+问题：
+如何存储大量的列表数据在hbase以及我们努力寻找哪种数据访问模式最有意义
+一个选择是存储多数数据作为key,我们可以这样做：</p>
+<pre><code>&lt;FixedWidthUserName&gt;&lt;FixedWidthValueId1&gt;:&quot;&quot; (no value)
+&lt;FixedWidthUserName&gt;&lt;FixedWidthValueId2&gt;:&quot;&quot; (no value)
+&lt;FixedWidthUserName&gt;&lt;FixedWidthValueId3&gt;:&quot;&quot; (no value)
+</code></pre><p>另一个选择是我们完全使用：</p>
+<pre><code>&lt;FixedWidthUserName&gt;&lt;FixedWidthPageNum0&gt;:&lt;FixedWidthLength&gt;&lt;FixedIdNextPageNum&gt;&lt;ValueId1&gt;&lt;ValueId2&gt;&lt;ValueId3&gt;...
+&lt;FixedWidthUserName&gt;&lt;FixedWidthPageNum1&gt;:&lt;FixedWidthLength&gt;&lt;FixedIdNextPageNum&gt;&lt;ValueId1&gt;&lt;ValueId2&gt;&lt;ValueId3&gt;...
+</code></pre><p>其中每行包含许多值，所以获取前30个值的方法如下：</p>
+<pre><code>scan { STARTROW =&gt; &#39;FixedWidthUsername&#39; LIMIT =&gt; 30}
+</code></pre><p>另一种使用场景可以像这样：</p>
+<pre><code>get &#39;FixedWidthUserName\x00\x00\x00\x00&#39;
+</code></pre><p>常规用法只会获取列表的前30项数据，很少有访问列表的更多数据，一些用户的列表数据可能少于30项，一些用户可能有数百万。</p>
+<p>单值模式看起来要占更多空间在hbase,但是可以更加灵活的检索和分页，这种方式对get分页或者scan分页有重大性能优势吗？</p>
+<p>我最初的理解是页数未知的话scan操作可能更快，（缓存设置合适）但是get 应该更快如果我们一直访问同一页数据，我最终收到许多人在性能上给我相反的意见。我假设页大小是相对一致的，目前为止的大多数场景我们可以保证在页长度不变的情况下我们只需要一页的数据，我将假设我们需要罕见的更新，而且插入列表数据的中部。</p>
+<p>答案：</p>
+<p>如果我理解正确，最终是需要存储&quot;user, valueid, value&quot;这样的三元组，像这样：</p>
+<pre><code>&quot;user123, firstname, Paul&quot;,
+&quot;user234, lastname, Smith&quot;
+</code></pre><p>(其中userid 是固定宽度，valuesid 是固定长度)</p>
+<p>你的访问模式可能是这样： 对于用户X ，列出从valueidY开始的30条数据。所有返回数据需要按 valueid 排序吗？</p>
+<p>hbase的常见设计问题：宽还是高？</p>
+<ul>
+<li>高：
+每一行保存每一个用户的一个值，所以一个用户会有许多行。
+rowkey是：user + valueid，具体的列可以是具体的值。
+如果你需要按照 rowkey的排序扫描这种设计就很好。
+你可以scan 任意 user + valueid，获取连续的30行。
+你放弃了一个用户所有行间的事务保证，但是你不一定需要它。
+这样做一般是推荐的。</li>
+<li>宽
+你可以在一行保存用户的所有值，用不同的列。
+只要你不需要在单个请求做很多事情，或者从头到尾扫描整个表返回所有数据，这种设计从本质上是不差的。
+客户端有方法可以获取特定列。</li>
+</ul>
+<p>注意没有一种方法从本质上比另一种占用更多磁盘空间。你仅仅是将具体值的key从”左“（row key）移动到了”右“（column qualifiers ）,在这些方法下，每一个 key/value 依然存储完整的 rowkey, column family name. </p>
+<p>手动分页更加复杂，像跟踪每一页的许多事情，如果有插入还需要重新分页，这看起来更加复杂。它可能有轻微的速度优势在极高的吞吐量下，唯一真正知道它们的方法就是亲自去实践。如果你没有时间去实践和比较，我的建议是用最简单的方法：每个 user+value一行。</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871efddd2f092c392ca4d49
+                 data-title=HBase Rowkey设计
+                 data-url=hbase-rowkey>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

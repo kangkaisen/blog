@@ -1,0 +1,205 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|HBase 集群监控系统构建</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> HBase 集群监控系统构建</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-05-04</p>
+            <p>分类: <a href="../tag/解决方案.html" target="_blank" >解决方案</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#一-集群为什么需要监控系统">一 集群为什么需要监控系统</a></li>
+<li><a href="#二-如何构建hbase集群监控系统">二 如何构建HBase集群监控系统</a></li>
+<li><a href="#三-hbase-集群监控项采集">三 HBase 集群监控项采集</a><ul>
+<li><a href="#31-主机基本监控项">3.1 主机基本监控项</a></li>
+<li><a href="#32-jvm监控项">3.2 JVM监控项</a></li>
+<li><a href="#33-hbase集群各系统存活监控项">3.3 HBase集群各系统存活监控项</a></li>
+<li><a href="#34-hbase集群各系统jmx监控项">3.4 HBase集群各系统JMX监控项</a></li>
+<li><a href="#35-hbase集群web页面监控项">3.5 HBase集群web页面监控项</a></li>
+<li><a href="#36-hbase集群特有监控项">3.6 HBase集群特有监控项</a></li>
+<li><a href="#37-hbase集群-表粒度和region粒度指标监控">3.7 HBase集群 表粒度和Region粒度指标监控</a></li>
+<li><a href="#38-hbase客户端监控">3.8 HBase客户端监控</a></li>
+</ul>
+</li>
+<li><a href="#四-注意事项">四 注意事项</a><ul>
+<li><a href="#41-安全认证">4.1 安全认证</a></li>
+<li><a href="#42-开发语言">4.2 开发语言</a></li>
+<li><a href="#43-代码重构">4.3 代码重构</a></li>
+</ul>
+</li>
+<li><a href="#五-总结">五 总结</a></li>
+</ul>
+<!-- toc stop -->
+<h2 id="一-集群为什么需要监控系统">一 集群为什么需要监控系统</h2>
+<p>总的来说是为了保证系统的稳定性，可靠性，可运维性。具体来说我认为有以下几点：</p>
+<ol>
+<li>掌控集群的核心性能指标，了解集群的性能表现。</li>
+<li>集群出现问题时及时报警，便于运维同学及时修复问题。</li>
+<li>集群重要指标值异常时进行预警，将问题扼杀在摇篮中，不用等集群真正不可用时才采取行动。</li>
+<li>当集群出现问题时，监控系统可以帮助我们更快的定位问题和解决问题</li>
+</ol>
+<h2 id="二-如何构建hbase集群监控系统">二 如何构建HBase集群监控系统</h2>
+<p>一般来说，大公司内部都有企业统一的监控报警系统，开源的有zabbix以及小米的Open-Falcon。对于HBase集群来讲，我们所要做的就是将我们关心的指标项发送到公司的监控系统，并配置相关的报警信息即可。所以问题现在转化为我们应该开发，采集并上报哪些HBase集群监控项</p>
+<h2 id="三-hbase-集群监控项采集">三 HBase 集群监控项采集</h2>
+<h3 id="31-主机基本监控项">3.1 主机基本监控项</h3>
+<p>CPU，内存，磁盘，网络 主机4大 基本监控项，这4项机器监控保证我们运行我们HBase集群的机器是正常的。</p>
+<h3 id="32-jvm监控项">3.2 JVM监控项</h3>
+<p>HBase集群涉及的系统HDFS，HBase，ZooKeeper都是用Java编写的，系统都是运行在JVM中，所以我们必须采集JVM相关的监控项，尤其是JVM的GC信息</p>
+<h3 id="33-hbase集群各系统存活监控项">3.3 HBase集群各系统存活监控项</h3>
+<p>HBase集群各个系统的进程是否存活是必须也是最基本的监控项。具体有<code>hmaster；regionserver；namenode；datanode；journalnode；zkfc；zookeeper</code>的存活监控。具体判断存活的方式我们可以去判断各系统相应的进程是否存在，也可以去判断各系统的web页面或者jmx页面是否正常。</p>
+<h3 id="34-hbase集群各系统jmx监控项">3.4 HBase集群各系统JMX监控项</h3>
+<p>JMX全称是Java Management Extensions，用于用于Java程序扩展监控和管理项。而许多Hadoop系统都提供了丰富的JMX监控项，所以我们可以直接从HBase系统本身提供的JMX信息获取我们需要的监控项。HBase提供的JMX信息的web页面，地址就是
+<code>http://your_hmaster:60010/jmx</code>，JMX web页面的数据格式是<code>json</code>格式。由于信息比较多，也提供了一个qry=name的方式获取具体某一项所需的数据，例如：<code>http://namenode:50070/jmx?qry=hadoop:service=NameNode,name=NameNodeInfo</code>只收集nameinfo相关的数据。
+所以我们可以用多线程或多进程同时采集多个指标项，<strong>同时也要注意在每个线程处理的时候数据应该是异步的，否则同步可能导致某一个指标项采集阻塞，
+使得之后的所有指标项在一个采集周期内无法正常返回数据。</strong></p>
+<p>下面是一个python利用进程池异步请求多个url的例子：</p>
+<pre><code>#!/usr/bin/env python
+# encoding: utf-8
+
+import urllib2
+import multiprocessing as mp
+
+results = []
+
+def add_list(result):
+    results.append(result)
+
+class PoolHelper(object):
+    def __call__(self, index, url):
+        return self.open_url(index, url)
+
+    def open_url(self, index, url):
+        try:
+            response = urllib2.urlopen(url, timeout = 10)
+            result = response.read()
+        except:
+            result = &#39;&#39;
+        return (index, result)
+
+    def pool_url(self, urls):
+        pool = mp.Pool()
+        for index, url in enumerate(urls):
+            pool.apply_async(self, args=(index, url,), callback=add_list)
+        pool.close()
+        pool.join()
+        return results
+</code></pre><p><strong>JMX的信息我们除了可以从web页面抓取外，也可以用Java 程序直接attach到目标进程直接获取JMX信息。</strong></p>
+<h3 id="35-hbase集群web页面监控项">3.5 HBase集群web页面监控项</h3>
+<p>我们也可以从HBase的60010和60030的web页面直接抓取集群的一些汇总信息。具体实现方式可以使用正则匹配，python也可以直接使用BeautifulSoup获取页面上我们需要的信息，BeautifulSoup简单，易用，强大。</p>
+<h3 id="36-hbase集群特有监控项">3.6 HBase集群特有监控项</h3>
+<h4 id="361-hbck监控">3.6.1 HBCK监控</h4>
+<p>关于HBCK的具体含义可以参考：[HBase HBCK 简介][1]</p>
+<h4 id="362-hbase-replication监控">3.6.2 HBase Replication监控</h4>
+<p>主要是用来确定开启Replication的HBase集群都正常同步，这一块为了便于被python调用，我们使用了JRuby开发，JRuby语法和Ruby一样，只不过可以直接调用Java API。</p>
+<h4 id="363-hbase-探针程序">3.6.3 HBase 探针程序</h4>
+<p>探针程序就是为了确定整个集群状态健康，一般是建表，写数据，读数据，删数据，删表。</p>
+<h3 id="37-hbase集群-表粒度和region粒度指标监控">3.7 HBase集群 表粒度和Region粒度指标监控</h3>
+<p>因为HBase本身的JMX监控指标没有表粒度和Region粒度，所以我们需要二次开发。我们主要是利用HBase的observer类型的协处理器来统计基于表粒度的put,get，scan等请求信息，然后发送到HBase的Metric，最后再从jmx页面抓取监控项。</p>
+<h3 id="38-hbase客户端监控">3.8 HBase客户端监控</h3>
+<p>以上的监控项都是服务端的，我们也需要用户使用的HBase客户端也有监控，客户端监控也是我们HBase服务质量的一个体现</p>
+<h2 id="四-注意事项">四 注意事项</h2>
+<h3 id="41-安全认证">4.1 安全认证</h3>
+<p>如果HBase集群开启了Kerberos认证，则在整个监控系统指标项开发，采集，上报过程中会带来许多额外需要解决的问题。</p>
+<h3 id="42-开发语言">4.2 开发语言</h3>
+<p>开发语言无所谓好坏，合适的便是最好的，所以在每个部分都可以根据实际情况采用最合适的语言。</p>
+<h3 id="43-代码重构">4.3 代码重构</h3>
+<p>监控系统指标项的开发，采集，上报程序一般不会有性能瓶颈，所有我们首先应该保证代码可以正确运行，然后不断迭代优化。</p>
+<h2 id="五-总结">五 总结</h2>
+<p>任何一个服务的监控系统都是一个不断迭代，不断优化的过程，不可能一开始就做到最好。监控总是比问题发生来的更早一些，而每一次出问题，又进一步加强相应方面的监控，我们需要让监控系统从出问题时才报警到可能出现问题时就预警逐渐过渡，最终让监控系统成为我们保证系统稳定性的一个有力工具。</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871f305d2f092c392ca4d51
+                 data-title=HBase 集群监控系统构建
+                 data-url=hbase-monitor>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

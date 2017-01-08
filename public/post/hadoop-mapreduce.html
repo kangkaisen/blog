@@ -1,0 +1,197 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Hadoop MapReduce 性能优化</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Hadoop MapReduce 性能优化</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-04-03</p>
+            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#影响-mapreduce-的主要因素">影响 MapReduce 的主要因素</a></li>
+<li><a href="#潜在影响因素">潜在影响因素</a></li>
+<li><a href="#性能调优">性能调优</a></li>
+<li><a href="#mapred-sitexml">mapred-site.xml</a></li>
+<li><a href="#hdfs-sitexml">hdfs-site.xml</a></li>
+<li><a href="#检测-系统瓶颈">检测 系统瓶颈</a></li>
+<li><a href="#善于使用linux-相关命令">善于使用linux 相关命令</a></li>
+<li><a href="#通过计数器-识别-资源薄弱环节">通过计数器 识别 资源薄弱环节</a></li>
+<li><a href="#强化-map-和-reduce-任务">强化 map 和 reduce 任务</a></li>
+<li><a href="#优化-mapreduce-任务">优化 mapreduce 任务</a></li>
+<li><a href="#hadoop-最佳实践">Hadoop 最佳实践</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="影响-mapreduce-的主要因素">影响 MapReduce 的主要因素</h3>
+<ul>
+<li>硬件因素 ：CPU 磁盘 I/O, 网络带宽， 内存</li>
+<li>底层存储系统</li>
+<li>输入数据，shuffle 数据 以及输出数据的大小</li>
+<li>作业算法： map, reduce, partition, combine, compress</li>
+</ul>
+<h3 id="潜在影响因素">潜在影响因素</h3>
+<ul>
+<li>I/O 模式： 直接I/O(本地) 流式I/O（TCP，JDBC）</li>
+<li>输入数据解析</li>
+<li>输入数据存储</li>
+</ul>
+<h3 id="性能调优">性能调优</h3>
+<ul>
+<li>COU利用率</li>
+<li>内存占用</li>
+<li>磁盘 I/O</li>
+<li>网络流量</li>
+</ul>
+<h3 id="mapred-sitexml">mapred-site.xml</h3>
+<ul>
+<li>CPU相关参数
+map reduce 任务的最大数目</li>
+<li>磁盘I/O相关参数
+是否压缩 编码方式</li>
+<li><p>内存相关参数</p>
+<ul>
+<li>每个JVM 任务的可用内存</li>
+<li>每个MR 作业的VM极限值</li>
+<li>MR 合并与排序 时 排序区的缓冲区大小</li>
+<li>MR 合并与排序 时 map 输出分区数目</li>
+</ul>
+</li>
+<li><p>与网络相关参数
+机架感知</p>
+</li>
+</ul>
+<h3 id="hdfs-sitexml">hdfs-site.xml</h3>
+<ul>
+<li>默认的block 块大小</li>
+<li>文件副本数</li>
+</ul>
+<h3 id="检测-系统瓶颈">检测 系统瓶颈</h3>
+<ol>
+<li>创建一项基线 ：使用 Hadoop 集群默认配置</li>
+<li>分析 Hadoop 计数器， 修改或者调优 某些配置参数的配置</li>
+<li>重复第2步，直到作业执行时间 达到最短</li>
+</ol>
+<h3 id="善于使用linux-相关命令">善于使用linux 相关命令</h3>
+<h3 id="通过计数器-识别-资源薄弱环节">通过计数器 识别 资源薄弱环节</h3>
+<ul>
+<li>检查输入数据大小</li>
+<li>检查 海量I/O 和网路阻塞</li>
+<li>检查 并发任务不足</li>
+<li>检查 CPU 过饱和</li>
+</ul>
+<h3 id="强化-map-和-reduce-任务">强化 map 和 reduce 任务</h3>
+<p>在Hadoop 下处理 hdfs 小文件问题的最简单方法是把它们打包成大文件</p>
+<p>在shuffle阶段 和 Sort 阶段 提高性能最简单的手段就是压缩排序和合并的数据量，可以 使用 combiner,数据压缩，数据过滤</p>
+<h3 id="优化-mapreduce-任务">优化 mapreduce 任务</h3>
+<ul>
+<li>合理设定Map/Reduce数量</li>
+<li>使用Combiner减少中间数据输出</li>
+<li>对中间数据和最终结果启用压缩</li>
+<li>减少Shuffle过程中写入磁盘的数据</li>
+<li>使用正确的 Writable 类型</li>
+<li>在代码中捕获所有异常</li>
+</ul>
+<h3 id="hadoop-最佳实践">Hadoop 最佳实践</h3>
+<ul>
+<li>EXT4 文件系统</li>
+<li>noatime: 禁用文件和目录的访问时间日志</li>
+<li>避免使用逻辑卷管理</li>
+<li>swap 值降低 或禁用</li>
+<li>提高最大打开文件描述符</li>
+</ul>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871ec7ed2f092c392ca4d43
+                 data-title=Hadoop MapReduce 性能优化
+                 data-url=hadoop-mapreduce>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

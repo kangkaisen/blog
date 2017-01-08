@@ -1,0 +1,248 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|读书笔记——《七周七并发模型》</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 读书笔记——《七周七并发模型》</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-03-30</p>
+            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
+            <hr/>
+            <h2 id="概述">概述</h2>
+<p>并发的代码的关键是 独立性 和 故障检测
+并发编程中如果某事可能会发生，那么不论多么艰难就一定会发生，而且可能发生在最不利的时刻</p>
+<h3 id="并发和并行的区别">并发和并行的区别</h3>
+<p>并发是同一时间应对 （dealing with）多件事情的能力（每一时刻只可以做一件事情，但是可以同时处理多个任务）</p>
+<p>并行是同一时间做 （doing) 多件事情的能力</p>
+<p>并发的关注点在于任务切分。举例来说，你是一个创业公司的CEO，开始只有你一个人，你一人分饰多角，一会做产品规划，一会写代码，一会见客户，虽然你不能见客户的同时写代码，但由于你切分了任务，分配了时间片，表现出来好像是多个任务一起在执行</p>
+<p>并行的关注点在于同时执行。还是上面的例子，你发现你自己太忙了，时间分配不过来，于是请了工程师，产品经理，市场总监，各司一职，这时候多个任务可以同时执行了</p>
+<h3 id="并行架构">并行架构</h3>
+<ul>
+<li>位级 bit-level 并行</li>
+<li>指令级 instruction-level 并行
+CPU并行技术：流水线 乱序执行 猜测执行</li>
+<li>数据级 data-level 并行
+图像处理适合数据级并行</li>
+<li>任务级 task-level 并行
+多处理器<ul>
+<li>共享内存的多处理器系统
+  通信通过内存</li>
+<li>分布式内存的多处理器系统
+  通信通过网络</li>
+</ul>
+</li>
+</ul>
+<h2 id="线程和锁">线程和锁</h2>
+<h3 id="互斥和内存模型">互斥和内存模型</h3>
+<h4 id="竞态条件">竞态条件</h4>
+<ul>
+<li>编译器的静态优化可以打乱代码的执行顺序</li>
+<li>JVM的动态优化可以打乱代码段执行顺序</li>
+<li>硬件可以通过乱序执行来优化性能</li>
+</ul>
+<h4 id="内存可见性">内存可见性</h4>
+<h4 id="死锁">死锁</h4>
+<p>避免死锁：总是按照一个全局的固定顺序获取多把锁
+设置超时可以避免无尽死锁</p>
+<h4 id="外星方法">外星方法</h4>
+<p>外星方法：调用这类方法时，调用者对方法的细节并不知情
+解决思路：
+避免在持有琐时调用外星方法
+进行保护性复制</p>
+<h3 id="超越内置锁">超越内置锁</h3>
+<h4 id="内置锁">内置锁</h4>
+<h4 id="reentrantlock">ReentrantLock</h4>
+<p>可中断
+超时
+条件变量：一个条件变量需要和一把锁关联</p>
+<h4 id="交替锁">交替锁</h4>
+<p>适用在链表</p>
+<h4 id="原子变量">原子变量</h4>
+<p>原子变量是无锁非阻塞算法的基础</p>
+<h4 id="线程池">线程池</h4>
+<p>CPU密集型 线程池大小应该接近于可用核数
+IO密集型 线程池大小可以设置的更大些</p>
+<h4 id="写入时复制">写入时复制</h4>
+<h4 id="阻塞队列">阻塞队列</h4>
+<p>ArrayBlockingQueue 适合生产者-消费者模式</p>
+<h4 id="非阻塞队列">非阻塞队列</h4>
+<p>ConcurrentLinkedQueue</p>
+<h4 id="concurrenthashmap">ConcurrentHashMap</h4>
+<h4 id="fork-join-框架">Fork/Join 框架</h4>
+<h2 id="函数式编程-clojure">函数式编程 Clojure</h2>
+<p>使用函数式编程的最大好处是我们可以确信程序是按照我们预想的方式运行的</p>
+<h3 id="抛弃可变状态">抛弃可变状态</h3>
+<p>函数式编程抛弃了可变状态</p>
+<h4 id="隐藏的可变状态">隐藏的可变状态</h4>
+<p>Java 的 SimpleDateFormat</p>
+<h4 id="逃逸的可变状态">逃逸的可变状态</h4>
+<h3 id="函数式并行">函数式并行</h3>
+<h3 id="函数式并发">函数式并发</h3>
+<p>函数式编程中，如何安排求值顺序来获得最终结果是相对自由的，这正是函数式代码可以轻松并行的关键。</p>
+<h4 id="引用透明性">引用透明性</h4>
+<p>在函数式编程中，函数都具有引用透明性：在任何调用函数的地方，都可以用函数运行的结果来替换函数的调用，而不会对程序产生副作用。</p>
+<p>引用透明性是可以安全调整函数求值顺序的关键所在。</p>
+<h2 id="clojure之道——分离标识与状态">Clojure之道——分离标识与状态</h2>
+<h3 id="原子变量与持久数据结构">原子变量与持久数据结构</h3>
+<h4 id="原子变量">原子变量</h4>
+<p>基于 java.util.concurrent.atomic 基础上建立的
+很多web应用都是用原子map来存储会话数据的</p>
+<h4 id="持久数据结构">持久数据结构</h4>
+<p>数据结构被修改时总是保留之前的版本，这样可以为代码提供一致的数据视角</p>
+<p>持久数据结构被修改时<strong>看上去</strong>就像创建了一个完整副本</p>
+<p>持久数据结构的实现实质上是使用了共享结构（用链表来理解）</p>
+<h4 id="标识与状态">标识与状态</h4>
+<p>如果一个线程引用了持久数据结构，那么其他线程对数据结构的修改对该线程就是不可见的</p>
+<p>持久数据结构分离了标识与状态，如果获取了一个标识的当前状态，无论将来对这个标识怎样修改，获取的那个状态将不再改变</p>
+<p>状态实际上是随时间变化的一系列值</p>
+<p>我们不能俩次踏入同一条河流，因为水在不停流动</p>
+<h3 id="代理和软件事务内存">代理和软件事务内存</h3>
+<h4 id="代理">代理</h4>
+<p>代理包含了对一个值的引用</p>
+<h4 id="软件事务内存-stm">软件事务内存 STM</h4>
+<h4 id="clojure-对共享可变状态的支持">Clojure 对共享可变状态的支持</h4>
+<p>原子变量可以对一个值同步更新</p>
+<p>代理可以对一个值异步更新</p>
+<p>引用可以对多个值进行一致，同步更新</p>
+<h2 id="actor">Actor</h2>
+<p>封装了状态，并通过消息和其他actor通信</p>
+<p>消息并不是直接发送到一个actor,而是发送到一个信箱</p>
+<p>尾调用消除指的是如果函数在最后调用了自己，那么递归调用将被替换成一个简单的跳转</p>
+<p>actor是异步发送消息的——发送者并不会被阻塞</p>
+<p>将发送进程的标识符包含在消息中，通过这个机制，消息的接受者可以回复消息</p>
+<p>将错误处理隔离到一个管理进程中</p>
+<p>进程的异常终止通过连接进行传播</p>
+<p>连接是双向的</p>
+<p>一个进程可以捕获拎一个进程的终止消息</p>
+<p>actor模型的程序遵循 “任其崩溃的” 哲学，让actor的管理者来处理异常</p>
+<p>创建一个规模宏大且可生长的系统的关键在于其模块之间应该如何交流，而不在于其内部的属性和行为应该如何表现</p>
+<h2 id="通信顺序进程">通信顺序进程</h2>
+<p>消息传递系统中，决定其特性和功能的首要因素并不是用于传递消息的代码或者消息的内容，而是消息的传输通道</p>
+<p>通信顺序进程 CSP</p>
+<p>actor模型和channel模型非常相似——他们均有独立的并发执行单元构成，这些执行单元之间都使用消息来进行通信。但是俩者的侧重点完全不同。</p>
+<p>CSP模型不关注发送消息的实体，而是关注发送消息时使用的 channel（通道）。channel是第一类对象，它不像进程那样与信箱是紧耦合的，而是可以单独创建和读写，并在进程之间传递</p>
+<h3 id="channel">Channel</h3>
+<p>一个 channel 就是一个线程安全的队列————任何任务只要持有channel的引用，就可以向一端添加消息，也可以从另一端删除消息。</p>
+<p>使用channel发送消息时发送者并不知道谁是接受者，反之也一样</p>
+<p>channel可以是无缓存也可以是有缓存的</p>
+<p>当channel的缓存区有足够空间时，向其中写入消息的操作会立刻完成，不会阻塞</p>
+<p>缓存区的三种类型：阻塞性，弃用新值型，移出旧值型</p>
+<h3 id="go块">go块</h3>
+<p>线程池技术是处理CPU密集型任务的利器，但当涉及线程通信时，线程池技术会被削弱</p>
+<p>go块既可以写出事件驱动的代码来解决目前碰到的阻塞问题，又可以不牺牲代码的结构性和可读性。其原理是go块在底层将串行化的代码透明的重写成事件驱动的形式</p>
+<p>go块中的代码会被转换成一个状态机。当从channel中读出消息或者向channel中写入消息的时候，状态机将暂停，并释放它所占用的线程的控制权。当代码可以继续运行时，状态机进行一次状态转换，并可能在另一个线程中继续运行</p>
+<p>go块的成本很低</p>
+<h3 id="异步io">异步IO</h3>
+<p>异步IO可以一下进行很多连接，当其中有一个连接的数据可用时，会收到一个通知</p>
+<h2 id="数据并行">数据并行</h2>
+<p>图形处理单元 GPU</p>
+<p>现代GPU1秒钟可以处理几十亿的三角形</p>
+<p>数据并行的具体方法：流水线和多ALU等</p>
+<h3 id="流水线">流水线</h3>
+<p>可以通过让流水线饱和来获得更好的性能</p>
+<h3 id="多alu">多ALU</h3>
+<p>主要搭配足够宽的内存总线，多个ALU就可以同时获取多个操作数，这样施加在大量数据上的运算就可以并行了</p>
+<p>数据并行尤其适合科学计算，工程计算以及仿真领域，比如流体力学，有限元分析，N体模拟，模拟退火，蚁群优化，神经网络等</p>
+<h2 id="lambda架构">Lambda架构</h2>
+<h3 id="mapreduce">MapReduce</h3>
+<p>Hadoop天生具有处理错误和从错误中恢复的能力</p>
+<h3 id="批处理层">批处理层</h3>
+<h3 id="加速层">加速层</h3>
+<h2 id="结语">结语</h2>
+<p>不变性在代码中的应用汇越来越广泛</p>
+<p>未来是分布式的</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871e92dd2f092c392ca4d3e
+                 data-title=读书笔记——《七周七并发模型》
+                 data-url=qizhouqibingfa>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

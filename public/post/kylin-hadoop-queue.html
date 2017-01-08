@@ -1,0 +1,187 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Apache Kylin Hadoop队列拆分方案设计与反思</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Apache Kylin Hadoop队列拆分方案设计与反思</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-12-11</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#背景">背景</a></li>
+<li><a href="#需求分析">需求分析</a></li>
+<li><a href="#方案设计">方案设计</a></li>
+<li><a href="#方案排期">方案排期</a></li>
+<li><a href="#需求1实现-impersonate方案">需求1实现 impersonate方案</a></li>
+<li><a href="#需求1实现-在yarn中为hadoop-kylin用户赋予其他队列的提交权限">需求1实现 在Yarn中为Hadoop-kylin用户赋予其他队列的提交权限</a></li>
+<li><a href="#需求2实现-增加project粒度配置并实现配置优先级">需求2实现 增加project粒度配置并实现配置优先级。</a></li>
+<li><a href="#反思1-凡事一定要先搞清概念">反思1 凡事一定要先搞清概念</a></li>
+<li><a href="#反思2-勿忘初心时刻不忘记最初目标">反思2 勿忘初心(时刻不忘记最初目标)</a></li>
+<li><a href="#反思3-跳出思维定式">反思3 跳出思维定式</a></li>
+<li><a href="#反思4-避免沉没成本的影响">反思4 避免沉没成本的影响</a></li>
+<li><a href="#总结">总结</a></li>
+<li><a href="#致谢和相关资料">致谢和相关资料</a></li>
+</ul>
+<!-- toc stop -->
+<p>本文首先叙述了我实现Kylin的Hadoop队列拆分的整个过程，所有的反思和总结都在最后。</p>
+<h3 id="背景">背景</h3>
+<p>Kylin已经在美团点评的各大业务线广泛使用，目前已有<code>20+</code> Project,<code>200+</code> Cube。为了便于资源统计和成本计算，我们需要将目前构建cube使用的单一<code>hadoop-kylin</code>队列拆分为各业务线的Hadoop队列。
+（我们的Hadoop集群和HBase集群都启用了基于kerberos的安全认证。）</p>
+<h3 id="需求分析">需求分析</h3>
+<p>为了实现队列拆分这一目标，我们需要实现两个需求：</p>
+<ol>
+<li>我们Kylin服务使用的<code>hadoop-kylin</code>用户可以提交Hive作业，MR作业到各业务线的Hadoop队列。</li>
+<li>可以在project粒度配置各project的Hadoop 队列信息，并实现<code>cube &gt; project &gt; server</code>的配置优先级。</li>
+</ol>
+<h3 id="方案设计">方案设计</h3>
+<p>对于需求1，前期在<strong>没有分析需求，认真思考的情况下</strong>就决定采用<code>impersonate</code>方案，因为是小伙伴推荐的方案，也是启用kerberos的安全认证时最正统，最常见的方案，在我们团队内部也广泛使用。<code>impersonate</code>简单来说就是用<code>hadoop-kylin</code>用户impersonate（冒充）成各业务线的Hadoop用户（像hadoop-waimai），然后再由hadoop-waimai用户提交MR作业到自己的Hadoop队列（像root.hadoop-waimai.etl）。</p>
+<p>对于需求2，分为2步，首先需要在project元数据中增加配置信息，其次需要实现<code>cube &gt; project &gt; server</code>的配置优先级。</p>
+<h3 id="方案排期">方案排期</h3>
+<p>对于两个需求，我首先查看了cube 扩展配置的相关代码，大概确认了需求2的实现思路和方式，感觉把握比较大。对于需求1的<code>impersonate</code>方案的相关概念和实现方式我并不清楚，所以决定先实现需求1，再实现需求2，然后再整合两个需求。</p>
+<h3 id="需求1实现-impersonate方案">需求1实现 impersonate方案</h3>
+<p>所谓的impersonate方案就是当Hadoop集群启用基于kerberos的安全认证时，我们可以设置一个超级用户，然后这个超级用户就可以假冒成其他的Hadoop用户提交MR作业。</p>
+<p>impersonate的代码实现十分简单，主要是调用<code>UserGroupInformation.doAs</code>。具体到Kylin中，我们在提交Hive SQL，MR job， 读写HDFS文件，访问HBase集群前都需要进行impersonate。我较快地实现了此方案。 但存在以下问题：</p>
+<ul>
+<li><strong>社区版的Hive通过命令行没法直接impersonate</strong>，<code>这也意味着我的改动无法提交到Kylin社区</code>。 在我们公司内部可行是因为我们团队修改了<code>hadoop-common</code>的代码，使得Hive在提交MR作业前都会进行impersonate。</li>
+<li><strong>需要在HBase集群为impersonate后的代理用户赋予权限</strong>。</li>
+<li><strong>需要将目前的<code>hadoop-kylin</code>用户替换为超级用户</strong>。</li>
+<li><strong>无法提交到Kylin社区，意味我们代码的维护成本变高</strong>。</li>
+</ul>
+<h3 id="需求1实现-在yarn中为hadoop-kylin用户赋予其他队列的提交权限">需求1实现 在Yarn中为Hadoop-kylin用户赋予其他队列的提交权限</h3>
+<p>由于需求1的impersonate方案实现存在以上问题，主要是<strong>无法提交到社区，而且改动的文件较多（虽然许多都是1行改动），导致代码的维护成本较高</strong>。
+所以这个方案在要上线前被小伙伴否决了，<strong>当时我的内心当然是拒绝的</strong>。</p>
+<p>之后小伙伴提醒到我们的目标只是实现hadoop队列拆分，所以<strong>只需要在Yarn中为hadoop-kylin用户赋予其他队列的提交权限</strong>就可以了。当时听到这个建议我愣了一下，和Yarn的小伙伴确认后<strong>我的内心更是崩溃的</strong>。</p>
+<p>此方案的实现是十分简单的，因为kylin本身支持cube粒度覆盖MR作业配置参数，所以我只需要实现支持cube粒度覆盖Hive参数。我在半天内就实现了此方案的开发，测试。</p>
+<h3 id="需求2实现-增加project粒度配置并实现配置优先级。">需求2实现 增加project粒度配置并实现配置优先级。</h3>
+<p>首先给project本身增加配置是十分简单的。至于实现<code>cube &gt; project &gt; server</code>的配置优先级思考了几种方案，可行的两种方案是：</p>
+<ol>
+<li>在cube初始化时就获取project的配置。</li>
+<li>在<code>KylinConfigExt</code>中获取具体的配置时再去获取project的配置。</li>
+</ol>
+<p>在公司我采用了方案2。方案1其实是我最初想到的方案，没有采用的原因是<strong>我起初认为在cube初始化时必须知道cube相应的project</strong>，<strong>但是在cube初始化时cube还没有添加到相应的project</strong>。</p>
+<p>最终在社区实现的方案是1。原因是我在<code>Apache Kylin PMC 李扬</code>的提醒下才意识到我们<strong>并不需要在cube初始化时就获取cube相应的project，我们只需要在relaod cube的时候获取cube相应的project就可以</strong>。</p>
+<p>关于此需求实现的相关讨论，具体思路和代码可以查看 <a href="https://issues.apache.org/jira/browse/KYLIN-2180">KYLIN-2180：Add project config and make config priority become &quot;cube &gt; project &gt; server&quot;</a></p>
+<h3 id="反思1-凡事一定要先搞清概念">反思1 凡事一定要先搞清概念</h3>
+<p>如果我一开始对hadoop队列，作业提交等概念都有<strong>清晰，正确的理解</strong>，知道只要有权限的hadoop用户就可以向相应的hadoop队列提交作业，我可能一开始根本就不会考虑impersonate方案。</p>
+<p>其实我们每个人的知识体系都是基于对所有概念的理解。引用李笑来的一段话来总结：</p>
+<pre><code>衡量一个人是否聪明，其实很简单：
+
+1. 看他的操作系统里有多少必要、正确、清晰的概念；
+
+2. 看他的操作系统里那些必要、正确、清晰的概念之间，有多少必要、正确、清晰的关联。
+</code></pre><p>显然基于李笑来的理论，<code>每个人的聪明显然是可以习得的，而不是天生的</code>。</p>
+<h3 id="反思2-勿忘初心-时刻不忘记最初目标-">反思2 勿忘初心(时刻不忘记最初目标)</h3>
+<p>在我们工作生活中，经常会有这样的情况：我们的目标是解决问题A，然而我们发现解决问题A需要先解决问题B，解决问题B需要先解决问题C·····</p>
+<p>有时间需要先解决2，3个问题可能是比较正常的，但是如果我们的目标问题本身只是个小问题，我们的方案却需要先解决2，3个甚至更多问题的时候，我们就需要反思我们的思路或方案是否合理，是不是我们走远了，有没有更简洁的方案能够直接解决我们的目标问题。</p>
+<h3 id="反思3-跳出思维定式">反思3 跳出思维定式</h3>
+<p>在我还没有进行队列拆分前，我脑子里就被印上了这样一个<code>错误的概念</code>：<strong>impersonate方案可以实现队列拆分，实现队列拆分就需要impersonate</strong>。</p>
+<p>在实现kylin的配置优先级时，我<code>想当然的觉得</code>cube在初始化时就需要知道cube相应的project。</p>
+<p><strong>在生活中，我们某个时间段专注于某个领域，某个问题，视野就会有限，思维也会逐渐形成定式。 所以<code>我们和他人的讨论交流是很有必要的</code>，有时即使是他人的一句无心之语，都有可能让我们“醍醐灌顶”。即使是一个人独立工作，当我们毫无头绪时，也可以暂时放下，过段时间就可能会有新的灵感和思路。</strong></p>
+<h3 id="反思4-避免沉没成本的影响">反思4 避免沉没成本的影响</h3>
+<p>所谓的沉没成本的影响是，<strong>当我们为一件事付出了很多后，即使我们明明知道这件事已经不值得做了或者做错了，但是我们不愿我们之前的付出付诸东流，就将这件错误的事情继续下去</strong>。</p>
+<p>当我已经完全实现的impersonate方案被否决时，开始时我的内心是不愿放弃的，不愿自己的付出被否认。觉得放弃这个方案就意味着我是错的，意味着我浪费了时间和精力。</p>
+<p>后来想了想。<strong>谁都会犯错，每个人都是在一步步的试错中成长起来的。<code>否定自己过去错误的想法，并不代表否定自己</code>。关键是当事实已经告诉我们的确错了的时候，我们要勇于放弃，即刻改正，并从中总结经验教训</strong>。</p>
+<h3 id="总结">总结</h3>
+<p>Apache Kylin的Hadoop队列拆分有多种方案实现，主要是<strong>如何选择简洁的，易于维护的，和社区兼容的方案</strong>，最终的相关代码其实十分简单。最终我们要将每个业务线的队列拆分，也只需要在project页面增加如下两个配置，可以很方便的灰度测试，逐个project上线。
+<img src="http://static.zybuluo.com/kangkaisen/dbv0dz1xxytptnbjsirn356y/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202016-12-11%20%E4%B8%8B%E5%8D%882.16.05.png" alt="屏幕快照 2016-12-11 下午2.16.05.png-58.8kB"></p>
+<h3 id="致谢和相关资料">致谢和相关资料</h3>
+<p>感谢Apache Kylin PMC 李扬、大月的建议和Review。</p>
+<p><a href="https://issues.apache.org/jira/browse/KYLIN-2180">KYLIN-2180：Add project config and make config priority become &quot;cube &gt; project &gt; server&quot;</a></p>
+<p><a href="https://issues.apache.org/jira/browse/KYLIN-2095">KYLIN-2095: Hive mr job use overrided MR job configuration by cube properties</a> 在我改变需求1的方案后，发现社区已经实现了这个功能，但是个人感觉cube的HiveJob覆盖Hive的相关配置在<code>JoinedFlatTable</code>的<code>generateHiveSetStatements</code>中实现更简单和更合理。</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871fb7bd2f092c392ca4d64
+                 data-title=Apache Kylin Hadoop队列拆分方案设计与反思
+                 data-url=kylin-hadoop-queue>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

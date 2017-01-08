@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Java并发编程1：线程安全性</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Java并发编程1：线程安全性</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-11-05</p>
+            <p>分类: <a href="../tag/Java.html" target="_blank" >Java</a></p>
+            <hr/>
+            <p>线程安全的核心在于对<code>状态访问</code>进行管理，特别是对<code>共享的</code>和<code>可变的</code>状态进行访问。 换句话说，对于不可变或者不共享的状态进行访问就不会存在线程安全性问题。</p>
+<p><code>共享</code> 意味着变量可以由多个线程访问。
+<code>可变</code> 意味着变量的值在其生命周期可能发生变化。</p>
+<p><code>无状态对象一定是线程安全的</code>。</p>
+<p>当在无状态的类中添加一个状态时，如果<code>该状态完全由线程安全的对象来管理</code>，那么这个类仍然是线程安全的。</p>
+<p>要保持状态的一致性，就需要在<code>单个原子操作</code>中更新<code>所有</code>相关的状态变量。</p>
+<h3 id="1-什么是线程安全性">1 什么是线程安全性</h3>
+<p>当<code>多个线程</code>访问某个类时，不管运行时环境采用<code>何种调度方式</code>或者这些线程将<code>如何交替执行</code>，并且在主调代码中<code>不需要任何额外的同步或协同</code>，这个类<code>始终</code>可以表现出正确的行为，则称这个类是线程安全的。</p>
+<h3 id="2-原子性">2 原子性</h3>
+<p>即<code>不可分割的操作</code>，这些操作要么全部执行并且执行的过程不会被任何因素打断，要么就都不执行。</p>
+<p>并发环境的原子性和是事务应用程序的原子性有着相同的含义—— 一组语句作为一个不可分割的单元被执行。</p>
+<h3 id="3-竞态条件">3 竞态条件</h3>
+<p>竞态条件： <code>不恰当的执行顺序会出现不正确的结果</code>。</p>
+<p>当多个线程竞争同一资源时，如果对资源的访问顺序敏感，就称存在竞态条件。</p>
+<p>大多数竞态条件的本质——基于一种<code>可能失效的观察结果</code>来做出判断或执行某个计算，这种类型的静态条件称为“先检查后执行”。</p>
+<h3 id="4-内置锁">4 内置锁</h3>
+<p>每个Java对象都可以用作一个实现同步的锁，这些锁称为<code>内置锁</code>或者<code>监视器锁</code>。</p>
+<pre><code>synchronized(lock) {
+//访问或者修改由锁保护的共享状态
+}
+</code></pre><h3 id="5-重入">5 重入</h3>
+<p>重入： 一个<code>线程</code>可以<code>再次</code>获得一个已经由它<code>自己持有</code>的锁。</p>
+<p><strong>重入的一种实现方式：</strong></p>
+<ul>
+<li>为每个锁关联一个获取计数器和一个所有者线程。</li>
+<li>当计数器为0时，认为无人持有这个锁。</li>
+<li>当线程请求一个无人持有的锁时，记录下锁的持有者，计数器加1。</li>
+<li>如果一个线程再次获得这个锁，计数器将递增。</li>
+<li>当线程退出同步代码块时，计数器将递减。</li>
+<li>当计数器减为0时，释放这个锁。</li>
+</ul>
+<h3 id="6-用锁来保护状态">6 用锁来保护状态</h3>
+<p>对于可能被<code>多个线程同时访问</code>的<code>可变</code>状态变量，在访问它时都需要持有<code>同一个锁</code>，在这种情况下，我们称这个变量是由这个锁保护的。</p>
+<p>当类的不变性条件涉及多个状态变量时，在不变性条件的每个变量都必须由同一个锁来保护。</p>
+<p>当执行时间较长的计算或者可能无法快速完成的操作时（网络IO），一定不要持有锁。</p>
+<h3 id="7-参考资料">7 参考资料</h3>
+<p>本文是《Java 并发编程实战》的读书笔记。</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871f7e0d2f092c392ca4d5b
+                 data-title=Java并发编程1：线程安全性
+                 data-url=java-concurrent-thread-safe>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1200 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|算法之美——二叉树</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 算法之美——二叉树</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-11-19</p>
+            <p>分类: <a href="../tag/算法.html" target="_blank" >算法</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#解题思路">解题思路</a></li>
+<li><a href="#traverse-vs-divide-conquer">Traverse vs Divide Conquer</a></li>
+<li><a href="#二叉树前序遍历">二叉树前序遍历</a></li>
+<li><a href="#二叉树中序遍历">二叉树中序遍历</a></li>
+<li><a href="#二叉树后序遍历">二叉树后序遍历</a></li>
+<li><a href="#二叉树的最大深度">二叉树的最大深度</a></li>
+<li><a href="#二叉树的最小深度">二叉树的最小深度</a></li>
+<li><a href="#平衡二叉树判断">平衡二叉树判断</a></li>
+<li><a href="#最近公共祖先">最近公共祖先</a></li>
+<li><a href="#最近公共祖先2">最近公共祖先2</a></li>
+<li><a href="#二叉树中的最大路径和">二叉树中的最大路径和</a></li>
+<li><a href="#二叉树的最大路径和-ii">二叉树的最大路径和 II</a></li>
+<li><a href="#二叉树的层次遍历">二叉树的层次遍历</a></li>
+<li><a href="#二叉树倒序层次遍历">二叉树倒序层次遍历</a></li>
+<li><a href="#二叉树的锯齿形层次遍历">二叉树的锯齿形层次遍历</a></li>
+<li><a href="#验证二叉查找树">验证二叉查找树</a></li>
+<li><a href="#二叉搜索树查找中序后继">二叉搜索树查找中序后继</a></li>
+<li><a href="#二叉搜索树的迭代">二叉搜索树的迭代</a></li>
+<li><a href="#二叉查找树的搜索区间">二叉查找树的搜索区间</a></li>
+<li><a href="#在二叉查找树中插入节点">在二叉查找树中插入节点</a></li>
+<li><a href="#删除二叉查找树的节点-再思考">删除二叉查找树的节点  再思考</a></li>
+<li><a href="#二叉树的路径和">二叉树的路径和</a></li>
+<li><a href="#扭转后等价的二叉树">扭转后等价的二叉树</a></li>
+<li><a href="#等价二叉树">等价二叉树</a></li>
+<li><a href="#对称二叉树">对称二叉树</a></li>
+<li><a href="#完全二叉树">完全二叉树</a></li>
+<li><a href="#参考资料">参考资料</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="解题思路">解题思路</h3>
+<p>碰到二叉树的问题,就想想整棵树在该问题上的结果和左右儿子在该问题上的结果之间的联系是什么。</p>
+<h3 id="traverse-vs-divide-conquer">Traverse vs Divide Conquer</h3>
+<ul>
+<li>都是递归算法</li>
+<li>结果在参数中 vs 结果在返回值中</li>
+<li>自顶向下 vs 自底向上</li>
+</ul>
+<h3 id="二叉树前序遍历">二叉树前序遍历</h3>
+<pre><code>非递归
+/**
+ * Definition of TreeNode:
+ * public class TreeNode {
+ *     public int val;
+ *     public TreeNode left, right;
+ *     public TreeNode(int val) {
+ *         this.val = val;
+ *         this.left = this.right = null;
+ *     }
+ * }
+ */
+public class Solution {
+    /**
+     * @param root: The root of binary tree.
+     * @return: Preorder in ArrayList which contains node values.
+     */
+
+    public ArrayList&lt;Integer&gt; preorderTraversal(TreeNode root) {
+        Stack&lt;TreeNode&gt; stack = new Stack&lt;TreeNode&gt;();
+        ArrayList&lt;Integer&gt; preorder = new ArrayList&lt;Integer&gt;();
+
+        if (root == null) {
+            return preorder;
+        }
+
+        stack.push(root);
+        while (!stack.empty()) {
+            TreeNode node = stack.pop();
+            preorder.add(node.val);
+            if (node.right != null) {
+                stack.push(node.right);
+            }
+            if (node.left != null) {
+                stack.push(node.left);
+            }
+        }
+
+        return preorder;
+    }
+}
+
+Traverse  
+
+public class Solution {
+    public ArrayList&lt;Integer&gt; preorderTraversal(TreeNode root) {
+        ArrayList&lt;Integer&gt; result = new ArrayList&lt;Integer&gt;();
+        traverse(root, result);
+        return result;
+    }
+    // 把root为根的preorder加入result里面
+    private void traverse(TreeNode root, ArrayList&lt;Integer&gt; result) {
+        if (root == null) {
+            return;
+        }
+
+        result.add(root.val);
+        traverse(root.left, result);
+        traverse(root.right, result);
+    }
+}
+
+Divide &amp; Conquer
+
+public class Solution {
+    public ArrayList&lt;Integer&gt; preorderTraversal(TreeNode root) {
+        ArrayList&lt;Integer&gt; result = new ArrayList&lt;Integer&gt;();
+        // null or leaf
+        if (root == null) {
+            return result;
+        }
+
+        // Divide
+        ArrayList&lt;Integer&gt; left = preorderTraversal(root.left);
+        ArrayList&lt;Integer&gt; right = preorderTraversal(root.right);
+
+        // Conquer
+        result.add(root.val);
+        result.addAll(left);
+        result.addAll(right);
+        return result;
+    }
+}
+</code></pre><h3 id="二叉树中序遍历">二叉树中序遍历</h3>
+<pre><code>/**
+ * Definition of TreeNode:
+ * public class TreeNode {
+ *     public int val;
+ *     public TreeNode left, right;
+ *     public TreeNode(int val) {
+ *         this.val = val;
+ *         this.left = this.right = null;
+ *     }
+ * }
+ */
+public class Solution {
+    /**
+     * @param root: The root of binary tree.
+     * @return: Inorder in ArrayList which contains node values.
+     */
+    public ArrayList&lt;Integer&gt; inorderTraversal(TreeNode root) {
+        Stack&lt;TreeNode&gt; stack = new Stack&lt;TreeNode&gt;();
+        ArrayList&lt;Integer&gt; result = new ArrayList&lt;Integer&gt;();
+        TreeNode curt = root;
+        while (curt != null || !stack.empty()) {
+            while (curt != null) {
+                stack.push(curt);
+                curt = curt.left;
+            }
+            curt = stack.pop();
+            result.add(curt.val);
+            curt = curt.right;
+        }
+        return result;
+    }
+}
+</code></pre><h3 id="二叉树后序遍历">二叉树后序遍历</h3>
+<pre><code>
+/**
+ * Definition of TreeNode:
+ * public class TreeNode {
+ *     public int val;
+ *     public TreeNode left, right;
+ *     public TreeNode(int val) {
+ *         this.val = val;
+ *         this.left = this.right = null;
+ *     }
+ * }
+ */
+public class Solution {
+    /**
+     * @param root: The root of binary tree.
+     * @return: Postorder in ArrayList which contains node values.
+     */
+    public ArrayList&lt;Integer&gt; postorderTraversal(TreeNode root) {
+        Stack&lt;TreeNode&gt; stack = new Stack&lt;TreeNode&gt;();
+        ArrayList&lt;Integer&gt; result = new ArrayList&lt;Integer&gt;();
+        if (root == null){
+            return result;
+        }
+        TreeNode curt = root;
+        TreeNode prev = null;
+
+        stack.push(root);
+        while (!stack.empty()) {
+            curt = stack.peek();
+            if ((curt.left == null &amp;&amp; curt.right == null) ||
+                (prev != null &amp;&amp;(prev == curt.left || prev == curt.right))){
+                result.add(curt.val);
+                stack.pop();
+                prev = curt;
+            }
+            else{
+                if(curt.right != null){
+                    stack.push(curt.right);
+                }
+                if(curt.left != null){
+                    stack.push(curt.left);
+                }
+            }
+        }
+        return result;
+
+    }
+}
+</code></pre><h3 id="二叉树的最大深度">二叉树的最大深度</h3>
+<pre><code>public class Solution {
+    public int maxDepth(TreeNode root) {
+        if (root == null) {
+            return 0;
+        }
+        int left = maxDepth(root.left);
+        int right = maxDepth(root.right);
+        return Math.max(left, right) + 1;
+    }
+}
+
+
+Traverse
+
+/**
+ * Definition of TreeNode:
+ * public class TreeNode {
+ *     public int val;
+ *     public TreeNode left, right;
+ *     public TreeNode(int val) {
+ *         this.val = val;
+ *         this.left = this.right = null;
+ *     }
+ * }
+ */
+public class Solution {
+    /**
+     * @param root: The root of binary tree.
+     * @return: An integer.
+     */
+    private int depth;
+
+    public int maxDepth(TreeNode root) {
+        depth = 0;
+        helper(root, 1);
+        return depth;
+    }
+
+    private void helper(TreeNode node, int curtDepth) {
+        if (node == null) {
+            return;
+        }
+
+        if (curtDepth &gt; depth) {
+            depth = curtDepth;
+        }
+
+        helper(node.left, curtDepth + 1);
+        helper(node.right, curtDepth + 1);
+    }
+}
+</code></pre><h3 id="二叉树的最小深度">二叉树的最小深度</h3>
+<pre><code>public class Solution {
+    public int minDepth(TreeNode root) {
+        if (root == null) {
+            return 0;
+        }
+        return getMin(root);
+    }
+
+    public int getMin(TreeNode root){
+        if (root == null) {
+            return Integer.MAX_VALUE;
+        }
+
+        if (root.left == null &amp;&amp; root.right == null) {
+            return 1;
+        }
+
+        return Math.min(getMin(root.left), getMin(root.right)) + 1;
+    }
+}
+</code></pre><h3 id="平衡二叉树判断">平衡二叉树判断</h3>
+<pre><code>/**
+ * Definition of TreeNode:
+ * public class TreeNode {
+ *     public int val;
+ *     public TreeNode left, right;
+ *     public TreeNode(int val) {
+ *         this.val = val;
+ *         this.left = this.right = null;
+ *     }
+ * }
+ */
+public class Solution {
+    /**
+     * @param root: The root of binary tree.
+     * @return: True if this Binary tree is Balanced, or false.
+     */
+    public boolean isBalanced(TreeNode root) {
+        return maxDepth(root) != -1;
+    }
+
+    private int maxDepth(TreeNode root) {
+        if (root == null) {
+            return 0;
+        }
+
+        int left = maxDepth(root.left);
+        int right = maxDepth(root.right);
+        if (left == -1 || right == -1 || Math.abs(left-right) &gt; 1) {
+            return -1;
+        }
+        return Math.max(left, right) + 1;
+    }
+}
+</code></pre><h3 id="最近公共祖先">最近公共祖先</h3>
+<pre><code>// 有父指针时 可以转化为寻找俩个链表的第一个公共节点
+
+ //Divide &amp; Conquer
+public class Solution {
+    // 在root为根的二叉树中找A,B的LCA:
+    // 如果找到了就返回这个LCA
+    // 如果只碰到A，就返回A
+    // 如果只碰到B，就返回B
+    // 如果都没有，就返回null
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode node1, TreeNode node2) {
+        if (root == null || root == node1 || root == node2) {
+            return root;
+        }
+
+        // Divide
+        TreeNode left = lowestCommonAncestor(root.left, node1, node2);
+        TreeNode right = lowestCommonAncestor(root.right, node1, node2);
+
+        // Conquer
+        if (left != null &amp;&amp; right != null) {
+            return root;
+        } 
+        if (left != null) {
+            return left;
+        }
+        if (right != null) {
+            return right;
+        }
+        return null;
+    }
+}
+</code></pre><h3 id="最近公共祖先2">最近公共祖先2</h3>
+<pre><code>public class Solution {
+    /**
+     * @param root: The root of the tree
+     * @param A, B: Two node in the tree
+     * @return: The lowest common ancestor of A and B
+     */
+    public ParentTreeNode lowestCommonAncestorII(ParentTreeNode root,
+                                                 ParentTreeNode A,
+                                                 ParentTreeNode B) {
+        // Write your code here
+        if (root == null || root == A || root == B) {
+            return root;
+        }
+        int lengthA = getLength (A);
+        int lengthB = getLength (B);
+        int diff = lengthA - lengthB;
+        ParentTreeNode tempA = null;
+        ParentTreeNode tempB = null;
+        if (diff &gt;= 0) {
+            tempA = skip (A, diff);
+            tempB = B;
+        } else {
+            tempB = skip (B, -diff);
+            tempA = A;
+        }
+        while (tempA != null &amp;&amp; tempB != null &amp;&amp; tempA != tempB) {
+            tempA = tempA.parent;
+            tempB = tempB.parent;
+        }
+        return tempA;
+    }
+
+
+    private int getLength (ParentTreeNode A) {
+        int length = 0;
+        ParentTreeNode temp = A;
+        while(temp != null) {
+            length ++;
+            temp = temp.parent;
+        }
+        return length;
+    }
+
+    private ParentTreeNode skip (ParentTreeNode A, int diff) {
+        ParentTreeNode temp = A;
+        for (int i = 0; i &lt; diff; i++) {
+            temp = temp.parent;
+        }
+        return temp;
+    }
+}
+</code></pre><h3 id="二叉树中的最大路径和">二叉树中的最大路径和</h3>
+<pre><code>//any to any VS root to any
+public class Solution {
+    private class ResultType {
+        // singlePath: 从root往下走到任意点的最大路径，这条路径可以不包含任何点
+        // maxPath: 从树中任意到任意点的最大路径，这条路径至少包含一个点（也就是root）
+        int singlePath, maxPath; 
+        ResultType(int singlePath, int maxPath) {
+            this.singlePath = singlePath;
+            this.maxPath = maxPath;
+        }
+    }
+
+    private ResultType helper(TreeNode root) {
+        if (root == null) {
+            return new ResultType(0, Integer.MIN_VALUE);
+        }
+        // Divide
+        ResultType left = helper(root.left);
+        ResultType right = helper(root.right);
+
+        // Conquer
+        int singlePath = Math.max(left.singlePath, right.singlePath) + root.val;
+        singlePath = Math.max(singlePath, 0);
+
+        int maxPath = Math.max(left.maxPath, right.maxPath);
+        maxPath = Math.max(maxPath, left.singlePath + right.singlePath + root.val);
+
+        return new ResultType(singlePath, maxPath);
+    }
+
+    public int maxPathSum(TreeNode root) {
+        ResultType result = helper(root);
+        return result.maxPath;
+    }
+}
+</code></pre><h3 id="二叉树的最大路径和-ii">二叉树的最大路径和 II</h3>
+<pre><code>上一题的简化版
+public class Solution {
+    /**
+     * @param root the root of binary tree.
+     * @return an integer
+     */
+    public int maxPathSum2(TreeNode root) {
+        // Write your code here
+        if (root == null) {
+            return 0;
+        }
+        // Divide
+        int left = maxPathSum2(root.left);
+        int right = maxPathSum2(root.right);
+
+        // Conquer
+        int maxPath = Math.max(left, right) + root.val;
+
+        return maxPath;
+    }
+}
+</code></pre><h3 id="二叉树的层次遍历">二叉树的层次遍历</h3>
+<pre><code>// version 1: BFS
+public class Solution {
+    /**
+     * @param root: The root of binary tree.
+     * @return: Level order a list of lists of integer
+     */
+    public ArrayList&lt;ArrayList&lt;Integer&gt;&gt; levelOrder(TreeNode root) {
+        // write your code here
+        ArrayList&lt;ArrayList&lt;Integer&gt;&gt; results= new ArrayList&lt;ArrayList&lt;Integer&gt;&gt;();
+         if (root == null)
+            return results;
+        Queue&lt;TreeNode&gt; queue = new LinkedList&lt;TreeNode&gt;();
+        queue.offer(root);
+        while(!queue.isEmpty()){
+            ArrayList&lt;Integer&gt; result = new ArrayList&lt;Integer&gt;();
+            int size = queue.size();
+            for (int i = 0; i &lt; size; i++){
+                TreeNode temp = queue.poll();
+                result.add(temp.val);
+                if (temp.left != null)
+                    queue.offer(temp.left);
+                if (temp.right != null)
+                    queue.offer(temp.right);
+            }
+            results.add(result);
+        }
+        return results;
+    }
+}
+
+
+// version 2:  DFS
+public class Solution {
+    /**
+     * @param root: The root of binary tree.
+     * @return: Level order a list of lists of integer
+     */
+    public ArrayList&lt;ArrayList&lt;Integer&gt;&gt; levelOrder(TreeNode root) {
+        ArrayList&lt;ArrayList&lt;Integer&gt;&gt; results = new ArrayList&lt;ArrayList&lt;Integer&gt;&gt;();
+
+        if (root == null) {
+            return results;
+        }
+
+        int maxLevel = 0;
+        while (true) {
+            ArrayList&lt;Integer&gt; level = new ArrayList&lt;Integer&gt;();
+            dfs(root, level, 0, maxLevel);
+            if (level.size() == 0) {
+                break;
+            }
+
+            results.add(level);
+            maxLevel++;
+        }
+
+        return results;
+    }
+
+    private void dfs(TreeNode root,
+                     ArrayList&lt;Integer&gt; level,
+                     int curtLevel,
+                     int maxLevel) {
+        if (root == null || curtLevel &gt; maxLevel) {
+            return;
+        }
+
+        if (curtLevel == maxLevel) {
+            level.add(root.val);
+            return;
+        }
+
+        dfs(root.left, level, curtLevel + 1, maxLevel);
+        dfs(root.right, level, curtLevel + 1, maxLevel);
+    }
+}
+
+// version 3: BFS. two queues
+public class Solution {
+    /**
+     * @param root: The root of binary tree.
+     * @return: Level order a list of lists of integer
+     */
+    public ArrayList&lt;ArrayList&lt;Integer&gt;&gt; levelOrder(TreeNode root) {
+        ArrayList&lt;ArrayList&lt;Integer&gt;&gt; result = new ArrayList&lt;ArrayList&lt;Integer&gt;&gt;();
+        if (root == null) {
+            return result;
+        }
+
+        ArrayList&lt;TreeNode&gt; Q1 = new ArrayList&lt;TreeNode&gt;();
+        ArrayList&lt;TreeNode&gt; Q2 = new ArrayList&lt;TreeNode&gt;();
+
+        Q1.add(root);
+        while (Q1.size() != 0) {
+            ArrayList&lt;Integer&gt; level = new ArrayList&lt;Integer&gt;();
+            Q2.clear();
+            for (int i = 0; i &lt; Q1.size(); i++) {
+                TreeNode node = Q1.get(i);
+                level.add(node.val);
+                if (node.left != null) {
+                    Q2.add(node.left);
+                }
+                if (node.right != null) {
+                    Q2.add(node.right);
+                }
+            }
+
+            // swap q1 and q2
+            ArrayList&lt;TreeNode&gt; temp = Q1;
+            Q1 = Q2;
+            Q2 = temp;
+
+            // add to result
+            result.add(level);
+        }
+
+        return result;
+    }
+}
+
+
+// version 4: BFS, queue with dummy node
+public class Solution {
+    /**
+     * @param root: The root of binary tree.
+     * @return: Level order a list of lists of integer
+     */
+    public ArrayList&lt;ArrayList&lt;Integer&gt;&gt; levelOrder(TreeNode root) {
+        ArrayList&lt;ArrayList&lt;Integer&gt;&gt; result = new ArrayList&lt;ArrayList&lt;Integer&gt;&gt;();
+        if (root == null) {
+            return result;
+        }
+
+        Queue&lt;TreeNode&gt; Q = new LinkedList&lt;TreeNode&gt;();
+        Q.offer(root);
+        Q.offer(null); // dummy node
+
+        ArrayList&lt;Integer&gt; level = new ArrayList&lt;Integer&gt;();
+        while (!Q.isEmpty()) {
+            TreeNode node = Q.poll();
+            if (node == null) {
+                if (level.size() == 0) {
+                    break;
+                }
+                result.add(level);
+                level = new ArrayList&lt;Integer&gt;();
+                Q.offer(null); // add a new dummy node
+                continue;
+            }
+
+            level.add(node.val);
+            if (node.left != null) {
+                Q.offer(node.left);
+            }
+            if (node.right != null) {
+                Q.offer(node.right);
+            }
+        }
+
+        return result;
+    }
+}
+</code></pre><h3 id="二叉树倒序层次遍历">二叉树倒序层次遍历</h3>
+<pre><code>// 借助二叉树层次遍历结果，逆序
+ 或者 利用 add(int index, E element) API.
+public class Solution {
+    /**
+     * @param root: The root of binary tree.
+     * @return: buttom-up level order a list of lists of integer
+     */
+    public ArrayList&lt;ArrayList&lt;Integer&gt;&gt; levelOrderBottom(TreeNode root) {
+        // write your code here
+         ArrayList&lt;ArrayList&lt;Integer&gt;&gt; results= new ArrayList&lt;ArrayList&lt;Integer&gt;&gt;();
+         if (root == null)
+            return results;
+        Queue&lt;TreeNode&gt; queue = new LinkedList&lt;TreeNode&gt;();
+        queue.offer(root);
+        while(!queue.isEmpty()){
+            ArrayList&lt;Integer&gt; result = new ArrayList&lt;Integer&gt;();
+            int size = queue.size();
+            for (int i = 0; i &lt; size; i++){
+                TreeNode temp = queue.poll();
+                result.add(temp.val);
+                if (temp.left != null)
+                    queue.offer(temp.left);
+                if (temp.right != null)
+                    queue.offer(temp.right);
+            }
+             results.add(0, result);
+        }
+        return results;
+    }
+}
+</code></pre><p>###二叉树的锯齿形层次遍历</p>
+<pre><code>public class Solution {
+    /**
+     * @param root: The root of binary tree.
+     * @return: A list of lists of integer include 
+     *          the zigzag level order traversal of its nodes&#39; values 
+     */
+    public ArrayList&lt;ArrayList&lt;Integer&gt;&gt; zigzagLevelOrder(TreeNode root) {
+        // write your code here
+        ArrayList&lt;ArrayList&lt;Integer&gt;&gt; result = new ArrayList&lt;ArrayList&lt;Integer&gt;&gt;();
+
+        if (root == null) {
+            return result;
+        }
+
+        Stack&lt;TreeNode&gt; currLevel = new Stack&lt;TreeNode&gt;();
+        Stack&lt;TreeNode&gt; nextLevel = new Stack&lt;TreeNode&gt;();
+        Stack&lt;TreeNode&gt; tmp;
+
+        currLevel.push(root);
+        boolean normalOrder = true;
+
+        while (!currLevel.isEmpty()) {
+            ArrayList&lt;Integer&gt; currLevelResult = new ArrayList&lt;Integer&gt;();
+
+            while (!currLevel.isEmpty()) {
+                TreeNode node = currLevel.pop();
+                currLevelResult.add(node.val);
+
+                if (normalOrder) {
+                    if (node.left != null) {
+                        nextLevel.push(node.left);
+                    }
+                    if (node.right != null) {
+                        nextLevel.push(node.right);
+                    }
+                } else {
+                    if (node.right != null) {
+                        nextLevel.push(node.right);
+                    }
+                    if (node.left != null) {
+                        nextLevel.push(node.left);
+                    }
+                }
+            }
+
+            result.add(currLevelResult);
+            tmp = currLevel;
+            currLevel = nextLevel;
+            nextLevel = tmp;
+            normalOrder = !normalOrder;
+        }
+
+        return result;
+    }
+}
+</code></pre><h3 id="验证二叉查找树">验证二叉查找树</h3>
+<pre><code>public class Solution {
+
+    public boolean isValidBST(TreeNode root) {
+        if (root == null) {
+            return true;
+        }
+        return dfs(root, Long.MIN_VALUE, Long.MAX_VALUE);
+    }
+
+    public boolean dfs(TreeNode root, long low, long up) {
+        if (root == null) {
+            return true;
+        }
+        if (root.val &gt;= up || root.val &lt;= low) {
+            return false;
+        }
+        return dfs(root.left, low, root.val) &amp;&amp; dfs(root.right, root.val, up);
+    }
+}
+</code></pre><h3 id="二叉搜索树查找中序后继">二叉搜索树查找中序后继</h3>
+<pre><code>    1. 这个BST是否有parent指针：如果有，则直接用父指针往上找。如果没有，则从root开始往下找。
+    2. 要查找的点是否有右孩子：如果有，简单，直接找右子树的最小节点。如果没有，则找到比该节点大且相差最小的父节点。
+    时间复杂度都是O(h), h是树高。
+
+public class Solution {
+    public TreeNode inorderSuccessor(TreeNode root, TreeNode p) {
+        TreeNode successor = null;
+        while (root != null &amp;&amp; root.val != p.val) {
+            if (root.val &gt; p.val) {
+                successor = root;
+                root = root.left;
+            } else {
+                root = root.right;
+            }
+        }
+
+        if (root == null) {
+            return null;
+        }
+
+        if (root.right == null) {
+            return successor;
+        }
+
+        root = root.right;
+        while (root.left != null) {
+            root = root.left;
+        }
+
+        return root;
+    }
+}
+</code></pre><h3 id="二叉搜索树的迭代">二叉搜索树的迭代</h3>
+<pre><code>// 就是中序遍历
+public class BSTIterator {
+    //@param root: The root of binary tree.
+    Stack&lt;TreeNode&gt; treeStack = new Stack&lt;TreeNode&gt;();
+    TreeNode current;
+    public BSTIterator(TreeNode root) {
+        // write your code here
+        while(!treeStack.isEmpty()){
+            treeStack.pop();
+        }
+        current = root;
+    }
+
+    //@return: True if there has next node, or false
+    public boolean hasNext() {
+        // write your code here
+        return (current != null || !treeStack.isEmpty());
+    }
+
+    //@return: return next node
+    public TreeNode next() {
+        // write your code here
+        while (current != null){
+            treeStack.push(current);
+            current = current.left;
+        }
+        current = treeStack.pop();
+        TreeNode temp = current;
+        current = current.right;
+        return temp;
+    }
+}
+</code></pre><h3 id="二叉查找树的搜索区间">二叉查找树的搜索区间</h3>
+<pre><code>public class Solution {
+    private ArrayList&lt;Integer&gt; results;
+    /**
+     * @param root: The root of the binary search tree.
+     * @param k1 and k2: range k1 to k2.
+     * @return: Return all keys that k1&lt;=key&lt;=k2 in increasing order.
+     */
+    public ArrayList&lt;Integer&gt; searchRange(TreeNode root, int k1, int k2) {
+        results = new ArrayList&lt;Integer&gt;();
+        helper(root, k1, k2);
+        return results;
+    }
+
+    private void helper(TreeNode root, int k1, int k2) {
+        if (root == null) {
+            return;
+        }
+        if (root.val &gt; k1) {
+            helper(root.left, k1, k2);
+        }
+        if (root.val &gt;= k1 &amp;&amp; root.val &lt;= k2) {
+            results.add(root.val);
+        }
+        if (root.val &lt; k2) {
+            helper(root.right, k1, k2);
+        }
+    }
+}
+</code></pre><h3 id="在二叉查找树中插入节点">在二叉查找树中插入节点</h3>
+<pre><code>public class Solution {
+    /**
+     * @param root: The root of the binary search tree.
+     * @param node: insert this node into the binary search tree
+     * @return: The root of the new binary search tree.
+     */
+
+     public TreeNode insertNode(TreeNode root, TreeNode node) {
+        if (root == null){
+            return node;
+        }
+        if (node.val &lt;= root.val) {
+            if (root.left == null)
+                root.left = node;
+            else
+                insertNode(root.left,node);
+        }
+        else {
+            if (root.right == null)
+                root.right = node;
+            else
+                insertNode(root.right,node);
+        }
+        return root;
+    }
+}
+</code></pre><h3 id="删除二叉查找树的节点-再思考">删除二叉查找树的节点  再思考</h3>
+<p><a href="http://www.mathcs.emory.edu/~cheung/Courses/171/Syllabus/9-BinTree/BST-delete.html">二叉搜索树删除解释</a>
+<a href="http://www.algolist.net/Data_structures/Binary_search_tree/Removal">二叉搜索树的删除</a></p>
+<pre><code>public class Solution {
+    /**
+     * @param root: The root of the binary search tree.
+     * @param value: Remove the node with given value.
+     * @return: The root of the binary search tree after removal.
+     */
+    public TreeNode removeNode(TreeNode root, int value) {
+        if (root==null) return null;
+
+        TreeNode preRoot = new TreeNode(0);
+        preRoot.left = root;
+        searchNodeRecur(preRoot,root,value);
+        return preRoot.left;
+    }
+
+    public void searchNodeRecur(TreeNode pre, TreeNode cur, int val){
+        //if there is no such node, then do nothing.
+        if (cur==null) return;
+
+        //find the node.
+        if (cur.val == val){
+            removeNode(pre,cur);
+            return;
+        } else if (cur.val &gt; val){
+            searchNodeRecur(cur,cur.left,val);
+        } else 
+            searchNodeRecur(cur,cur.right,val);
+
+    }
+
+    public void removeNode(TreeNode pre, TreeNode cur){
+        //a leaf node.
+        if (cur.left==null &amp;&amp; cur.right==null){
+            if (pre.left==cur){
+                pre.left = null;
+            }
+            else{
+                pre.right = null;
+            }
+        }
+        else if (cur.left==null || cur.right==null){ //cur only has one sub tre
+            TreeNode child = (cur.left==null) ? cur.right : cur.left;
+            if (pre.left==cur) pre.left = child;
+            else pre.right=child;
+        } 
+        else {    //has two sub trees, select the largest node in the left subtree
+            TreeNode pre2 = cur;
+            TreeNode cur2 = cur.left;
+            while (cur2.right!=null){
+                pre2 = cur2;
+                cur2 = cur2.right;
+            }
+            //a leaf node
+            if (cur2.left==null){
+                if (pre2.left==cur2) pre2.left = null;
+                else pre2.right=null;
+                cur2.left = cur.left;
+                cur2.right = cur.right;
+                if (pre.left==cur) pre.left=cur2;
+                else pre.right=cur2;
+            } else {
+                if (pre2.left==cur2) pre2.left = cur2.left;
+                else pre2.right = cur2.left;
+                cur2.left = cur.left;
+                cur2.right = cur.right;
+                if (pre.left==cur) pre.left=cur2;
+                else pre.right=cur2;
+            }
+        }
+    }
+}
+</code></pre><h3 id="二叉树的路径和">二叉树的路径和</h3>
+<pre><code>public class Solution {
+    /**
+     * @param root the root of binary tree
+     * @param target an integer
+     * @return all valid paths
+     */
+    public List&lt;List&lt;Integer&gt;&gt; binaryTreePathSum(TreeNode root, int target) {
+        // Write your code here
+        List&lt;List&lt;Integer&gt;&gt; results = new ArrayList ();
+        List &lt;Integer&gt; result = new ArrayList&lt;Integer&gt; ();
+        int sum = 0;
+        if (root == null){
+            return results;
+        }
+        helper(root, sum, target, result, results);
+        return results;
+    }
+
+    private void helper(TreeNode root, int sum, int target, List&lt;Integer&gt; result, 
+                    List&lt;List&lt;Integer&gt;&gt; results) {
+        sum += root.val;
+        result.add(root.val);
+        if (sum == target &amp;&amp; root.left == null &amp;&amp; root.right == null) {
+            results.add(new ArrayList&lt;Integer&gt;(result));
+            return;
+        }
+        if (root.left != null) {
+            helper(root.left, sum, target, result, results);
+            result.remove(result.size()-1);
+        }
+        if (root.right != null) {
+            helper(root.right, sum, target, result, results);
+            result.remove(result.size()-1);
+        }
+
+    }
+}
+</code></pre><h3 id="扭转后等价的二叉树">扭转后等价的二叉树</h3>
+<pre><code>public class Solution {
+    /**
+     * @param a, b, the root of binary trees.
+     * @return true if they are tweaked identical, or false.
+     */
+    public boolean isTweakedIdentical(TreeNode a, TreeNode b) {
+        // Write your code here
+        // if (a == null &amp;&amp; b!= null || a != null &amp;&amp; b == null){
+        //     return false;
+        // }
+        if (a == null &amp;&amp; b == null) {
+            return true;
+        }
+        if (a == null || b == null) {
+            return false;
+        }
+        if (a.val != b.val) {
+            return false;
+        }
+
+        if (isTweakedIdentical(a.left, b.left) &amp;&amp; isTweakedIdentical(a.right, b.right)) {
+            return true;
+        }
+
+        if (isTweakedIdentical(a.left, b.right) &amp;&amp; isTweakedIdentical(a.right, b.left)) {
+            return true;
+        }
+
+        return false;
+    }
+}
+</code></pre><h3 id="等价二叉树">等价二叉树</h3>
+<pre><code>public class Solution {
+    /**
+     * @param a, b, the root of binary trees.
+     * @return true if they are identical, or false.
+     */
+    public boolean isIdentical(TreeNode a, TreeNode b) {
+        // Write your code here
+        if (a == null &amp;&amp; b == null) {
+            return true;
+        }
+        if (a == null || b == null) {
+            return false;
+        }
+        if (a.val != b.val) {
+            return false;
+        }
+
+        if (isIdentical(a.left, b.left) &amp;&amp; isIdentical(a.right, b.right)) {
+            return true;
+        }
+
+        return false;
+    }
+}
+</code></pre><h3 id="对称二叉树">对称二叉树</h3>
+<pre><code>public class Solution {
+    /**
+     * @param root, the root of binary tree.
+     * @return true if it is a mirror of itself, or false.
+     */
+    public boolean isSymmetric(TreeNode root) {
+        // Write your code here
+        if (root == null) {
+            return true;
+        }
+        return check(root.left, root.right);
+    }
+
+    private boolean check(TreeNode root1, TreeNode root2) {
+        if (root1 == null &amp;&amp; root2 == null) {
+            return true;
+        }
+        if (root1 == null || root2 == null) {
+            return false;
+        }
+        if (root1.val != root2.val) {
+            return false;
+        }
+        return check(root1.left, root2.right) &amp;&amp; check(root1.right, root2.left);
+    }
+}
+</code></pre><h3 id="完全二叉树">完全二叉树</h3>
+<pre><code>class ResultType {
+    public int depth;
+    public boolean isFull, isComplete;
+    ResultType(int depth, boolean isFull, boolean isComplete) {
+        this.depth = depth;
+        this.isFull = isFull;
+        this.isComplete = isComplete;
+    }
+}
+
+public class Solution {
+    /**
+     * @param root, the root of binary tree.
+     * @return true if it is a complete binary tree, or false.
+     */
+    public boolean isComplete(TreeNode root) {
+        ResultType result = helper(root);
+        return result.isComplete;
+    }
+
+    private ResultType helper(TreeNode root) {
+        if (root == null) {
+            return new ResultType(0, true, true);
+        }
+
+        ResultType left = helper(root.left);
+        ResultType right = helper(root.right);
+        if (!left.isComplete) {
+            return new ResultType(-1, false, false);
+        }
+
+        // depth is the same, left should be full and right should be complete
+        if (left.depth == right.depth) {
+            if (!left.isFull || !right.isComplete) {
+                return new ResultType(-1, false, false);
+            }
+            return new ResultType(left.depth + 1, right.isFull, true);
+        }
+
+        // left.depth = right.depth + 1, left should be full and right should be full
+        if (left.depth == right.depth + 1) {
+            if (!left.isComplete || !right.isFull) {
+                return new ResultType(-1, false, false);
+            }
+            return new ResultType(left.depth + 1, false, true);
+        }
+
+        return new ResultType(-1, false, false);
+    }
+}
+</code></pre><h3 id="参考资料">参考资料</h3>
+<p><a href="http://www.jiuzhang.com/?referer=38beb6">九章算法</a></p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871f905d2f092c392ca4d5d
+                 data-title=算法之美——二叉树
+                 data-url=binary-tree>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

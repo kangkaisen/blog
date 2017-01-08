@@ -1,0 +1,195 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|读书笔记——《数学之美》</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 读书笔记——《数学之美》</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-03-05</p>
+            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
+            <hr/>
+            <ul>
+<li><p><strong>简单性和模块化是软件工程的基石；分布式和容错性是互联网的生命</strong></p>
+</li>
+<li><p><strong>语言和数学的产生都是为了同一个目的————记录和传播信息</strong></p>
+</li>
+<li><p>文字的理解需要上下文</p>
+</li>
+<li><p>翻译这件事之所以能达成，仅仅是因为不同文字系统在记录信息的能力上是等价的</p>
+</li>
+<li><p>文字只是信息的载体，而非信息本身</p>
+</li>
+<li><p><strong>信息的冗余是信息安全的保障</strong></p>
+</li>
+<li><p>语言的数据，我们称之为语料，尤其是汉语或者多语的对照语料对翻译至关重要，它是机器翻译研究的基础</p>
+</li>
+<li><p><strong>任何事物的规律性都是内在的，并不随它的载体而改变</strong></p>
+</li>
+<li><p>词是有限且封闭的集合，而语言是无限且开放的集合</p>
+</li>
+<li><p>任何一种语言都是一种编码的方式，而语言的语法规则是编解码的算法</p>
+</li>
+<li><p>基于统计的自然语言处理，基于统计方法的核心模型是通信系统加隐含马尔科夫模型</p>
+</li>
+<li><p>一个句子是否合理，就看它的可能性大小如何</p>
+</li>
+<li><p>马尔科夫假设</p>
+</li>
+<li><p>使用语言模型需要知道模型中所有的条件概率，我们称之为模型的参数。通过对语料的统计，得到这些参数的过程称作模型的训练</p>
+</li>
+<li><p>大数定理</p>
+</li>
+<li><p>零概率问题</p>
+</li>
+<li><p>古德——图灵估计</p>
+</li>
+<li><p>卡茨退避法</p>
+</li>
+<li><p>最简单的分词方法——查字典</p>
+</li>
+<li><p><strong>通信的本质就是编解码和传输的过程</strong></p>
+</li>
+<li><p>几乎所有的自然语言处理问题都可以等价成通信的解码问题</p>
+</li>
+<li><p>符合马尔科夫假设的随机过程称为马尔科夫过程，也称马尔科夫链</p>
+</li>
+<li><p>隐含马尔科夫模型（转移概率，生成概率）</p>
+</li>
+<li><p>有监督训练和无监督训练</p>
+</li>
+<li><p>EM过程（期望值最大化）：不断估计新的模型参数，使得输出概率（我们的目标函数）达到最大化</p>
+</li>
+<li><p>信息量就等于不确定性的多少</p>
+</li>
+<li><p>信息熵 对一个信息系统不确定性的度量</p>
+</li>
+<li><p>变量的不确定性越大，熵也就越大。要把它搞清楚，需要的信息量也就越大</p>
+</li>
+<li><p><strong>信息是消除系统不确定性的唯一办法，在没有获得任何信息前，一个系统就像是一个黑盒，引入信息，就可以了解系统黑盒的内部结构</strong></p>
+</li>
+<li><p>几乎所有的自然语言处理，信息与信号处理的应用都是一个消除不确定性的过程</p>
+</li>
+<li><p>条件熵 </p>
+</li>
+<li><p>互信息 衡量俩个事件的相关程度</p>
+</li>
+<li><p>相对熵 衡量俩段信息的相似程度</p>
+</li>
+<li><p>《信息论基础》</p>
+</li>
+<li><p><strong>一个人想要在自己的领域做到世界一流，他的周围必须有许多世界一流的人物</strong></p>
+</li>
+<li><p><strong>技术分为道和术俩种，具体的做事方法是术，做事的原理和原则是道</strong></p>
+</li>
+<li><p>一个搜索引擎主要做3件事：自动下载尽可能多的网页；建立快速有效的索引；根据相关性对网页进行公平准确的排序</p>
+</li>
+<li><p><strong>真理在形式在从来都是简单的，而不是复杂和含混的</strong></p>
+</li>
+<li><p>网页排名算法的高明之处在于它把整个互联网当做一个整体来对待，这符合系统论的观点</p>
+</li>
+<li><p>TF-IDF</p>
+</li>
+<li><p><strong>好的算法：简单，有效，可靠性好而且容易读懂</strong></p>
+</li>
+<li><p>向量的夹角是衡量俩个向量相似程度的度量</p>
+</li>
+<li><p>新闻的相似性：向量余弦</p>
+</li>
+<li><p>奇异值分解</p>
+</li>
+</ul>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871e8e6d2f092c392ca4d3d
+                 data-title=读书笔记——《数学之美》
+                 data-url=shuxuezhimei>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

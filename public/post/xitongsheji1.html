@@ -1,0 +1,219 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|系统设计方法论</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 系统设计方法论</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-04-25</p>
+            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#什么是系统设计">什么是系统设计</a></li>
+<li><a href="#算法面试和系统设计面试的区别">算法面试和系统设计面试的区别</a></li>
+<li><a href="#系统设计面试考察点">系统设计面试考察点</a></li>
+<li><a href="#系统设计面试的俩种形式">系统设计面试的俩种形式</a></li>
+<li><a href="#什么是好的设计">什么是好的设计</a></li>
+<li><a href="#系统设计5步-snake分析法">系统设计5步 SNAKE分析法：</a></li>
+<li><a href="#1-scenario-场景">1 Scenario  场景</a></li>
+<li><a href="#2-needs-需求">2 Needs 需求</a></li>
+<li><a href="#3-application-应用">3 Application 应用</a></li>
+<li><a href="#4-kilobyte-数据">4 Kilobyte 数据</a></li>
+<li><a href="#5-evolve-进化">5 Evolve 进化</a></li>
+<li><a href="#总结">总结</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="什么是系统设计">什么是系统设计</h3>
+<p>为满足特定需求而设计系统的架构，组件， 模块， 接口， 数据。</p>
+<ul>
+<li>概念设计</li>
+<li>逻辑设计</li>
+<li>物理设计</li>
+</ul>
+<p>系统设计 = 逻辑设计 + 架构设计</p>
+<h3 id="算法面试和系统设计面试的区别">算法面试和系统设计面试的区别</h3>
+<h4 id="算法面试">算法面试</h4>
+<ul>
+<li>注重程序的实现</li>
+<li>注重解决问题的能力</li>
+</ul>
+<h4 id="系统面试">系统面试</h4>
+<ul>
+<li>注重思考的过程</li>
+<li>注重发现问题的能力</li>
+</ul>
+<h3 id="系统设计面试考察点">系统设计面试考察点</h3>
+<ul>
+<li>可行解</li>
+<li>特定问题</li>
+<li>分析能力</li>
+<li>权衡能力</li>
+<li>知识储备</li>
+</ul>
+<h3 id="系统设计面试的俩种形式">系统设计面试的俩种形式</h3>
+<h4 id="设计某某系统">设计某某系统</h4>
+<p>微博，人人，微信，滴滴等等</p>
+<h4 id="找问题">找问题</h4>
+<ul>
+<li>网站挂了怎么办</li>
+<li>网站太慢怎么办</li>
+<li>流量增长怎么办</li>
+</ul>
+<h3 id="什么是好的设计">什么是好的设计</h3>
+<ul>
+<li>健壮的</li>
+<li>简洁的</li>
+</ul>
+<h3 id="系统设计5步-snake分析法：">系统设计5步 SNAKE分析法：</h3>
+<h3 id="1-scenario-场景">1 Scenario  场景</h3>
+<p>即需要设计哪些功能
+1 枚举所有功能
+2 按照重要性进行排序，选择核心功能</p>
+<h3 id="2-needs-需求">2 Needs 需求</h3>
+<p>即需要设计多牛的系统
+1 询问
+2 预测</p>
+<h4 id="确定日活跃用户数">确定日活跃用户数</h4>
+<h4 id="根据日活跃用户数估算">根据日活跃用户数估算</h4>
+<ul>
+<li>估算 平均并发用户数</li>
+<li>估算 峰值用户数 = 平均并发用户数 * 6</li>
+<li>估算 3个月后 峰值用户数 = 峰值用户数 *2</li>
+<li>估算 每个用户流量</li>
+<li>估算 峰值流量</li>
+<li>估算 读的QPS</li>
+<li>估算 写的QPS</li>
+<li>估算 每个用户内存</li>
+<li>估算 每日最大内存</li>
+<li>估算 磁盘存储量</li>
+</ul>
+<h3 id="3-application-应用">3 Application 应用</h3>
+<p>即分析系统的主要组成模块
+1 重放需求，为每个需求添加一个服务
+2 归并相同的服务</p>
+<h3 id="4-kilobyte-数据">4 Kilobyte 数据</h3>
+<p>即 数据如何存储和访问
+1 为每个服务选择数据存储结构
+2 细化表结构</p>
+<p><strong>程序 = 算法 + 数据结构</strong>
+<strong>系统 = 服务 + 数据存储</strong></p>
+<p>前4步可以产生一个解决方案，但肯定不是完美的解决方案</p>
+<h3 id="5-evolve-进化">5 Evolve 进化</h3>
+<p>即 解决缺陷，处理可能遇到的问题</p>
+<h4 id="1-优化">1 优化</h4>
+<ul>
+<li>解决设计缺陷</li>
+<li>更多功能设计</li>
+<li>一些特殊用例</li>
+</ul>
+<h4 id="2-维护">2 维护</h4>
+<ul>
+<li>鲁棒性 
+如果一台服务器、数据库挂了怎么办</li>
+<li>扩展性
+如果流量暴增，如何扩展</li>
+</ul>
+<h3 id="总结">总结</h3>
+<p><strong>系统设计不是设计一个最好的方案，而是设计一个最合适的方案</strong></p>
+<p><strong>在设计之前问清楚再动手设计</strong></p>
+<p><strong>不要做关键词大师</strong></p>
+<p><strong>不要一开始就冲着很牛逼的方案去</strong></p>
+<p><strong>不要总想着做最牛的系统，要设计够用的系统</strong></p>
+<p><strong>Done is better than perfect!</strong></p>
+<p><strong>先设计一个基本能工作的系统，然后再逐步优化</strong></p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871f24ed2f092c392ca4d4f
+                 data-title=系统设计方法论
+                 data-url=xitongsheji1>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

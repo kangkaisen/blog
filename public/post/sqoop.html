@@ -1,0 +1,180 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Sqoop从Hive导入Mysql失败解决方案</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Sqoop从Hive导入Mysql失败解决方案</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-04-10</p>
+            <p>分类: <a href="../tag/解决方案.html" target="_blank" >解决方案</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#测试sqoop是否可以连接到mysql">测试Sqoop是否可以连接到mysql</a></li>
+<li><a href="#用sqoop将mysql数据导入hdfs">用Sqoop将mysql数据导入HDFS</a></li>
+<li><a href="#用sqoop将hdfs数据导入mysql">用Sqoop将HDFS数据导入mysql</a></li>
+<li><a href="#用sqoop将mysql数据导入hive">用Sqoop将mysql数据导入Hive</a></li>
+<li><a href="#sqoop从hive导入mysql注意事项">Sqoop从Hive导入mysql注意事项</a></li>
+<li><a href="#sqoop从hive导入mysql失败终极解决方案">Sqoop从Hive导入mysql失败终极解决方案</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="测试sqoop是否可以连接到mysql">测试Sqoop是否可以连接到mysql</h3>
+<pre><code>sqoop  list-databases --connect jdbc:mysql://120.25.122.238:3306/  --username root --password root
+</code></pre><h3 id="用sqoop将mysql数据导入hdfs">用Sqoop将mysql数据导入HDFS</h3>
+<pre><code>    sqoop import --connect jdbc:mysql://120.25.122.238:3306/sqoop --username root --password root --table student --target-dir /data/sqoop/student -m 1 
+
+    sqoop import --connect jdbc:mysql://120.25.122.238:3306/sqoop --username root --password root --query &#39;select * from user where $CONDITIONS&#39; --split-by id --target-dir /data/sqoop/user2  --null-string &#39;&#39; --null-non-string &#39;&#39;
+
+  -m:map并行读取的数量
+</code></pre><h3 id="用sqoop将hdfs数据导入mysql">用Sqoop将HDFS数据导入mysql</h3>
+<pre><code>    sqoop export --connect jdbc:mysql://120.25.122.238:3306/sqoop --username root --password root --table user1  --fields-terminated-by &#39;,&#39; --export-dir /data/sqoop/user
+
+ -Dsqoop.export.records.per.statement=10 
+指定每10条数据执行一次insert
+或是
+-Dsqoop.export.statements.per.transaction=10 
+指定每次事务多少条记录被insert
+
+--update-key id
+指定根据那个列进行更新
+
+--columns：指定根据那几个列进行更新，HDFS数据文件叧能包含
+id,name列
+</code></pre><h3 id="用sqoop将mysql数据导入hive">用Sqoop将mysql数据导入Hive</h3>
+<pre><code>    sqoop import --connect jdbc:mysql://mysql-server -ip:3306/sqoop  --username sqoop --password sqoop --table user_info --hive-import
+参数解析：
+--hive-import：指定要导入的hive表
+
+
+参数解析：
+--incremental：指定sqoop增量模式
+--check -column:  指定增量的列
+--last -value:  指定列值从那一列开始
+</code></pre><h3 id="sqoop从hive导入mysql注意事项">Sqoop从Hive导入mysql注意事项</h3>
+<ul>
+<li><p>导入mysql前mysql必须建立和hive数据格式一致的表。</p>
+</li>
+<li><p>应确保mysql的数据类型长度大于相对应的hive数据的最大长度。</p>
+</li>
+<li><p>导入mysql前应确保相应的用户拥有远程登录MySQL的权限。</p>
+</li>
+<li><p>应该指定null字段的填充符。</p>
+</li>
+<li><p>如果之前已经导入了部分数据，需要继续增量导入，就必须指定更新的键。<code>--update-key</code></p>
+</li>
+<li><p>使用正确的分隔符。</p>
+</li>
+</ul>
+<p>如果你以上几点你都注意了，可能还是会遇到这个错误：</p>
+<p><strong>字段对不上或字段类型不一致</strong></p>
+<pre><code>Caused by: java.lang.NumberFormatException: For input string: “什么是OSI参考模型？各层的主要功能是什么？]    ″
+</code></pre><p>我使用的导入命令是</p>
+<pre><code>sqoop export -D sqoop.export.records.per.statement=10 --connect jdbc:mysql://kks1:3306/sougou --username hive --password hive --table sougou --fields-terminated-by &#39;\t&#39; --export-dir &quot;/hivedata/warehouse/sougou.db/sougou/month=6/week=1/day=1&quot; --null-string &#39;\\N&#39; --null-non-string &#39;\\N&#39;
+</code></pre><p>出现这个问题的原因是数据本身的内容含有相应的分隔符，从而导致解析类型错位，进而解析失败。这条记录的源数据如下：</p>
+<pre><code>18:47:29    5999958585312108    [1.    什么是OSI参考模型？各层的主要功能是什么？]    9    68    www.eyea.net/bbs/index.php?mods=topicdisplay&amp;forumid=62&amp;postid=42
+</code></pre><p>我们使用<code>\t</code>分割，所以sqoop把 <code>什么是OSI参考模型？各层的主要功能是什么？]</code> 当做 int类型解析，进而失败。</p>
+<h3 id="sqoop从hive导入mysql失败终极解决方案">Sqoop从Hive导入mysql失败终极解决方案</h3>
+<p>这个时候，我们可以修改并重新编译sqoop导入mysql解析规则的java文件。每次通过sqoop导入MySql的时，都会在sqoop目录生成一个以MySql表命名的.java文件，然后打成JAR包，给sqoop提交给hadoop 的MR来解析Hive表中的数据。那可以根据报的错误，找到对应的行，改写该文件，编译，重新打包，sqoop可以通过 -jar-file ，–class-name 组合让我们指定运行自己的jar包中的某个class。</p>
+<h4 id="编译打包方法如下：">编译打包方法如下：</h4>
+<pre><code>javac -cp ./:/home/sqoop/sqoop-1.4.6.jar:/home/hadoop/share/hadoop/common/hadoop-common-2.6.0.jar:/home/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-core-2.6.0.jar sougou.java
+jar -cf sougou.jar sougou.class
+</code></pre><h4 id="运行命令如下：">运行命令如下：</h4>
+<pre><code>//hive导入mysql：
+
+sqoop export -D sqoop.export.records.per.statement=10 --connect jdbc:mysql://kks1:3306/sougou --username hive --password hive --table sougou --fields-terminated-by &#39;\t&#39; --export-dir &quot;/hivedata/warehouse/sougou.db/sougou/month=6/week=1/day=1&quot; --null-string &#39;\\N&#39; --null-non-string &#39;\\N&#39; --jar-file /home/sqoop/sougou.jar --class-name sougou;
+</code></pre><p><code>我们通过修改相关的java文件不仅可以解决各种解析异常，也可以实现自定义多字节列分隔符的功能。</code></p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871f181d2f092c392ca4d4d
+                 data-title=Sqoop从Hive导入Mysql失败解决方案
+                 data-url=sqoop>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

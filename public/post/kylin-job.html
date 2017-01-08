@@ -1,0 +1,348 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦| Apache Kylin Job 生成和调度详解</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1>  Apache Kylin Job 生成和调度详解</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-10-12</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#构建cube的job">构建Cube的Job</a></li>
+<li><a href="#job-的生成">Job 的生成</a></li>
+<li><a href="#executable">Executable</a></li>
+<li><a href="#chainedexecutable">ChainedExecutable</a></li>
+<li><a href="#单机调度">单机调度</a></li>
+<li><a href="#单机锁">单机锁</a></li>
+<li><a href="#分布式调度">分布式调度</a></li>
+<li><a href="#分布式调度如何实现ha">分布式调度如何实现HA</a></li>
+<li><a href="#分布式调度开发反思">分布式调度开发反思</a></li>
+<li><a href="#总结">总结</a></li>
+<li><a href="#kylin-job生成和调度反思">Kylin Job生成和调度反思</a></li>
+</ul>
+<!-- toc stop -->
+<p>在<a href="http://blog.bcmeng.com/post/kylin-cube.html">Apache Kylin Cube 构建原理</a> 一文中我们知道了Cube的构建需要经过一系列的Job才能完成，那这些Job是如何生成并被调度的呢？</p>
+<h3 id="构建cube的job">构建Cube的Job</h3>
+<p><img src="http://static.zybuluo.com/kangkaisen/iks46vlauv9t9bv5uawm86wz/cube-build.png" alt="cube-build.png-61.4kB"></p>
+<h3 id="job-的生成">Job 的生成</h3>
+<p>经过Restful请求调用 <code>JobService</code>的<code>submitJob</code>方法，会根据构建的Segment信息和用户信息生成Job。</p>
+<pre><code>job = EngineFactory.createBatchCubingJob(newSeg, submitter);
+</code></pre><p>其中EngineFactory是一个工厂类，可以根据不同的配置选择不同的cube构建类型（Batch或者Streaming）和不同的cube构建算法（Batch Cube有不同的构建算法）</p>
+<pre><code>public static DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter) {
+        return batchEngine(newSegment).createBatchCubingJob(newSegment, submitter);
+}
+
+//获取不同的构建算法
+public static IBatchCubingEngine batchEngine(IEngineAware aware) {
+        return batchEngines.get(aware.getEngineType());
+}
+</code></pre><p>我们以目前版本主要使用的<code>MRBatchCubingEngine2</code>构建算法分析：</p>
+<pre><code>public class MRBatchCubingEngine2 implements IBatchCubingEngine {
+    //创建单个segment构建的Job
+    public DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter) {
+    }
+    //创建多个segment Merge的Job
+    public DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter) {
+    }
+    //获取构建cube的数据源（Hive）
+    public Class&lt;?&gt; getSourceInterface() {
+    }
+    //获取构建cube的存储源（HBase）
+    public Class&lt;?&gt; getStorageInterface() {
+    }
+
+}
+</code></pre><p>我们以单个segment的构建过程<code>createBatchCubingJob</code> 分析，其调用了<code>BatchMergeJobBuilder2</code>的<code>build</code>方法，主要是<code>CubingJob</code>用<code>addTask</code>方法将构建cube的每一步job串起来，便于之后调度。</p>
+<pre><code>    final CubingJob result = CubingJob.createBuildJob((CubeSegment) seg, submitter, config);
+        // Phase 1: 建立Hive的大宽表
+        inputSide.addStepPhase1_CreateFlatTable(result);
+        // Phase 2: 建立字典
+        result.addTask(createFactDistinctColumnsStepWithStats(jobId));
+        result.addTask(createBuildDictionaryStep(jobId));
+        result.addTask(createSaveStatisticsStep(jobId));
+        outputSide.addStepPhase2_BuildDictionary(result);
+        // Phase 3: 构建 cube
+        addLayerCubingSteps(result, jobId, cuboidRootPath);
+        result.addTask(createInMemCubingStep(jobId, cuboidRootPath)); 
+        outputSide.addStepPhase3_BuildCube(result, cuboidRootPath);
+        // Phase 4: 更新元数据，垃圾清理
+        result.addTask(createUpdateCubeInfoAfterBuildStep(jobId));
+        inputSide.addStepPhase4_Cleanup(result);
+        outputSide.addStepPhase4_Cleanup(result);
+</code></pre><p><code>CubingJob</code> 到底是什么，我们稍后分析，我们先来看Kylin是如何表达构建Segment过程中的每一个Job。</p>
+<h3 id="executable">Executable</h3>
+<p><img src="http://static.zybuluo.com/kangkaisen/1csvgigllzyaqgkrmd3uei42/kylin-job.png" alt="kylin-job.png-73.7kB">
+在Kylin中，每一个Job都实现了接口<code>Executable</code>，其中核心方法是<code>execute</code>，每个实现类可以定义Job的具体执行逻辑。</p>
+<pre><code>public interface Executable {
+    String getId();
+    String getName();
+
+    //定义Job的具体执行逻辑
+    //参数ExecutableContext Job的上下文
+    //结果ExecuteResult Job的状态和输出
+    ExecuteResult execute(ExecutableContext executableContext) throws ExecuteException;
+
+    //获取Job运行状态
+    ExecutableState getStatus();
+
+    Output getOutput();
+    boolean isRunnable();
+    //获取Job的执行参数
+    Map&lt;String, String&gt; getParams();
+}
+</code></pre><p>抽象类<code>AbstractExecutable</code>实现了<code>Executable</code>接口，核心是实现了<code>execute</code>方法，为了清晰的定义每个Job的运行状态，AbstractExecutable将<code>execute</code>方法细化为<code>onExecuteStart</code>，<code>doWork</code>，<code>onExecuteError</code>，<code>onExecuteFinished</code>等阶段。其中execute方法修饰符为final，onExecuteStart，onExecuteError，onExecuteFinished方法修饰符为protected，doWork方法修饰符为protected abstract，用于子类根据自己的具体逻辑重写此方法。</p>
+<p>了解设计模式的小伙伴应该已经看出Kylin Job的表达使用了模板方法设计模式，抽象类<code>AbstractExecutable</code>的 <code>execute</code>方法定义了所有Job的执行逻辑的骨架，具体的Job类根据具体逻辑重写<code>doWork</code>等方法。</p>
+<p><code>execute</code>方法的关键代码如下：</p>
+<pre><code>public final ExecuteResult execute(ExecutableContext executableContext) throws ExecuteException {
+        //Job的状态从Ready 变为 Running
+        onExecuteStart(executableContext);
+        ...
+        //不同的Job在这里实现具体逻辑
+        result = doWork(executableContext);
+        ...
+        if (exception != null) {
+            //Job的状态从Ready 变为 Error
+            onExecuteError(exception, executableContext);
+        }
+        //Job的状态从Ready 变为 Succeed or Error or Discard
+        onExecuteFinished(result, executableContext);
+    }
+</code></pre><p>AbstractExecutable的具体直接实现类<code>主要</code>有ShellExecutable，HadoopShellExecutable，MapReduceExecutable，主要是根据自身的具体逻辑重写了<code>doWork</code>方法。</p>
+<ul>
+<li><code>ShellExecutable</code>主要用来执行Shell 命令可以直接执行的Job，像计算Hive表行数等Job。</li>
+<li><code>HadoopShellExecutable</code>主要用来执行依赖Hadoop环境且用Shell执行的Job，像建字典，建立HBase表，Bulkload HFile等Job。</li>
+<li><code>MapReduceExecutable</code>主要用来执行MapReduce类型的Job，像计算列基数，计算Cuboid， 生成HFile等Job。</li>
+</ul>
+<h3 id="chainedexecutable">ChainedExecutable</h3>
+<p>前面提到是<code>CubingJob</code>将构建cube的每一步job串了起来，其实<code>CubingJob</code>继承了<code>DefaultChainedExecutable</code>，DefaultChainedExecutable类继承了
+AbstractExecutable类并实现了<code>ChainedExecutable</code>接口。CubingJob 主要是为Job关联了cube和segment的相关信息，串连所有Job的任务都是DefaultChainedExecutable类实现的。</p>
+<pre><code>public interface ChainedExecutable extends Executable {
+    //获取所有子Job
+    List&lt;? extends AbstractExecutable&gt; getTasks();
+    //添加子Job
+    void addTask(AbstractExecutable executable);
+}
+</code></pre><p>之前提到在生成Job的时候，<code>CubingJob</code>通过<code>addTask</code>方法将所有子Job串连了起来。那么<code>DefaultChainedExecutable</code>到底是如何串连起所有子Job呢？关键在其重写的<code>doWork</code>方法里：</p>
+<pre><code>protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+        List&lt;? extends Executable&gt; executables = getTasks();//获取所有子Job
+        for (int i = 0; i &lt; executables.size(); ++i) {
+            Executable subTask = executables.get(i);
+            ExecutableState state = subTask.getStatus();
+            if (state == ExecutableState.RUNNING) {
+                //子Job正在执行，等待它完成
+                break;
+            } else if (state == ExecutableState.ERROR) {
+               //子Job执行失败，抛出异常
+            }
+            if (subTask.isRunnable()) {
+               //每个Job在初始化后是Ready状态，所以isRunnable()是True，当子Job是Ready状态时，就开始执行。
+                return subTask.execute(context);
+            }
+        }
+        return new ExecuteResult(ExecuteResult.State.SUCCEED, null);
+    }
+
+DefaultChainedExecutable 也重写了onExecuteFinished方法，来根据所有子Job的状态更新整个Job的最终状态。
+</code></pre><p>至此，我们知道了1个Job是如何表示和生成的，也知道了构建segment的多个Job是如何串起来的，下面我们来看下Job是如何被调度的。</p>
+<h3 id="单机调度">单机调度</h3>
+<p>首先我们来看下Kylin默认的单机版调度<code>DefaultScheduler</code>是如何实现的，其核心逻辑是十分简单的，有两个线程池，一个线程池用来抓取所有Job的状态信息，一个线程池来执行具体的Job。其本质上就是一个生产者，消费者模型。</p>
+<p>首先<code>ScheduledExecutorService</code>线程池会定时抓取所有Job的状态信息，如果Job的状态是Ready，那么说明该Job是可以被调度执行的，就将该Job交给<code>JobPool</code>线程池的执行单元<code>JobRunner</code>去执行，而<code>JobRunner</code>则调用了每个Job的<code>execute</code>方法。</p>
+<pre><code>//抓取所有Job的状态信息的线程池
+ScheduledExecutorService fetcherPool = Executors.newScheduledThreadPool(1);
+
+//默认每1分钟抓取1次Job信息
+fetcherPool.scheduleAtFixedRate(fetcher, 10, ExecutableConstants.DEFAULT_SCHEDULER_INTERVAL_SECONDS, TimeUnit.SECONDS);
+
+//抓取所有Job状态信息的执行单元
+private class FetcherRunner implements Runnable {
+    synchronized public void run() {
+    //遍历所有Job
+    for (final String id : executableManager.getAllJobIds()) {
+    nReady++;
+    //根据jobid拿到Job信息
+    AbstractExecutable executable = executableManager.getJob(id);
+    //调度Ready 状态的 Job
+    jobPool.execute(new JobRunner(executable));
+    }
+}
+
+//执行Job的线程池
+//SynchronousQueue是没有缓存空间的同步队列，将任务直接交付给可以执行任务的线程
+ExecutorService jobPool = new ThreadPoolExecutor(corePoolSize, corePoolSize, Long.MAX_VALUE, TimeUnit.DAYS, new SynchronousQueue&lt;Runnable&gt;());
+
+//执行Job的执行单元
+private class JobRunner implements Runnable {
+    public void run() {
+        //调用Job的execute方法执行Job的具体逻辑
+        executable.execute(context);
+}
+</code></pre><p>在分布式应用中，单点迟早都会成为性能瓶颈，也无法保证高可用，高可靠，易扩展，那么Kylin1.6.1版本之前的Job Server无法分布式化的原因是什么呢？<strong>是因为有单机锁。</strong></p>
+<h3 id="单机锁">单机锁</h3>
+<p>默认的单机锁实现类是<code>ZookeeperJobLock</code>。</p>
+<pre><code>锁什么？  
+锁整个Job Server节点，所以同一份元数据下只可以有1个Job Server运行。
+
+如何锁？
+利用zookeeper的临时有序节点。
+
+谁持有锁？   
+整个Job Server节点持有锁。
+
+何时加锁？   
+Job Server进程启动时加锁。
+
+何时释放锁？  
+Job Server进程退出时释放锁。
+</code></pre><h3 id="分布式调度">分布式调度</h3>
+<p>那么如何将单机版调度变为分布式调度呢？核心思路就是将整个Job Server粒度的锁变为Segment粒度的锁，因为每个链式Job的目的都是构建1个segment，我们只需要保证构建1个segment的所有Job都在1个Job Server执行即可。</p>
+<p>分布式调度的实现类是<code>DistributedScheduler</code>，分布式锁的实现类是<code>ZookeeperDistributedJobLock</code>。</p>
+<pre><code>锁什么？
+锁segment。
+
+谁持有锁？
+触发构建该segment的Job Server持有锁。将持有锁的ServerName写入Zookeeper临时节点，用来标记哪个Job Server持有锁。
+
+如何加锁？
+利用zookeeper的临时节点。
+
+何时加锁？
+提交build请求时对segment进行加锁。
+
+如何释放锁？
+直接删除掉segment在Zookeeper上的临时节点。
+
+何时释放锁？
+整个Job的最终状态变为SUCCEED，ERROR 和 DISCARDED 时 释放segment的锁。
+</code></pre><h3 id="分布式调度如何实现ha">分布式调度如何实现HA</h3>
+<p>作为分布式调度，当1个JobServer挂掉时，我们当然希望其他存活的JobServer可以接管挂掉的JobServer上正在Running的Job。</p>
+<p>这个Take over功能的实现主要是<strong>利用Zookeeepr的watch机制</strong>，每个JobServer都会监听segment锁在Zookeeper临时节点的父节点路径下所有子节点的CHILD_REMOVED事件。</p>
+<p>当JobServer接收到CHILD_REMOVED事件后，如果<strong>该segment对应的Job状态是RUNNING且之前没有持有该segment的锁</strong>，就会对segment进行尝试加锁，加锁成功的JobServer就会继续调度该segment对应的Job。</p>
+<h3 id="分布式调度开发反思">分布式调度开发反思</h3>
+<ul>
+<li>复杂系统要开发新功能前必须要熟悉相关模块代码，理清代码逻辑关系。</li>
+<li>在确立方案时，我们应该借鉴现有开源系统的类似功能实现。因为许多问题在业界早就有了很成熟的方案。</li>
+<li>基本方案确立后，我们可以用简单的代码快速验证方案的可行性。</li>
+<li>并发编程时我们的加锁粒度一定要尽可能小。Kylin的分布式调度在初期是对cube加锁的，因为当初1个cube只能有1个Job在同时运行，所以我就想当然对cube进行加锁，没有考虑到1个Job本质上是在构建1个segment以及之后可能会并发构建segment。</li>
+<li>并发编程时加锁，释放锁的时机也是需要我们认真思考的，并且尽可能保证加锁，释放锁的逻辑紧凑，不要分散到多个类中。</li>
+<li>在调用第三类库的方法实现核心功能时，我们不仅要认真阅读文档，注释，demo，也应该对其方法的核心逻辑进行确认。我开发初期就误用了Curator的API。</li>
+<li>在增加新功能时，我们应该尽可能对原有代码保持较小改动。</li>
+<li>对于代码正确性的保证不仅需要完备的测试，更重要的是我们代码逻辑本身简洁，清晰，可靠，正确。比如分布式调度在初期对cube加锁时，Cube Auto merge会导致失败的case在集成测试，我们的线下环境，预上线环境都没有出现，而是在上线到生产环境几天后才出现的。</li>
+</ul>
+<h3 id="总结">总结</h3>
+<p>Kylin-1.6.1实现分布式调度后Job的状态变化大致如下：</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/16pdwmmhaps3noni0arfcabr/JobStatus.png" alt="JobStatus.png-200.5kB"></p>
+<p>Kylin-1.6.1的Job调度示意图如下：</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/67p5xnn9ihi0z5edrenvbtc1/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202016-10-12%20%E4%B8%8B%E5%8D%8810.56.56.png" alt="屏幕快照 2016-10-12 下午10.56.56.png-124.1kB"></p>
+<h3 id="kylin-job生成和调度反思">Kylin Job生成和调度反思</h3>
+<ol>
+<li><p>从Kylin Job生成和调度，我们可以学习什么？</p>
+<p>模板方法，工厂模式，桥接模式等设计模式的使用。</p>
+<p>Kylin的Job调度本质是一个生产者消费者模式，凡是<strong>符合生产者消费者模式的场景，我们都可以考虑借鉴Kylin Job调度的实现</strong>。</p>
+</li>
+<li><p>单机的并发上限可以到多少？</p>
+<p>单机的并发主要受限于内存使用，而内存用于字典构建。</p>
+</li>
+<li><p>是否可以实现cube的优先级调度？</p>
+<p>目前是随机的公平调度。 优先级调度当然可以实现，但是在Kylin实现优先级调度意义不大，           优先级主要靠Hadoop的资源资源调度优先级去实现。</p>
+</li>
+<li><p>Job 越来越多怎么办（每次在获取可以调度的Job时都需要遍历所有Job）？</p>
+<p>临时办法：及时进行元数据清理。</p>
+</li>
+</ol>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871f713d2f092c392ca4d59
+                 data-title= Apache Kylin Job 生成和调度详解
+                 data-url=kylin-job>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

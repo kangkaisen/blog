@@ -1,0 +1,1109 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|算法之美——数组和数</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 算法之美——数组和数</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-11-19</p>
+            <p>分类: <a href="../tag/算法.html" target="_blank" >算法</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#single-number-落单的数">single-number 落单的数</a></li>
+<li><a href="#single-number-ii-落单的数-ii">single-number-ii 落单的数 II</a></li>
+<li><a href="#single-number-iii">single-number-iii</a></li>
+<li><a href="#majority-number">majority-number</a></li>
+<li><a href="#majority-number-ii-主元素-ii">majority-number-ii 主元素 II</a></li>
+<li><a href="#majority-number-iii-主元素-iii">majority-number-iii 主元素 III</a></li>
+<li><a href="#best-time-to-buy-and-sell-stock-买卖股票的最佳时机">best-time-to-buy-and-sell-stock 买卖股票的最佳时机</a></li>
+<li><a href="#best-time-to-buy-and-sell-stock-ii-买卖股票的最佳时机-ii">best-time-to-buy-and-sell-stock-ii 买卖股票的最佳时机 II</a></li>
+<li><a href="#买卖股票的最佳时机-iii">买卖股票的最佳时机 III</a></li>
+<li><a href="#买卖股票的最佳时机-iv">买卖股票的最佳时机 IV</a></li>
+<li><a href="#最大子数组">最大子数组</a></li>
+<li><a href="#最大子数组-ii">最大子数组 II</a></li>
+<li><a href="#maximum-subarray-iii-最大子数组iii">maximum-subarray-iii 最大子数组iii</a></li>
+<li><a href="#minimum-subarray-最小子数组">minimum-subarray 最小子数组</a></li>
+<li><a href="#maximum-subarray-difference-最大子数组差">maximum-subarray-difference 最大子数组差</a></li>
+<li><a href="#subarray-sum-子数组之和">subarray-sum 子数组之和</a></li>
+<li><a href="#subarray-sum-closest-最接近零的子数组和">subarray-sum-closest 最接近零的子数组和</a></li>
+<li><a href="#2-sum-两数之和">2-sum 两数之和</a></li>
+<li><a href="#3-sum-三数之和">3-sum 三数之和</a></li>
+<li><a href="#3-sum-closest-三数之和-ii">3-sum-closest 三数之和 II</a></li>
+<li><a href="#4-sum-四数之和">4-sum 四数之和</a></li>
+<li><a href="#k-sum-k数和">k-sum k数和</a></li>
+<li><a href="#fast-power-快速幂">fast-power 快速幂</a></li>
+<li><a href="#sqrtx-x的平方根">sqrtx x的平方根</a></li>
+<li><a href="#trailing-zeros-n尾部0的个数">Trailing Zeros n!尾部0的个数</a></li>
+<li><a href="#o1-check-power-of-2-o1时间检查是否是2的幂">o1-check-power-of-2 o1时间检查是否是2的幂</a></li>
+<li><a href="#参考资料">参考资料</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="single-number-落单的数">single-number 落单的数</h3>
+<p><a href="http://www.lintcode.com/zh-cn/problem/single-number/">原题</a>
+给出2*n + 1 个的数字，除其中一个数字之外其他每个数字均出现两次，找到这个数字。</p>
+<h4 id="思路">思路</h4>
+<p>一个数与自身异或的结果为0</p>
+<h4 id="java代码">java代码</h4>
+<pre><code>public class Solution {
+    /**
+     *@param A : an integer array
+     *return : a integer 
+     */
+    public int singleNumber(int[] A) {
+        if (A.length == 0) {
+            return 0;
+        }
+
+        int n = A[0];
+        for(int i = 1; i &lt; A.length; i++) {
+            n = n ^ A[i];
+        }
+
+        return n;
+    }
+}
+</code></pre><h3 id="single-number-ii-落单的数-ii">single-number-ii 落单的数 II</h3>
+<p><a href="http://www.lintcode.com/zh-cn/problem/single-number-ii/">原题</a>
+给出3*n + 1 个的数字，除其中一个数字之外其他每个数字均出现三次，找到这个数字。</p>
+<h4 id="思路">思路</h4>
+<p>若一个数字出现3次，则该数字的二进制表示中每个位置的数值为1的出现次数为3次，如：5的二进制表示为101，若5出现3次，则其二进制表示中的第一个位置和第二个位置出现1的次数和均为3。那么对该位1出现的次数对3取余，最终的结果所对应的就是所要求的Sing Number。</p>
+<p>对int的32bit的各个位中1出现的次数，对数组中所有元素逐个进行统计，然后每个bit对3取余，最终的结果就是只出现一次的数字。</p>
+<h4 id="java代码">java代码</h4>
+<pre><code>public class Solution {
+    /**
+     * @param A : An integer array
+     * @return : An integer 
+     */
+    public int singleNumberII(int[] A) {
+        if (A == null || A.length == 0) {
+            return -1;
+        }
+        int result = 0;
+        int[] bits = new int[32];
+        for (int i = 0;i &lt; 32;i++) {
+            for(int j = 0;j &lt; A.length;j++){
+                bits[i] += A[j] &gt;&gt; i &amp; 1;
+                bits[i] = bits[i] % 3;
+            }
+            result = result | (bits[i] &lt;&lt; i);  
+        }
+        return result;
+    }
+}
+</code></pre><h3 id="single-number-iii">single-number-iii</h3>
+<p><a href="http://www.lintcode.com/zh-cn/problem/single-number-iii/">原题</a>
+给出2*n + 2个的数字，除其中两个数字之外其他每个数字均出现两次，找到这两个数字。</p>
+<h4 id="思路">思路</h4>
+<p>一个数与自身异或的结果为0。</p>
+<p>如果对所有元素进行异或操作，最后剩余的结果是出现次数为1次的两个数的异或结果，此时无法直接得到这两个数具体的值。但是，因为这两个数一定是不同的，所以最终异或的值至少有一个位为1。我们可以找出异或结果中第一个值为1的位，然后根据该位的值是否为1，将数组中的每一个数，分成两个部分。这样每个部分，就可以采用Singal numberI中的方法得到只出现一次的数。</p>
+<h4 id="java代码">java代码</h4>
+<pre><code>public class Solution {
+    /**
+     * @param A : An integer array
+     * @return : Two integers
+     */
+    int findFirstBit1(int num) {
+        int index = 0;
+        while((num &amp; 1) == 0) {
+            ++index;
+            num &gt;&gt;= 1;
+        }
+        return index;
+    }
+
+    boolean isBit1(int num, int index) {
+        num = num &gt;&gt; index;
+        if ((num &amp; 1) == 1) 
+            return true;
+        else 
+            return false;
+
+    }
+
+    public List&lt;Integer&gt; singleNumberIII(int[] A) {
+        ArrayList&lt;Integer&gt; res = new ArrayList&lt;Integer&gt; ();
+        if (A ==null || A.length == 0){
+            return res;
+        }
+        int n = A.length;
+        int result = 0;
+        for (int i = 0;i &lt; n;i ++){
+            result ^= A[i];
+        }
+
+        int indexOfBit1 = findFirstBit1(result);
+
+        int num1 = 0, num2 = 0;
+        for(int i = 0; i &lt; n; ++i) {
+            if(isBit1(A[i], indexOfBit1)) {
+                num1 ^= A[i];
+            }
+            else
+                num2 ^= A[i];
+        }
+        res.add(num1);
+        res.add(num2);
+        return res;
+    }
+}
+</code></pre><h3 id="majority-number">majority-number</h3>
+<p><a href="http://www.lintcode.com/zh-cn/problem/majority-number/">原题</a>
+给定一个整型数组，找出主元素，它在数组中的出现次数严格大于数组元素个数的二分之一</p>
+<h4 id="java代码">java代码</h4>
+<pre><code>public class Solution {
+    /**
+     * @param nums: a list of integers
+     * @return: find a  majority number
+     */
+    public int majorityNumber(ArrayList&lt;Integer&gt; nums) {
+        if (nums.size() == 0){
+            return -1;
+        }
+        int result = nums.get(0);
+        int count = 1;
+        for (int i = 1;i &lt; nums.size();i++){
+            if (result == nums.get(i)){
+                count ++;
+            }
+            else {
+                count --;
+                if (count == 0){
+                    result = nums.get(i);
+                    count = 1;
+                }
+            }
+        }
+        return result;
+    }
+}
+</code></pre><h3 id="majority-number-ii-主元素-ii">majority-number-ii 主元素 II</h3>
+<p><a href="http://www.lintcode.com/zh-cn/problem/majority-number-ii/#">原题</a>
+给定一个整型数组，找到主元素，它在数组中的出现次数严格大于数组元素个数的三分之一。</p>
+<h4 id="思路">思路</h4>
+<p>1.选择两个candidate</p>
+<p>2.scan数组，如果和两个candidate相等，则相应的candidate count+1；如果不相等，两个candidate的counter都减1（前提是counter都大于0）；如果某一个counter已经等于0，那么替换candidate为当前数</p>
+<p>3.我们最后得到两个candidate，但是不知道谁更majority，因为一个例子就是1,1,1,1,3,3,3,2,2,2,5,5,5,最后candidate1=1， counter=1，candidate2=5，counter2=3，原因就是candidate1在之前被错误的抵消了很多。所以要再扫一遍。</p>
+<h4 id="java代码">java代码</h4>
+<pre><code>public class Solution {
+    /**
+     * @param nums: A list of integers
+     * @return: The majority number that occurs more than 1/3
+     */
+    public int majorityNumber(ArrayList&lt;Integer&gt; nums) {
+        int candidate1 = 0, candidate2 = 0;
+        int count1, count2;
+        count1 = count2 = 0;
+        for (int i = 0; i &lt; nums.size(); i++) {
+            if (candidate1 == nums.get(i)) {
+                count1 ++;
+            } else if (candidate2 == nums.get(i)) {
+                count2 ++;
+            } else if (count1 == 0) {
+                candidate1 = nums.get(i);
+                count1 = 1;
+            } else if (count2 == 0) {
+                candidate2 = nums.get(i);
+                count2 = 1;
+            } else {
+                count1--;
+                count2--;
+            }
+        }
+        count1 = count2 = 0;
+        for (int i = 0; i &lt; nums.size(); i++) {
+            if (nums.get(i) == candidate1) {
+                count1++;
+            } else if (nums.get(i) == candidate2) {
+                count2++;
+            }
+        }    
+        return count1 &gt; count2 ? candidate1 : candidate2;
+    }
+}
+</code></pre><h3 id="majority-number-iii-主元素-iii">majority-number-iii 主元素 III</h3>
+<p><a href="http://www.lintcode.com/zh-cn/problem/majority-number-iii/">原题</a>
+给定一个整型数组，找到主元素，它在数组中的出现次数严格大于数组元素个数的1/k。</p>
+<h4 id="思路">思路</h4>
+<p>使用HashMap，存k个值，key为数组中的元素值，value为该值出现的次数。若同时有k个不同的元素在map中，则抵销一次，即所有value减一，并删除value为零的key，遍历一遍后，map中value最大的key为答案。</p>
+<h4 id="java代码">java代码</h4>
+<pre><code>public class Solution {
+    /**
+     * @param nums: A list of integers
+     * @param k: As described
+     * @return: The majority number
+     */
+    public int majorityNumber(ArrayList&lt;Integer&gt; nums, int k) {
+        Map&lt;Integer, Integer&gt; map = new HashMap&lt;Integer, Integer&gt;();
+
+        for (Integer i : nums) {
+            if (!map.containsKey(i)) {
+                map.put(i, 1);
+            } else {
+                map.put(i, map.get(i) + 1);
+            }
+
+            if (map.size() &gt;= k) {
+                removeKey(map);
+            }
+        }
+        if (map.size() == 0) {
+            return Integer.MIN_VALUE;
+        }
+
+        int maxKey = 0;
+        int max = 0;
+        Set&lt;Integer&gt; keySet = map.keySet();
+        for (Integer i : keySet) {
+            int count = 0;
+            for (Integer j : nums) {
+                if (i.equals(j)) {
+                    count++;
+                }
+            }
+            if (count &gt; max) {
+                max = count;
+                maxKey = i;
+
+            }
+        }
+
+        return maxKey;
+    }
+
+    private void removeKey(Map&lt;Integer, Integer&gt; map) {
+        Set&lt;Integer&gt; keySet = map.keySet();
+        List&lt;Integer&gt; removeList = new ArrayList&lt;&gt;();
+        for (Integer key : keySet) {
+            if (map.get(key) == 1) {
+                removeList.add(key);
+            }
+            else {
+                map.put(key, map.get(key) - 1);
+            }
+        }
+        for (Integer key : removeList) {
+            map.remove(key);
+        }
+    }
+}
+</code></pre><h3 id="best-time-to-buy-and-sell-stock-买卖股票的最佳时机">best-time-to-buy-and-sell-stock 买卖股票的最佳时机</h3>
+<p><a href="http://www.lintcode.com/zh-cn/problem/best-time-to-buy-and-sell-stock/">原题</a>
+假设有一个数组，它的第i个元素是一支给定的股票在第i天的价格。如果你最多只允许完成一次交易(例如,一次买卖股票),设计一个算法来找出最大利润。</p>
+<h4 id="思路">思路</h4>
+<p>扫描一遍，找出后一项-前一项的最大值即可</p>
+<h4 id="java代码">java代码</h4>
+<pre><code>public class Solution {
+    /**
+     * @param prices: Given an integer array
+     * @return: Maximum profit
+     */
+    public int maxProfit(int[] prices) {
+        if (prices == null || prices.length == 0) {
+            return 0;
+        }
+
+        int min = Integer.MAX_VALUE;  //just remember the smallest price
+        int profit = 0;
+        for (int i : prices) {
+            min = i &lt; min ? i : min;
+            profit = (i - min) &gt; profit ? i - min : profit;
+        }
+
+        return profit;
+    }
+}
+</code></pre><h3 id="best-time-to-buy-and-sell-stock-ii-买卖股票的最佳时机-ii">best-time-to-buy-and-sell-stock-ii 买卖股票的最佳时机 II</h3>
+<p><a href="http://www.lintcode.com/zh-cn/problem/best-time-to-buy-and-sell-stock-ii/#">原题</a>
+假设有一个数组，它的第i个元素是一个给定的股票在第i天的价格。设计一个算法来找到最大的利润。你可以完成尽可能多的交易(多次买卖股票)。然而,你不能同时参与多个交易(你必须在再次购买前出售股票)。</p>
+<h4 id="思路">思路</h4>
+<p>best-time-to-buy-and-sell-stock的基础累加即可</p>
+<h4 id="java代码">java代码</h4>
+<pre><code>class Solution {
+    /**
+     * @param prices: Given an integer array
+     * @return: Maximum profit
+     */
+    public int maxProfit(int[] prices) {
+        if ( prices == null || prices.length == 0){
+            return 0;
+        }
+        int profit = 0;
+        for (int i = 1; i &lt; prices.length; i++){
+
+            if (prices[i] &gt; prices[i-1]){
+                profit += prices[i] - prices[i-1];
+
+            }
+        }
+        return profit;
+    }
+}
+</code></pre><h3 id="买卖股票的最佳时机-iii">买卖股票的最佳时机 III</h3>
+<p><a href="http://www.lintcode.com/zh-cn/problem/best-time-to-buy-and-sell-stock-iii/">原题</a>
+假设你有一个数组，它的第i个元素是一支给定的股票在第i天的价格。设计一个算法来找到最大的利润。你最多可以完成两笔交易。</p>
+<h4 id="样例">样例</h4>
+<p>给出一个样例数组 [4,4,6,1,1,4,2,5], 返回 6</p>
+<h4 id="思路">思路</h4>
+<p> 基本思想是分成两个时间段，然后对于某一天，计算之前的最大值和之后的最大值  </p>
+<h4 id="代码">代码</h4>
+<pre><code>class Solution {
+    /**
+     * @param prices: Given an integer array
+     * @return: Maximum profit
+     */
+    public int maxProfit(int[] prices) {
+        if (prices == null || prices.length &lt;= 1) {
+            return 0;
+        }
+
+        int[] left = new int[prices.length];
+        int[] right = new int[prices.length];
+
+        // DP from left to right;
+        left[0] = 0;
+        int min = prices[0];
+        for (int i = 1; i &lt; prices.length; i++) {
+            min = Math.min(prices[i], min);
+            left[i] = Math.max(left[i - 1], prices[i] - min);
+        }
+
+        //DP from right to left;
+        right[prices.length - 1] = 0;
+        int max = prices[prices.length - 1];
+        for (int i = prices.length - 2; i &gt;= 0; i--) {
+            max = Math.max(prices[i], max);
+            right[i] = Math.max(right[i + 1], max - prices[i]);
+        }
+
+        int profit = 0;
+        for (int i = 0; i &lt; prices.length; i++){
+            profit = Math.max(left[i] + right[i], profit);  
+        }
+
+        return profit;
+    }
+};
+</code></pre><h3 id="买卖股票的最佳时机-iv">买卖股票的最佳时机 IV</h3>
+<p><a href="http://www.lintcode.com/zh-cn/problem/best-time-to-buy-and-sell-stock-iv/">原题</a>
+假设你有一个数组，它的第i个元素是一支给定的股票在第i天的价格。</p>
+<p>设计一个算法来找到最大的利润。你最多可以完成 k 笔交易</p>
+<h4 id="思路">思路</h4>
+<p>我们维护两种量，一个是当前到达第i天可以最多进行j次交易，最好的利润是多少（global[i][j]），另一个是当前到达第i天，最多可进行j次交易，并且最后一次交易在当天卖出的最好的利润是多少（local[i][j]）</p>
+<p>同时注意当K很大时的情况,变为买卖股票的最佳时机ii。</p>
+<h4 id="java代码">java代码</h4>
+<pre><code>class Solution {
+    /**
+     * @param k: An integer
+     * @param prices: Given an integer array
+     * @return: Maximum profit
+     */
+    public int maxProfit(int k, int[] prices) {
+        if (k == 0) {
+            return 0;
+        }
+        if(prices==null || prices.length==0)  
+        return 0;  
+
+        if (k &gt;= prices.length / 2) {
+            int profit = 0;
+            for (int i = 1; i &lt; prices.length; i++) {
+                if (prices[i] &gt; prices[i - 1]) {
+                    profit += prices[i] - prices[i - 1];
+                }
+            }
+            return profit;
+        }
+        int len = prices.length;  
+        int[][] local = new int[len][k+1];       
+        int[][] global = new int[len][k+1];     
+        for(int i=1; i&lt;len; i++) {  
+            int diff = prices[i] - prices[i-1];  
+            for(int j=1; j&lt;=k; j++) {  
+                local[i][j] = Math.max(global[i-1][j-1]+Math.max(diff,0), local[i-1][j]+diff);  
+                global[i][j] = Math.max(global[i-1][j], local[i][j]);  
+            }  
+        }  
+        return global[len-1][k];   
+    }
+};
+</code></pre><h3 id="最大子数组">最大子数组</h3>
+<p><a href="http://www.lintcode.com/zh-cn/problem/maximum-subarray/">原题</a>
+给定一个整数数组，找到一个具有最大和的子数组，返回其最大和。</p>
+<h4 id="思路">思路</h4>
+<p>扫描一遍，遇到负数则重新累加求和。</p>
+<h4 id="java代码">java代码</h4>
+<pre><code>public class Solution {
+    /**
+     * @param nums: A list of integers
+     * @return: A integer indicate the sum of max subarray
+     */
+    public int maxSubArray(ArrayList&lt;Integer&gt; nums) {
+        if(nums == null || nums.size() == 0){
+            return 0;
+        }
+        int thissum = 0;
+        int maxsum = nums.get(0);
+        for (int i : nums){
+            thissum += i;
+            if (thissum &gt; maxsum){
+                maxsum = thissum;
+            }
+            else if (thissum &lt; 0){
+                thissum = 0;
+            }
+        }
+        return maxsum;
+    }
+}
+</code></pre><h3 id="最大子数组-ii">最大子数组 II</h3>
+<p><a href="http://www.lintcode.com/en/problem/maximum-subarray-ii/">原题</a>
+给定一个整数数组，找出两个不重叠子数组使得它们的和最大。</p>
+<p>每个子数组的数字在数组中的位置应该是连续的。</p>
+<p>返回最大的和。</p>
+<h4 id="思路">思路</h4>
+<p>和买卖股票的最佳时机 III 思路一样。用俩个数组，一个从左往右扫，一个从右往左扫。</p>
+<h4 id="java代码">java代码</h4>
+<pre><code>public class Solution {
+    /**
+     * @param nums: A list of integers
+     * @return: An integer denotes the sum of max two non-overlapping subarrays
+     */
+    public int maxTwoSubArrays(ArrayList&lt;Integer&gt; nums) {
+        // write your code
+        int size = nums.size();
+        int[] left = new int[size];
+        int[] right = new int[size];
+        int sum = 0;
+        int minSum = 0;
+        int max = Integer.MIN_VALUE;
+        for(int i = 0; i &lt; size; i++){
+            sum += nums.get(i);
+            max = Math.max(max,sum);
+            sum = Math.max(sum,0);
+            left[i] = max;
+        }
+        sum = 0;
+        minSum = 0;
+        max = Integer.MIN_VALUE;
+        for(int i = size - 1; i &gt;= 0; i--){
+            sum += nums.get(i);
+            max = Math.max(max, sum );
+            sum = Math.max(sum,0);
+            right[i] = max;
+        }
+        max = Integer.MIN_VALUE;
+        for(int i = 0; i &lt; size - 1; i++){
+            max = Math.max(max, left[i] + right[i + 1]);
+        }
+        return max;
+    }
+}
+</code></pre><h3 id="maximum-subarray-iii-最大子数组iii">maximum-subarray-iii 最大子数组iii</h3>
+<p><a href="http://www.lintcode.com/zh-cn/problem/maximum-subarray-iii/">原题</a>
+给定一个整数数组和一个整数k，找出k个不重叠子数组使得它们的和最大。</p>
+<p>每个子数组的数字在数组中的位置应该是连续的。</p>
+<p>返回最大的和。</p>
+<h4 id="思路">思路</h4>
+<p>思路类似买卖股票的最佳时机 IV，用DP解。</p>
+<h4 id="java代码">java代码</h4>
+<pre><code>public class Solution {
+    /**
+     * @param nums: A list of integers
+     * @param k: An integer denote to find k non-overlapping subarrays
+     * @return: An integer denote the sum of max k non-overlapping subarrays
+     */
+
+        public int maxSubArray(ArrayList&lt;Integer&gt; nums, int k) {
+        if (nums == null)
+            return 0;
+        int len = nums.size();
+        if (len &lt; k)
+            return 0;
+
+        int[][] globalMax = new int[k + 1][len + 1];
+        for (int i = 1; i &lt;= k; i++) {
+            int localMax = Integer.MIN_VALUE;
+
+            for (int j = i - 1; j &lt; len; j++) {
+                localMax = Math.max(localMax, globalMax[i - 1][j]) + nums.get(j);
+                if (j == i - 1)
+                    globalMax[i][j + 1] = localMax;
+                else
+                    globalMax[i][j + 1] = Math.max(globalMax[i][j], localMax);
+            }
+        }
+        return globalMax[k][len];
+    }
+
+
+
+}
+</code></pre><h3 id="minimum-subarray-最小子数组">minimum-subarray 最小子数组</h3>
+<p><a href="http://www.lintcode.com/zh-cn/problem/minimum-subarray/">原题</a></p>
+<h4 id="思路">思路</h4>
+<p>同最大子数组</p>
+<h4 id="java代码">java代码</h4>
+<pre><code>public class Solution {
+    /**
+     * @param nums: a list of integers
+     * @return: A integer indicate the sum of minimum subarray
+     */
+    public int minSubArray(ArrayList&lt;Integer&gt; nums) {
+        if (nums == null || nums.size() == 0) {
+            return 0;
+        }
+        int tempSum = 0;
+        int minSum = nums.get(0);
+        for (int i = 0; i &lt; nums.size(); i++){
+
+            tempSum += nums.get(i);
+            minSum = Math.min(tempSum , minSum);
+            tempSum = Math.min(tempSum , 0);
+        }
+        return minSum;
+    }
+}
+</code></pre><h3 id="maximum-subarray-difference-最大子数组差">maximum-subarray-difference 最大子数组差</h3>
+<p>给定一个整数数组，找出两个不重叠的子数组A和B，使两个子数组和的差的绝对值|SUM(A) - SUM(B)|最大。</p>
+<p>返回这个最大的差值。</p>
+<h4 id="思路">思路</h4>
+<p>左右各扫描一遍。建立俩个数组，每个数组存放对应的从左，从右的最大，最小值。</p>
+<h4 id="代码">代码</h4>
+<pre><code>public class Solution {
+    /**
+     * @param nums: A list of integers
+     * @return: An integer indicate the value of maximum difference between two
+     *          Subarrays
+     */
+    public int maxDiffSubArrays(ArrayList&lt;Integer&gt; nums) {
+        if (nums == null || nums.size() == 0) {
+            return 0;
+        }
+        int len = nums.size();
+        int[] leftMin = new int[len];
+        int[] leftMax = new int[len];
+        int endMin = nums.get(0), endMax = nums.get(0);
+        leftMin[0] = endMin;
+        leftMax[0] = endMax;
+        for (int i=1;i&lt;len;i++){
+            //Calculate max subarray.
+            endMax = Math.max(nums.get(i), nums.get(i)+endMax);
+            leftMax[i] = Math.max(leftMax[i-1],endMax);
+
+            //Calculate min subarray.
+            endMin = Math.min(nums.get(i),nums.get(i)+endMin);
+            leftMin[i] = Math.min(leftMin[i-1],endMin);
+        }
+
+        int[] rightMin = new int[len];
+        int[] rightMax = new int[len];
+        endMin = nums.get(len-1);
+        endMax = nums.get(len-1);
+        rightMin[len-1] = endMin;
+        rightMax[len-1] = endMax;
+        for (int i=len-2;i&gt;=0;i--){
+            endMax = Math.max(nums.get(i),nums.get(i)+endMax);
+            rightMax[i] = Math.max(rightMax[i+1],endMax);
+            endMin = Math.min(nums.get(i),nums.get(i)+endMin);
+            rightMin[i] = Math.min(rightMin[i+1],endMin); 
+        }
+
+        int maxDiff= 0;
+        for (int i=0;i&lt;len-1;i++){
+            if (maxDiff&lt;Math.abs(leftMin[i]-rightMax[i+1]))
+                maxDiff = Math.abs(leftMin[i]-rightMax[i+1]);
+
+            if (maxDiff&lt;Math.abs(leftMax[i]-rightMin[i+1]))
+                maxDiff = Math.abs(leftMax[i]-rightMin[i+1]);
+        }
+        return maxDiff;
+    }
+}
+</code></pre><h3 id="subarray-sum-子数组之和">subarray-sum 子数组之和</h3>
+<p><a href="http://www.lintcode.com/ch-zn/problem/subarray-sum/">原题</a>
+给定一个整数数组，找到和为零的子数组。你的代码应该返回满足要求的子数组的起始位置和结束位置</p>
+<h4 id="思路">思路</h4>
+<p>使用Map 来记录index,sum的值。当遇到两个index的sum相同时，表示从index1+1到index2是一个解。
+注意：添加一个index = -1作为虚拟节点。这样我们才可以记录index1 = 0的解。</p>
+<h4 id="java代码">java代码</h4>
+<pre><code>public class Solution {
+    /**
+     * @param nums: A list of integers
+     * @return: A list of integers includes the index of the first number 
+     *          and the index of the last number
+     */
+    public ArrayList&lt;Integer&gt; subarraySum(int[] nums) {
+        ArrayList&lt;Integer&gt; res = new ArrayList&lt;Integer&gt;();
+        if (nums==null || nums.length==0) return res;
+        int len = nums.length;
+        Map&lt;Integer,Integer&gt; map = new HashMap&lt;Integer , Integer&gt;();
+
+        map.put(0,-1);
+        int sum =0;
+        for (int i=0;i&lt;len;i++){
+            sum += nums[i];
+            //check the exists of current sum.
+            if (map.containsKey(sum)){
+                int start = map.get(sum)+1;
+                res.add(start);
+                res.add(i);
+                return res;
+            } else {
+
+                map.put(sum,i);
+            }
+        }
+
+        return res;
+    }
+}
+</code></pre><h3 id="subarray-sum-closest-最接近零的子数组和">subarray-sum-closest 最接近零的子数组和</h3>
+<p><a href="http://www.lintcode.com/zh-cn/problem/subarray-sum-closest/">原题</a>
+给定一个整数数组，找到一个和最接近于零的子数组。返回第一个和最有一个指数。你的代码应该返回满足要求的子数组的起始位置和结束位置。</p>
+<h4 id="思路">思路</h4>
+<p>连续数组的和其实就是前缀和之间的差，而要求和最接近于零，也就是说，两个前缀和要最接近，那么直接前缀和排序，相邻两项比较即。
+由O(nlogn)的时间复杂度我们也可以想到排序。</p>
+<h4 id="java代码">java代码</h4>
+<pre><code>class CustomComparator implements Comparator&lt;int[]&gt; {
+    public int compare(int[] a, int[] b) {
+        return Integer.compare(a[0], b[0]);
+    }
+}
+
+public class Solution {
+
+    /**
+     * @param nums: A list of integers
+     * @return: A list of integers includes the index of the first number 
+     *          and the index of the last number
+     */
+   public ArrayList&lt;Integer&gt; subarraySumClosest(int[] nums) {
+        ArrayList&lt;Integer&gt; rst = new ArrayList&lt;Integer&gt;();
+        if(nums == null || nums.length == 0) {
+            return rst;
+        }
+        if (nums.length == 1) {
+            rst.add(0); rst.add(0);
+            return rst;
+        }
+        int[][] culmulate = new int[nums.length][2];
+        culmulate[0][0] = nums[0];
+        culmulate[0][1] = 0;
+        for (int i = 1; i &lt; nums.length; i++) {
+            culmulate[i][0] = culmulate[i - 1][0] + nums[i];
+            culmulate[i][1] = i;
+        }
+
+        Arrays.sort(culmulate, new CustomComparator());
+        int min = Integer.MAX_VALUE;
+        int start = 0;
+        int end = 0;
+        for (int i = 0; i &lt; nums.length - 1; i++) {
+            int temp = culmulate[i + 1][0] - culmulate[i][0];
+            if (temp &lt;= min) {
+                min = temp;
+                start = culmulate[i][1];
+                end = culmulate[i + 1][1];
+            }
+        }
+         if (start &lt; end) {
+            rst.add(start + 1);
+            rst.add(end);
+        } else {
+            rst.add(end + 1);
+            rst.add(start);
+        }
+        return rst;
+    }
+}
+</code></pre><h3 id="2-sum-两数之和">2-sum 两数之和</h3>
+<p><a href="http://www.lintcode.com/zh-cn/problem/2-sum/">原题</a>
+给一个整数数组，找到两个数使得他们的和等于一个给定的数target。</p>
+<p>你需要实现的函数twoSum需要返回这两个数的下标, 并且第一个下标小于第二个下标。注意这里下标的范围是1到n，不是以0开头。</p>
+<h4 id="思路">思路</h4>
+<p>和 subarray-sum 子数组之和 问题一样</p>
+<h4 id="java代码">java代码</h4>
+<pre><code>public class Solution {
+    /*
+     * @param numbers : An array of Integer
+     * @param target : target = numbers[index1] + numbers[index2]
+     * @return : [index1 + 1, index2 + 1] (index1 &lt; index2)
+     */
+    public int[] twoSum(int[] numbers, int target) {
+    HashMap&lt;Integer, Integer&gt; map = new HashMap&lt;Integer, Integer&gt;();
+    int[] result = new int[2];
+
+    for (int i = 0; i &lt; numbers.length; i++) {
+        if (map.containsKey(numbers[i])) {
+            int index = map.get(numbers[i]);
+            result[0] = index+1 ;
+            result[1] = i+1;
+            break;
+        } else {
+            map.put(target - numbers[i], i);
+        }
+    }
+
+    return result;
+    }
+}
+</code></pre><h3 id="3-sum-三数之和">3-sum 三数之和</h3>
+<p><a href="http://www.lintcode.com/zh-cn/problem/3-sum/">原题</a>
+给出一个有n个整数的数组S，在S中找到三个整数a, b, c，找到所有使得a + b + c = 0的三元组。</p>
+<h4 id="思路">思路</h4>
+<p>a + b + c = 0 =&gt; a + b = -c;
+我们很自然的想到排序，再从俩头扫。设置最小的c,第2小和最大的为a 和 b. 固定c,让a++或者b--.对整个数组循环这个过程。</p>
+<h4 id="代码">代码</h4>
+<pre><code> public ArrayList&lt;ArrayList&lt;Integer&gt;&gt; threeSum(int[] num) {
+    ArrayList&lt;ArrayList&lt;Integer&gt;&gt; result = new ArrayList&lt;ArrayList&lt;Integer&gt;&gt;();
+
+    if (num.length &lt; 3)
+        return result;
+
+    // sort array
+    Arrays.sort(num);
+
+    for (int i = 0; i &lt; num.length - 2; i++) {
+        // //avoid duplicate solutions
+        if (i == 0 || num[i] &gt; num[i - 1]) {
+
+            int negate = -num[i];
+
+            int start = i + 1;
+            int end = num.length - 1;
+
+            while (start &lt; end) {
+                //case 1
+                if (num[start] + num[end] == negate) {
+                    ArrayList&lt;Integer&gt; temp = new ArrayList&lt;Integer&gt;();
+                    temp.add(num[i]);
+                    temp.add(num[start]);
+                    temp.add(num[end]);
+
+                    result.add(temp);
+                    start++;
+                    end--;
+                    //避免重复
+                    while (start &lt; end &amp;&amp; num[end] == num[end + 1])
+                        end--;
+
+                    while (start &lt; end &amp;&amp; num[start] == num[start - 1])
+                        start++;
+                //case 2
+                } else if (num[start] + num[end] &lt; negate) {
+                    start++;
+                //case 3
+                } else {
+                    end--;
+                }
+            }
+
+        }
+    }
+
+    return result;
+</code></pre><h3 id="3-sum-closest-三数之和-ii">3-sum-closest 三数之和 II</h3>
+<p>给一个包含n个整数的数组S, 找到和与给定整数target最接近的三元组，返回这三个数的和。</p>
+<p>思路</p>
+<p>和上题一样，排序后，俩头扫。只是每次保留和target的差的最小值</p>
+<pre><code>public int threeSumClosest(int[] nums ,int target) {
+    int min = Integer.MAX_VALUE;
+    int result = 0;
+
+    Arrays.sort(nums);
+
+    for (int i = 0; i &lt; nums.length; i++) {
+        int j = i + 1;
+        int k = nums.length - 1;
+        while (j &lt; k) {
+            int sum = nums[i] + nums[j] + nums[k];
+            int diff = Math.abs(sum - target);
+
+            if(diff == 0) return sum;
+
+            if (diff &lt; min) {
+                min = diff;
+                result = sum;
+            }
+            if (sum &lt;= target) {
+                j++;
+            } else {
+                k--;
+            }
+        }
+    }
+
+    return result;
+    }
+</code></pre><h3 id="4-sum-四数之和">4-sum 四数之和</h3>
+<p>给一个包含n个数的整数数组S，在S中找到所有使得和为给定整数target的四元组(a, b, c, d)。</p>
+<p>思路</p>
+<p>和前俩题思路一样，只不过排序后要固定前俩个数字，俩头扫。需要俩重循环。</p>
+<pre><code>public class Solution {
+    public ArrayList&lt;ArrayList&lt;Integer&gt;&gt; fourSum(int[] num, int target) {
+        ArrayList&lt;ArrayList&lt;Integer&gt;&gt; rst = new ArrayList&lt;ArrayList&lt;Integer&gt;&gt;();
+        Arrays.sort(num);
+
+        for (int i = 0; i &lt; num.length - 3; i++) {
+            if (i != 0 &amp;&amp; num[i] == num[i - 1]) {
+                continue;
+            }
+
+            for (int j = i + 1; j &lt; num.length - 2; j++) {
+                if (j != i + 1 &amp;&amp; num[j] == num[j - 1])
+                    continue;
+
+                int left = j + 1;
+                int right = num.length - 1;
+                while (left &lt; right) {
+                    int sum = num[i] + num[j] + num[left] + num[right];
+                    if (sum &lt; target) {
+                        left++;
+                    } else if (sum &gt; target) {
+                        right--;
+                    } else {
+                        ArrayList&lt;Integer&gt; tmp = new ArrayList&lt;Integer&gt;();
+                        tmp.add(num[i]);
+                        tmp.add(num[j]);
+                        tmp.add(num[left]);
+                        tmp.add(num[right]);
+                        rst.add(tmp);
+                        left++;
+                        right--;
+                        while (left &lt; right &amp;&amp; num[left] == num[left - 1]) {
+                            left++;
+                        }
+                        while (left &lt; right &amp;&amp; num[right] == num[right + 1]) {
+                            right--;
+                        }
+                    }
+                }
+            }
+        }
+
+        return rst;
+    }
+}
+</code></pre><h3 id="k-sum-k数和">k-sum k数和</h3>
+<p>给定n个不同的正整数，整数k（k &lt; = n）以及一个目标数字。
+在这n个数里面找出K个数，使得这K个数的和等于目标数字，求问有多少种方案？</p>
+<p>思路</p>
+<p>经过前面几道和K相关的问题，我们意识到应该用动态规划（DP）了。
+建立递推方程如下：</p>
+<pre><code> if (t &lt;= A[i - 1]) {
+   f[i][j][t] = f[i - 1][j - 1][t - A[i - 1]];
+     }
+ f[i][j][t] += f[i - 1][j][t];
+</code></pre><p>我们用f[i][j][t] 代表前i个数，挑j个数，组成和为t的方案总数。
+（1）我们可以把当前A[i - 1]这个值包括进来，所以需要加上D[i - 1][j - 1][t - A[i - 1]]（前提是t – A[i - 1]要大于0）</p>
+<p>（2）我们可以不选择A[i - 1]这个值，这种情况就是D[i - 1][j][t]，也就是说直接在前i-1个值里选择一些值加到target.</p>
+<pre><code>
+
+public class Solution {
+    /**
+     * @param A: an integer array.
+     * @param k: a positive integer (k &lt;= length(A))
+     * @param target: a integer
+     * @return an integer
+     */
+     public int  kSum(int A[], int k, int target) {
+        int n = A.length;
+        int[][][] f = new int[n + 1][k + 1][target + 1];
+        for (int i = 0; i &lt; n + 1; i++) {
+            f[i][0][0] = 1;
+        }
+        for (int i = 1; i &lt;= n; i++) {
+            for (int j = 1; j &lt;= k &amp;&amp; j &lt;= i; j++) {
+                for (int t = 1; t &lt;= target; t++) {
+                    f[i][j][t] = 0;
+                    if (t &gt;= A[i - 1]) {
+                        f[i][j][t] = f[i - 1][j - 1][t - A[i - 1]];
+                    }
+                    f[i][j][t] += f[i - 1][j][t];
+                } // for t
+            } // for j
+        } // for i
+        return f[n][k][target];
+    }
+}
+</code></pre><h3 id="fast-power-快速幂">fast-power 快速幂</h3>
+<p>计算an % b，其中a，b和n都是32位的整数。</p>
+<p>思路</p>
+<p>a的n次方等于a的n/2次方乘以a的n/2次方。注意奇偶。</p>
+<pre><code>class Solution {
+    /*
+     * @param a, b, n: 32bit integers
+     * @return: An integer
+     */
+    public int fastPower(int a, int b, int n) {
+        if (n == 1) {
+            return a % b;
+        }
+        if (n == 0) {
+            return 1 % b;
+        }
+
+        long product = fastPower(a, b, n / 2);
+        product = (product * product) % b;
+        if (n % 2 == 1) {
+            product = (product * a) % b;
+        }
+        return (int) product;
+    }
+};
+</code></pre><h3 id="sqrtx-x的平方根">sqrtx x的平方根</h3>
+<p>Implement int sqrt(int x).Compute and return the square root of x</p>
+<p>二分查找。由时间复杂度logn以及相关数学知识我们应该想到</p>
+<pre><code>public class Solution {
+    public int sqrt(int x) {
+        long lo = 0;
+        long hi = x;
+
+        while (hi &gt;= lo) {     
+            long mid = lo+(hi-lo)/2;
+            if (x &lt; mid * mid) {
+                hi = mid-1;      // not hi = mid
+            } else {
+                lo = mid+1;  
+            }
+        }
+        return (int) hi;
+    }
+}
+</code></pre><h3 id="trailing-zeros-n-尾部0的个数">Trailing Zeros n!尾部0的个数</h3>
+<p>Write an algorithm which computes the number of trailing zeros in n factorial.</p>
+<p>思路</p>
+<p>由数学知识我们知道，n!中尾部0的个数取决于5的个数，但是还有5的n次方我们不要忘记统计，因为2的个数总是多于5的。</p>
+<pre><code>class Solution {
+    /*
+     * param n: As desciption
+     * return: An integer, denote the number of trailing zeros in n!
+     */
+    public long trailingZeros(long n) {
+        long x = 5;
+        long result = 0;
+        while (n &gt;= x){
+            result += n / x;
+            x *= 5;
+        }
+        return result;
+    }
+};
+</code></pre><h3 id="o1-check-power-of-2-o1时间检查是否是2的幂">o1-check-power-of-2 o1时间检查是否是2的幂</h3>
+<p>Using O(1) time to check whether an integer n is a power of 2.</p>
+<p>思路</p>
+<p>如果是n是2的幂，则有n&amp;(n-1) == 0. 位运算中小技巧还是蛮多的。</p>
+<pre><code>class Solution {
+    /*
+     * @param n: An integer
+     * @return: True or false
+     */
+    public boolean checkPowerOf2(int n) {
+        if (n == 0 || n == Integer.MIN_VALUE){
+            return false;
+        }
+        boolean flag = false;
+        if ((n &amp; n - 1) == 0){
+            flag = true;
+        }
+        return flag;
+    }
+};
+</code></pre><h3 id="参考资料">参考资料</h3>
+<p><a href="http://www.jiuzhang.com/?referer=38beb6">九章算法</a></p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871f87dd2f092c392ca4d5c
+                 data-title=算法之美——数组和数
+                 data-url=array>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,465 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|读书笔记——《Effective Java》</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 读书笔记——《Effective Java》</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-11-05</p>
+            <p>分类: <a href="../tag/Java.html" target="_blank" >Java</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#服务提供者框架">服务提供者框架</a></li>
+<li><a href="#1-学习一门语言必须掌握3件事情">1 学习一门语言必须掌握3件事情</a></li>
+<li><a href="#2-静态工厂方法代替构造器">2 静态工厂方法代替构造器</a></li>
+<li><a href="#3-遇到多个构造器参数时要考虑用构建器">3 遇到多个构造器参数时要考虑用构建器</a></li>
+<li><a href="#4-通过私有构造器强化类不可实例化的能力">4 通过私有构造器强化类不可实例化的能力</a></li>
+<li><a href="#5-避免创造不必要的对象">5 避免创造不必要的对象</a></li>
+<li><a href="#6-消除过期的对象引用">6 消除过期的对象引用</a></li>
+<li><a href="#7-应该避免使用终结方法">7 应该避免使用终结方法</a></li>
+<li><a href="#8-覆盖-equal-时请遵循通用约定">8 覆盖 equal 时请遵循通用约定</a></li>
+<li><a href="#9-覆盖equal时总要覆盖hashcode">9 覆盖equal时总要覆盖hashcode</a></li>
+<li><a href="#10-始终覆盖-tostring">10 始终覆盖 toString</a></li>
+<li><a href="#11-谨慎覆盖-clone">11 谨慎覆盖 clone</a></li>
+<li><a href="#12-考虑实现-comparable-接口">12 考虑实现 Comparable 接口</a></li>
+<li><a href="#13-使类和成员的可访问性最小化">13 使类和成员的可访问性最小化</a></li>
+<li><a href="#14-在共有类中使用访问方法而非共有域">14 在共有类中使用访问方法而非共有域</a></li>
+<li><a href="#15-使可变性最小化">15 使可变性最小化</a></li>
+<li><a href="#16-复合优先于继承">16 复合优先于继承</a></li>
+<li><a href="#17-要么为继承而设计并提供文档说明要么就禁止继承">17 要么为继承而设计并提供文档说明，要么就禁止继承</a></li>
+<li><a href="#18-接口优于抽象类">18 接口优于抽象类</a></li>
+<li><a href="#19-接口只用于定义类型">19 接口只用于定义类型</a></li>
+<li><a href="#20-类层次优于标签类">20 类层次优于标签类</a></li>
+<li><a href="#21-用函数对象表示策略">21 用函数对象表示策略</a></li>
+<li><a href="#22-优先考虑静态成员类">22 优先考虑静态成员类</a></li>
+<li><a href="#23-新代码中要使用泛型而不是原生态类型">23 新代码中要使用泛型而不是原生态类型</a></li>
+<li><a href="#24-消除非受检警告">24 消除非受检警告</a></li>
+<li><a href="#25-列表优先于数组">25 列表优先于数组</a></li>
+<li><a href="#26-优先考虑泛型方法">26 优先考虑泛型方法</a></li>
+<li><a href="#28-利用有限通配符来提升api灵活性">28 利用有限通配符来提升API灵活性</a></li>
+<li><a href="#29-优先考虑类型安全的异构容器">29 优先考虑类型安全的异构容器 ？？</a></li>
+<li><a href="#30-用枚举代替int常量">30 用枚举代替int常量</a></li>
+<li><a href="#31-用enumset-代理位域">31 用EnumSet 代理位域</a></li>
+<li><a href="#32-用enummap-代替序数索引">32 用EnumMap 代替序数索引</a></li>
+<li><a href="#35-注解优先于命名模式">35 注解优先于命名模式</a></li>
+<li><a href="#36-坚持使用override注解">36 坚持使用Override注解</a></li>
+<li><a href="#38-检查参数的有效性">38 检查参数的有效性</a></li>
+<li><a href="#39-必要时进行保护性拷贝">39 必要时进行保护性拷贝</a></li>
+<li><a href="#40-谨慎的设计方法签名">40 谨慎的设计方法签名</a></li>
+<li><a href="#41-慎用重载">41 慎用重载</a></li>
+<li><a href="#42-慎用可变参数">42 慎用可变参数</a></li>
+<li><a href="#43-返回零长度的数组或者集合而不是null">43 返回零长度的数组或者集合，而不是null</a></li>
+<li><a href="#44-为所有导出的api元素编写文档注释">44 为所有导出的API元素编写文档注释</a></li>
+<li><a href="#45-将局部变量的作用域最小化">45 将局部变量的作用域最小化</a></li>
+<li><a href="#46-for-each-优于-for循环">46 for each 优于 for循环</a></li>
+<li><a href="#47-了解和使用类库">47 了解和使用类库</a></li>
+<li><a href="#48-float-和-double-是非精确的">48 float 和 double 是非精确的</a></li>
+<li><a href="#49-基本类型优先于装箱基本类型">49 基本类型优先于装箱基本类型</a></li>
+<li><a href="#50-如果其他类型更合适则尽量避免使用字符串">50 如果其他类型更合适，则尽量避免使用字符串</a></li>
+<li><a href="#51-当心字符串连接的性能">51 当心字符串连接的性能</a></li>
+<li><a href="#52-通过接口引用对象">52 通过接口引用对象</a></li>
+<li><a href="#53-接口优先于反射机制">53 接口优先于反射机制</a></li>
+<li><a href="#54-谨慎使用本地方法">54 谨慎使用本地方法</a></li>
+<li><a href="#55-谨慎地进行优化">55 谨慎地进行优化</a></li>
+<li><a href="#56-遵守普遍接受的命名惯例">56 遵守普遍接受的命名惯例</a></li>
+<li><a href="#57-只针对异常的情况才使用异常">57 只针对异常的情况才使用异常</a></li>
+<li><a href="#58-可恢复的情况使用受检异常编程错误使用运行时异常">58 可恢复的情况使用受检异常，编程错误使用运行时异常</a></li>
+<li><a href="#59-避免不必要的使用受检的异常">59 避免不必要的使用受检的异常</a></li>
+<li><a href="#60-优先使用标准的异常">60 优先使用标准的异常</a></li>
+<li><a href="#61-抛出与抽象相对应的异常">61 抛出与抽象相对应的异常</a></li>
+<li><a href="#62-每个方法抛出的异常都要有文档">62 每个方法抛出的异常都要有文档</a></li>
+<li><a href="#63-在细节信息中包含能捕获失败的信息">63 在细节信息中包含能捕获失败的信息</a></li>
+<li><a href="#64-努力使失败保持原子性">64 努力使失败保持原子性</a></li>
+<li><a href="#65-不要忽略异常">65 不要忽略异常</a></li>
+<li><a href="#66-同步访问共享的可变数据">66 同步访问共享的可变数据</a></li>
+<li><a href="#67-避免过度同步">67 避免过度同步</a></li>
+<li><a href="#68-executor-和-task-优先于线程">68 executor 和 task 优先于线程</a></li>
+<li><a href="#69-并发工具优于-wait-和-notify">69 并发工具优于 wait 和 notify</a></li>
+<li><a href="#70-线程安全性的文档化">70 线程安全性的文档化</a></li>
+<li><a href="#71-慎用延迟初始化">71 慎用延迟初始化</a></li>
+<li><a href="#72-不要依赖于线程调度器">72 不要依赖于线程调度器</a></li>
+<li><a href="#73-避免使用线程组">73 避免使用线程组</a></li>
+<li><a href="#74-序列化实现">74 序列化实现</a></li>
+<li><a href="#何时使用静态代码块">何时使用静态代码块</a></li>
+<li><a href="#对象初始化顺序">对象初始化顺序</a></li>
+<li><a href="#参考资料">参考资料</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="服务提供者框架">服务提供者框架</h3>
+<p>多个服务提供者实现一个服务，系统为多个服务提供者的客户端提供多个实现，并把他们从多个实现中解耦出来。</p>
+<p>服务提供者框架有3个重要组件：</p>
+<ol>
+<li>服务接口 ： 服务提供者实现</li>
+<li>提供者注册API ： 系统用来注册实现，让客户端访问它们的</li>
+<li>服务访问API ：客户端用来获取服务实例的</li>
+<li>服务提供者接口（可选）：服务提供者负责创建其服务实现的实例</li>
+</ol>
+<p>对于JDBC 来说：</p>
+<ul>
+<li>connection 就是服务接口 </li>
+<li>drivermanager.registerdriver 是提供者注册API</li>
+<li>drivermanager.getconnection 服务访问API </li>
+<li>driver 服务提供者接口</li>
+</ul>
+<h3 id="1-学习一门语言必须掌握3件事情">1 学习一门语言必须掌握3件事情</h3>
+<ul>
+<li>语法</li>
+<li>库和API</li>
+<li>用法</li>
+</ul>
+<h3 id="2-静态工厂方法代替构造器">2 静态工厂方法代替构造器</h3>
+<p>静态工厂相比构造器的优势1 ：有名称</p>
+<p>静态工厂相比构造器的优势2 ：不必每次调用时都创建一个新对象</p>
+<p>静态工厂相比构造器的优势3 ：可以返回原返回类型的任何子类型的对象</p>
+<p>静态工厂相比构造器的优势4 ： 在创建参数化类型实例的时候，可以使代码更加简洁</p>
+<p>静态工厂方法与其他的静态方法实际上没有任何区别</p>
+<h3 id="3-遇到多个构造器参数时要考虑用构建器">3 遇到多个构造器参数时要考虑用构建器</h3>
+<p>静态工厂和构造器的共同缺陷：不能很好的扩展到大量的可选参数</p>
+<p>重叠构造器模式 不适合参数很多的情景</p>
+<p>JavaBeans模式 线程安全问题</p>
+<p>Builder模式 线程安全，易读，适合大量参数的场景，生成的对象是不可变的</p>
+<h3 id="4-通过私有构造器强化类不可实例化的能力">4 通过私有构造器强化类不可实例化的能力</h3>
+<h3 id="5-避免创造不必要的对象">5 避免创造不必要的对象</h3>
+<p>如果对象是不可变的，它就始终可以被重用</p>
+<p>优先使用基本类型而不是装箱基本类型，要当心无意识的自动装箱</p>
+<p>小对象的创建和回收动作是十分廉价的</p>
+<p>真正正确使用对象池的典型对象示例就是数据库连接池</p>
+<h3 id="6-消除过期的对象引用">6 消除过期的对象引用</h3>
+<p>所谓的过期引用，是指永远也不会再被解除的引用。</p>
+<p>如果一个对象引用被无意识地保留起来了， 那么，垃圾回收机制不仅不会处理这个对象，而且也不会处理被这个对象所引用的所有其他对象。</p>
+<p>一旦对象引用已经过期，只需清空引用即可。即赋值为null。</p>
+<p><strong>只要类是自己管理内存，就应该警惕内存泄露问题</strong>。</p>
+<p><strong>内存泄露的另一个常见来源是缓存</strong>。</p>
+<p><strong>内存泄露的第三个来源是监听器和回调</strong>。</p>
+<h3 id="7-应该避免使用终结方法">7 应该避免使用终结方法</h3>
+<p>终结方法的缺点是不能保证会被及时执行。</p>
+<h3 id="8-覆盖-equal-时请遵循通用约定">8 覆盖 equal 时请遵循通用约定</h3>
+<p>自反性
+对称性
+传递性
+一致性 如果俩个对象相等，它们必须始终保证相等</p>
+<ol>
+<li>用 == 操作符 检查 参数是否是这个对象的引用；</li>
+<li>使用 <code>instanceof</code> 操作符 检查 参数是否为正确的类型；</li>
+<li>把参数转换为正确的类型；</li>
+<li>对于参数中的关键域，检查参数中的域是否与该对象中对应的域相匹配；</li>
+<li>当编写完 equal方法时。应该检查它是否是对称的，传递的，一致的。</li>
+</ol>
+<pre><code>public boolean equals(Object obj){ 
+  //判断obj是否和this相等，保证自反性 
+  if (obj == this) return true; 
+  //判断obj是否为null，保证最后一条准则 
+  if (obj == null) return false; 
+  //判断两个对象的实际类型是否相等， 
+//如果不相等，则说明比较的是两个不同种类的对象，应当返回false 
+if (obj.getClass() != this.getClass()) return false; 
+//强制类型转换 
+//由于之前已经使用getClass判断过实际类型，因此这里强转是安全的 
+Student stu = (Student) obj; 
+//判断每个属性是否相等 
+//  对于基本类型的属性用“ == ”比较，对象类型的属性用 equals 比较  
+if (this.age == stu.age &amp;&amp; this.name.equals(stu.name) )  
+
+  return true; 
+else return false; 
+}
+</code></pre><h3 id="9-覆盖equal时总要覆盖hashcode">9 覆盖equal时总要覆盖hashcode</h3>
+<p>相等的对象必须具有相等的 hashcode</p>
+<h3 id="10-始终覆盖-tostring">10 始终覆盖 toString</h3>
+<h3 id="11-谨慎覆盖-clone">11 谨慎覆盖 clone</h3>
+<p>永远不要让客户去做任何类库可以替客户完成的事情。</p>
+<h3 id="12-考虑实现-comparable-接口">12 考虑实现 Comparable 接口</h3>
+<h3 id="13-使类和成员的可访问性最小化">13 使类和成员的可访问性最小化</h3>
+<p>设计良好的模块会隐藏所有的实现细节，把它的API和实现清晰地隔离开来。然后，模块之间只通过API进行通信。</p>
+<p>包含共有可变域的类并不是线程安全的。</p>
+<h3 id="14-在共有类中使用访问方法而非共有域">14 在共有类中使用访问方法而非共有域</h3>
+<h3 id="15-使可变性最小化">15 使可变性最小化</h3>
+<p>不可变类只是实例不能被修改的类。</p>
+<p>1 不要提供任何修改对象的方法。</p>
+<p>2 保证类不会被扩展。</p>
+<p>3 使得所有域都是 final 和私有的。</p>
+<p>4 确保对于任何可变组件的互斥访问。</p>
+<p>不可变对象本质上是线程安全的，不要求同步，可以自由共享。</p>
+<p>不可变类的真正唯一缺点，对于每个不同的值都需要一个单独的对象。</p>
+<h3 id="16-复合优先于继承">16 复合优先于继承</h3>
+<h3 id="17-要么为继承而设计并提供文档说明，要么就禁止继承">17 要么为继承而设计并提供文档说明，要么就禁止继承</h3>
+<p><strong>好的API文档应该描述了一个给定的方法做了什么工作，而不是如何做到的。</strong></p>
+<h3 id="18-接口优于抽象类">18 接口优于抽象类</h3>
+<p>抽象类允许包含某些方法的实现，但是接口不可以。</p>
+<p>为了实现由抽象类定义的类型，类必须成为抽象类的一个子类。</p>
+<p>接口的优点：</p>
+<ol>
+<li>现有的类可以很容易被更新，以实现新的接口。</li>
+<li>接口是定义mixin（混合类型的）理想选择。</li>
+<li>接口允许我们构造非层次结构的类型框架。</li>
+</ol>
+<p>抽象类的演变比接口的演变要容易得多。</p>
+<h3 id="19-接口只用于定义类型">19 接口只用于定义类型</h3>
+<p>一般不定义常量。</p>
+<p>常量的定义可以放在本身类，枚举类，工具类中。</p>
+<h3 id="20-类层次优于标签类">20 类层次优于标签类</h3>
+<p>代码</p>
+<h3 id="21-用函数对象表示策略">21 用函数对象表示策略</h3>
+<p>这类对象的方法执行其他对象上的操作，如果一个类仅仅导出这样一个方法，它的实例实际上就等同于一个指向该方法的指针。这样的实例被称为函数对象。</p>
+<p>函数指针的主要用途就是实现策略模式，在Java中实现这种模式，要声明一个接口来表示该策略，并且为每个具体策略声明一个实现了该借口的类。</p>
+<p>代码</p>
+<p>具体的策略类只使用一次时，往往使用匿名类实现。</p>
+<p>重复使用时 使用私有的静态成员类。</p>
+<h3 id="22-优先考虑静态成员类">22 优先考虑静态成员类</h3>
+<p>嵌套类存在的目的只是为了它的外围类服务。</p>
+<p><strong>静态成员类</strong>  作为共有类的辅助类，仅当与它的外部类一起使用时才有意义。</p>
+<p><strong>非静态成员类</strong> 每个实例都与一个外部类的外部实例相关联 。</p>
+<p><strong>匿名类</strong>：动态创建函数对象  创建过程对象 静态工厂方法的内部</p>
+<p><strong>局部类</strong> ：在任何“可以声明局部变量的地方” 都可以声明局部类</p>
+<p>后3个称为内部类。</p>
+<h3 id="23-新代码中要使用泛型而不是原生态类型">23 新代码中要使用泛型而不是原生态类型</h3>
+<p>无限制的通配符类型</p>
+<h3 id="24-消除非受检警告">24 消除非受检警告</h3>
+<h3 id="25-列表优先于数组">25 列表优先于数组</h3>
+<h3 id="26-优先考虑泛型方法">26 优先考虑泛型方法</h3>
+<h3 id="28-利用有限通配符来提升api灵活性">28 利用有限通配符来提升API灵活性</h3>
+<p><code>list&lt;type1&gt; 既不是 list&lt;type2&gt;的子类型，也不是它的超类型</code></p>
+<p>有限的通配符类型 
+<code>List&lt;? extend E&gt;</code></p>
+<p><code>Collection&lt;? super E&gt;</code></p>
+<pre><code>PECS producer-extends consumer-super
+</code></pre><h3 id="29-优先考虑类型安全的异构容器-？？">29 优先考虑类型安全的异构容器 ？？</h3>
+<h3 id="30-用枚举代替int常量">30 用枚举代替int常量</h3>
+<h3 id="31-用enumset-代理位域">31 用EnumSet 代理位域</h3>
+<h3 id="32-用enummap-代替序数索引">32 用EnumMap 代替序数索引</h3>
+<h3 id="35-注解优先于命名模式">35 注解优先于命名模式</h3>
+<h3 id="36-坚持使用override注解">36 坚持使用Override注解</h3>
+<h3 id="38-检查参数的有效性">38 检查参数的有效性</h3>
+<h3 id="39-必要时进行保护性拷贝">39 必要时进行保护性拷贝</h3>
+<p>保护性拷贝是在检查参数的有效性之前进行的，并且有效性检查是针对拷贝后的对象，而不是针对原始的对象。</p>
+<h3 id="40-谨慎的设计方法签名">40 谨慎的设计方法签名</h3>
+<p>谨慎地选择方法的名称。</p>
+<p>避免过长的参数列表：</p>
+<ul>
+<li>创建辅助类</li>
+<li>build模式</li>
+</ul>
+<p>对于参数类型， 优先使用接口而不是类。</p>
+<h3 id="41-慎用重载">41 慎用重载</h3>
+<p>覆盖方法 代码例子</p>
+<h3 id="42-慎用可变参数">42 慎用可变参数</h3>
+<p>可变参数的每次调用都会导致进行一次数组分配和初始化。</p>
+<h3 id="43-返回零长度的数组或者集合，而不是null">43 返回零长度的数组或者集合，而不是null</h3>
+<pre><code>Collections.EMPTY_SET;
+Collections.EMPTY_LIST;
+Collections.EMPTY_MAP;
+</code></pre><h3 id="44-为所有导出的api元素编写文档注释">44 为所有导出的API元素编写文档注释</h3>
+<p>Javadoc</p>
+<p>方法的文档注释应该简洁地描述出它和客户端之间的约定</p>
+<p>说明方法做了什么</p>
+<p>列举出方法的前置条件
+@throws
+@param</p>
+<p>后置条件</p>
+<p>类的线程安全性和可序列化性</p>
+<h3 id="45-将局部变量的作用域最小化">45 将局部变量的作用域最小化</h3>
+<p>第一次使用的地方声明</p>
+<p>try 语句</p>
+<h3 id="46-for-each-优于-for循环">46 for each 优于 for循环</h3>
+<p>无法使用的情况：</p>
+<ul>
+<li>过滤</li>
+<li>转换</li>
+<li>平行迭代</li>
+</ul>
+<h3 id="47-了解和使用类库">47 了解和使用类库</h3>
+<p>可靠的算法库</p>
+<p>性能不断提升</p>
+<p>代码融入主流</p>
+<p>Random.nextInt(int)</p>
+<p>java.long java.util java.io</p>
+<p>集合相关的API</p>
+<p>java.util.concurrent</p>
+<h3 id="48-float-和-double-是非精确的">48 float 和 double 是非精确的</h3>
+<p>BigDecimal int long 进行货币计算</p>
+<h3 id="49-基本类型优先于装箱基本类型">49 基本类型优先于装箱基本类型</h3>
+<p>基本类型只有值</p>
+<p>装箱基本类型有null值</p>
+<p>基本类型更节省空间和时间</p>
+<p><strong>何时使用装箱基本类型</strong>：</p>
+<ol>
+<li>集合中的元素，键 和值</li>
+<li>类型参数</li>
+<li>反射调用</li>
+</ol>
+<h3 id="50-如果其他类型更合适，则尽量避免使用字符串">50 如果其他类型更合适，则尽量避免使用字符串</h3>
+<h3 id="51-当心字符串连接的性能">51 当心字符串连接的性能</h3>
+<p>使用StringBuilder</p>
+<h3 id="52-通过接口引用对象">52 通过接口引用对象</h3>
+<h3 id="53-接口优先于反射机制">53 接口优先于反射机制</h3>
+<h3 id="54-谨慎使用本地方法">54 谨慎使用本地方法</h3>
+<h3 id="55-谨慎地进行优化">55 谨慎地进行优化</h3>
+<p>要努力编写好的程序而不是快的程序</p>
+<p>要考虑API设计决策的性能后果</p>
+<p>在每次试图优化之前和之后，要对性能进行测量</p>
+<p>设计API</p>
+<p>线路层协议</p>
+<p>永久数据格式</p>
+<h3 id="56-遵守普遍接受的命名惯例">56 遵守普遍接受的命名惯例</h3>
+<h3 id="57-只针对异常的情况才使用异常">57 只针对异常的情况才使用异常</h3>
+<p>异常永远不应该用于正常的控制流</p>
+<p>设计良好的API不应该强迫它的客户端为了正常的控制流而使用异常</p>
+<p>如果类有状态相关的方法，则也应该有状态测试的方法或者可识别的返回值：
+next()方法 和 hasNext() 方法</p>
+<h3 id="58-可恢复的情况使用受检异常，编程错误使用运行时异常">58 可恢复的情况使用受检异常，编程错误使用运行时异常</h3>
+<p>受检异常
+运行时异常
+错误</p>
+<p>非受检异常是不需要也不应该被捕获的可抛出结构</p>
+<p>实现的所有未受检的抛出结构都应该是RuntimException的子类</p>
+<h3 id="59-避免不必要的使用受检的异常">59 避免不必要的使用受检的异常</h3>
+<h3 id="60-优先使用标准的异常">60 优先使用标准的异常</h3>
+<p>IllegalArgumentException</p>
+<p>IllegalStateException</p>
+<h3 id="61-抛出与抽象相对应的异常">61 抛出与抽象相对应的异常</h3>
+<p>更高层的实现应该捕获低层的异常，同时抛出可以按照高层抽象进行解释的异常</p>
+<h3 id="62-每个方法抛出的异常都要有文档">62 每个方法抛出的异常都要有文档</h3>
+<p>javadoc 的 throws 标记</p>
+<h3 id="63-在细节信息中包含能捕获失败的信息">63 在细节信息中包含能捕获失败的信息</h3>
+<h3 id="64-努力使失败保持原子性">64 努力使失败保持原子性</h3>
+<p>失败的方法调用应该使对象保持在被调用之前的状态</p>
+<p>不可变对象</p>
+<p>检查参数有效性</p>
+<p>恢复代码</p>
+<p>对象拷贝</p>
+<h3 id="65-不要忽略异常">65 不要忽略异常</h3>
+<h3 id="66-同步访问共享的可变数据">66 同步访问共享的可变数据</h3>
+<p>long  或者 double 类型变量的读，写不是原子的</p>
+<p>如果读和写操作没有都被同步，同步就不会起作用</p>
+<p>安全发布对象：</p>
+<ul>
+<li>保存在静态对象中；</li>
+<li>保存在volatile域，final域，或者加锁的域</li>
+<li>放到并发集合中。</li>
+</ul>
+<h3 id="67-避免过度同步">67 避免过度同步</h3>
+<p>分拆锁 分离锁 非阻塞并发控制</p>
+<p>不要在同步区域调用外来方法</p>
+<p>同步区做尽可能少的工作</p>
+<h3 id="68-executor-和-task-优先于线程">68 executor 和 task 优先于线程</h3>
+<h3 id="69-并发工具优于-wait-和-notify">69 并发工具优于 wait 和 notify</h3>
+<p>executor framework  并发集合  同步器</p>
+<h3 id="70-线程安全性的文档化">70 线程安全性的文档化</h3>
+<p>线程安全性有多种级别</p>
+<ol>
+<li>不可变的  String</li>
+<li>无条件的线程安全 concurrentHashMap</li>
+<li>有条件的线程安全</li>
+<li>非线程安全 通用的集合实现 arraylist  hashmap</li>
+</ol>
+<h3 id="71-慎用延迟初始化">71 慎用延迟初始化</h3>
+<p>静态域的延迟初始化</p>
+<p>code</p>
+<p>实例域的延迟初始化</p>
+<p>code</p>
+<h3 id="72-不要依赖于线程调度器">72 不要依赖于线程调度器</h3>
+<p>Thread.yield 没有可预测的语义</p>
+<h3 id="73-避免使用线程组">73 避免使用线程组</h3>
+<h3 id="74-序列化实现">74 序列化实现</h3>
+<h3 id="何时使用静态代码块">何时使用静态代码块</h3>
+<p>一个类可以使用不包含在任何方法体中的静态代码块，当类被载入时，静态代码块被执行，且只被执行一次，静态块常用来执行类属性的初始化。</p>
+<h3 id="对象初始化顺序">对象初始化顺序</h3>
+<p>对象的初始化顺序:首先执行父类静态的内容，<strong>父类静态的内容执行完毕后，接着去执行子类的静态的内容，当子类的静态内容执行完毕之后，再去看父类有没有非静态代码块，如果有就执行父类的非静态代码块</strong>，父类的非静态代码块执行完毕，接着执行父类的构造方法；父类的构造方法执行完毕之后，它接着去看子类有没有非静态代码块，如果有就执行子类的非静态代码块。子类的非静态代码块执行完毕再去执行子类的构造方法。总之一句话，<strong>静态代码块内容先执行，接着执行父类非静态代码块和构造方法，然后执行子类非静态代码块和构造方法。</strong></p>
+<h3 id="参考资料">参考资料</h3>
+<p>本文是《Effective Java》读书笔记，代码会持续完善补充。</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871f76ad2f092c392ca4d5a
+                 data-title=读书笔记——《Effective Java》
+                 data-url=java-effective-java>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Apache Kylin 维度优化指南</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Apache Kylin 维度优化指南</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-10-07</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#为什么需要维度优化">为什么需要维度优化</a></li>
+<li><a href="#如何计算1个聚集组的维度组合数">如何计算1个聚集组的维度组合数</a></li>
+<li><a href="#如何进行维度优化">如何进行维度优化</a></li>
+<li><a href="#聚集组">聚集组</a></li>
+<li><a href="#衍生维度">衍生维度</a></li>
+<li><a href="#强制维度">强制维度</a></li>
+<li><a href="#层次维度">层次维度</a></li>
+<li><a href="#联合维度">联合维度</a></li>
+<li><a href="#extended-column">Extended Column</a></li>
+<li><a href="#hbase-rowkey顺序">HBase Rowkey顺序</a></li>
+</ul>
+<!-- toc stop -->
+<p>本文主要介绍Apache Kylin进行维度优化的常见方法。</p>
+<h3 id="为什么需要维度优化">为什么需要维度优化</h3>
+<p>因为如果不进行任何维度优化，直接将所有的维度放在一个聚集组里，Kylin就会计算所有的维度组合（cuboid）。</p>
+<p>比如，有12个维度，Kylin就会计算2的12次方即4096个cuboid，实际上查询可能用到的cuboid不到1000个，甚至更少。
+如果对维度不进行优化，会造成集群计算和存储资源的浪费，也会影响cube的build时间和查询性能，所以我们需要进行cube的维度优化。</p>
+<p><strong>当你在保存cube时遇到下面的异常信息时，意味1个聚集组的维度组合数已经大于 4096 ，你就必须进行维度优化了。</strong></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/0rsmuprx31dn0ry1llrda2cr/image_1aufkne841pr4155d15bh1cmigf09.png" alt="image_1aufkne841pr4155d15bh1cmigf09.png-43.3kB"></p>
+<h3 id="如何计算1个聚集组的维度组合数">如何计算1个聚集组的维度组合数</h3>
+<pre><code>当有层次维度时，公式如下：
+(hierarchy.size() + 1) * hierarchyDimsList.size() * (1 &lt;&lt; jointDimsList.size()) * (1 &lt;&lt; normalDims.size())
+
+当没有层次维度时，公式如下：
+1 &lt;&lt; jointDimsList.size()) * (1 &lt;&lt; normalDims.size()
+
+
+hierarchyDimsList.size(): 层次维度的个数。
+hierarchy.size(): 每个层次维度包含的维度个数。
+jointDimsList.size(): 联合维度的个数。
+normalDims.size(): 正常维度的个数,即不是强制维度，层次维度，联合维度的维度数目。
+</code></pre><h3 id="如何进行维度优化">如何进行维度优化</h3>
+<p><strong>首先请确认你设置的cube维度都是你查询时会使用到的。</strong></p>
+<p>目前Kylin可以使用的维度优化手段有以下几种：</p>
+<ul>
+<li>聚集组</li>
+<li>衍生纬度</li>
+<li>强制维度</li>
+<li>层次维度</li>
+<li>联合维度</li>
+<li>Extended Column</li>
+</ul>
+<p>下文会详细介绍以上维度优化手段的基本概念，以及何时使用这些优化手段。</p>
+<h3 id="聚集组">聚集组</h3>
+<blockquote>
+<p>聚集组：用来控制哪些cuboid需要计算。</p>
+<p>适用场景：不是只需要计算base cuboid的情况下，都需要聚集组。</p>
+<p>注意事项：一个维度可以出现在多个聚集组中，但是build期间只会计算一次。</p>
+<p><strong>如果不设置聚集组，默认情况下只会计算 base cuboid</strong>。</p>
+<p>聚集组不宜太多。</p>
+</blockquote>
+<h3 id="衍生维度">衍生维度</h3>
+<blockquote>
+<p>衍生维度：维表中可以由主键推导出值的列可以作为衍⽣维度。</p>
+<p>使用场景：以星型模型接入时。例如用户维表可以从userid推导出用户的姓名，年龄，性别。</p>
+<p>优化效果：维度表的N个维度组合成的cuboid个数会从2的N次方降为2。</p>
+</blockquote>
+<p>图示：
+<img src="http://static.zybuluo.com/kangkaisen/g9130yn0dvaz9kn4nfneyh2r/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202016-03-31%20%E4%B8%8B%E5%8D%882.24.07.png" alt="此处输入图片的描述"></p>
+<h3 id="强制维度">强制维度</h3>
+<blockquote>
+<p>强制维度：所有cuboid必须包含的维度，不会计算不包含强制维度的cuboid。</p>
+<p>适用场景：可以将确定在查询时一定会使用的维度设为强制维度。例如，时间维度。</p>
+<p>优化效果：将一个维度设为强制维度，则cuboid个数直接减半。</p>
+</blockquote>
+<p>图示：
+<img src="http://static.zybuluo.com/kangkaisen/y744npgiv7ccy36tq6dsfyct/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202016-03-31%20%E4%B8%8B%E5%8D%882.20.20.png" alt="强制维度"></p>
+<h3 id="层次维度">层次维度</h3>
+<blockquote>
+<p>层次维度：具有一定层次关系的维度。</p>
+<p>使用场景：像年，月，日；国家，省份，城市这类具有层次关系的维度。</p>
+<p>优化效果：将N个维度设置为层次维度，则这N个维度组合成的cuboid个数会从2的N次方减少到N+1。</p>
+</blockquote>
+<p>图示：
+<img src="http://static.zybuluo.com/kangkaisen/984xt2g15whaejhvg9ih3vx6/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202016-03-31%20%E4%B8%8B%E5%8D%882.21.49.png" alt="此处输入图片的描述"></p>
+<h3 id="联合维度">联合维度</h3>
+<blockquote>
+<p>联合维度：将几个维度视为一个维度。</p>
+<p>适用场景：
+1 可以将确定在查询时一定会同时使用的几个维度设为一个联合维度。</p>
+<p>2 可以将基数很小的几个维度设为一个联合维度。</p>
+<p>3 可以将查询时很少使用的几个维度设为一个联合维度。</p>
+<p>优化效果：将N个维度设置为联合维度，则这N个维度组合成的cuboid个数会从2的N次方减少到1。</p>
+</blockquote>
+<h3 id="extended-column">Extended Column</h3>
+<p>在OLAP分析场景中，<strong>经常存在对某个id进行过滤，但查询结果要展示为name的情况</strong>，比如user_id和user_name。这类问题通常有三种解决方式：</p>
+<blockquote>
+<p>a. 将ID和Name都设置为维度，查询语句类似<code>select name, count(*) from table where id = 1 group by id,name</code>。这种方式的问题是会导致维度增多，导致预计算结果膨胀；</p>
+<p>b. 将id和name都设置为维度，并且将两者设置为联合。这种方式的好处是保持维度组合数不会增加，但限制了维度的其它优化，比如ID不能再被设置为强制维度或者层次维度；</p>
+<p>c. 将ID设置为维度，Name设置为特殊的Measure，类型为Extended Column。这种方式既能保证过滤id且查询name的需求，同时也不影响id维度的进一步优化。</p>
+</blockquote>
+<p>所以此类需求我们推荐使用 Extended Column。</p>
+<h3 id="hbase-rowkey顺序">HBase Rowkey顺序</h3>
+<p>简单的讲，查询频率越高的维度在Rowkey中的顺序需要越靠前。</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871f668d2f092c392ca4d58
+                 data-title=Apache Kylin 维度优化指南
+                 data-url=kylin-dimension>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

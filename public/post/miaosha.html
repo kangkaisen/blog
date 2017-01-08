@@ -1,0 +1,152 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|秒杀系统设计思路</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 秒杀系统设计思路</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-04-03</p>
+            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
+            <hr/>
+            <h3 id="秒杀难点">秒杀难点</h3>
+<p>库存只有一份，所有人会在集中的时间读和写这些数据。</p>
+<h3 id="秒杀问题">秒杀问题</h3>
+<ul>
+<li>对现有网站业务的冲击</li>
+<li>高并发情况以及数据库的负载</li>
+<li>突然增加的网络和服务器带宽</li>
+<li>直接下单</li>
+<li>防止机器秒杀</li>
+</ul>
+<h3 id="秒杀方案">秒杀方案</h3>
+<ul>
+<li>秒杀系统独立部署</li>
+<li>秒杀商品页面静态化</li>
+<li>租借秒杀活动网络带宽</li>
+<li>动态生成随机下单页面URL</li>
+<li>将请求尽量拦截在系统上游</li>
+<li>充分利用缓存</li>
+</ul>
+<h3 id="秒杀优化细节">秒杀优化细节</h3>
+<h4 id="浏览器层请求拦截">浏览器层请求拦截</h4>
+<p>产品层面，用户点击“查询”或者“购票”后，按钮置灰，禁止用户重复提交请求</p>
+<p>JS层面，限制用户在x秒之内只能提交一次请求</p>
+<h4 id="站点层请求拦截与页面缓存">站点层请求拦截与页面缓存</h4>
+<p>同一个uid，限制访问频度，做页面缓存</p>
+<p>同一个item的查询，例如手机车次，做页面缓存</p>
+<h4 id="服务层请求拦截与数据缓存">服务层请求拦截与数据缓存</h4>
+<p>对于写请求，做请求队列，每次只允许有限的写请求去数据层，如果均成功再放下一批，如果库存不够则队列里的写请求全部返回“已售完”</p>
+<p>对于读请求，cache来抗，不管是memcached还是redis，单机抗个每秒10w应该都是没什么问题的</p>
+<h3 id="总结">总结</h3>
+<ul>
+<li>在高并发情况下，影响系统性能的一个关键因素是：数据的一致性要求。</li>
+<li>尽量将请求拦截在系统上游</li>
+<li>读多写少的常用多使用缓存</li>
+<li><strong>前端三板斧【扩容】+【限流】+【静态化】</strong></li>
+<li><strong>后端两条路【内存】+【排队】</strong></li>
+</ul>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://www.cnblogs.com/rollenholt/p/3393398.html">如何实现“秒杀”系统</a></p>
+<p><a href="http://chuansong.me/n/1334017">秒杀系统架构优化思路</a></p>
+<p><a href="http://sobuhu.com/program/2013/04/07/how-to-design-seckill.html">如何设计一个秒杀系统</a></p>
+<p><a href="http://jag522.iteye.com/blog/2113519">网购秒杀系统架构设计</a></p>
+<p><a href="http://mm.fancymore.com/reading/%E7%A7%92%E6%9D%80%E7%B3%BB%E7%BB%9F%E7%9A%84%E8%AE%BE%E8%AE%A1.html">秒杀系统的设计和优化</a></p>
+<p><a href="http://www.csdn.net/article/2014-11-07/2822545">“米粉节”背后的故事——小米网抢购系统开发实践</a></p>
+<p><a href="http://itindex.net/detail/53237-%E7%A7%92%E6%9D%80-%E7%B3%BB%E7%BB%9F-%E8%AE%BE%E8%AE%A1">秒杀系统设计的知识点</a></p>
+<p><a href="http://itindex.net/detail/39902-%E7%B3%BB%E7%BB%9F-%E8%AE%BE%E8%AE%A1">12306订票系统设计关键点</a></p>
+<p><a href="http://mp.weixin.qq.com/s?__biz=MzIxNDMyMTkzNA==&amp;mid=2247483739&amp;idx=1&amp;sn=970e0afac72c90925611b0fd1d94587c&amp;scene=23&amp;srcid=0521sHGgjlOgaZWeU0f9e6VW#rd">秒杀系统架构分析与实战</a></p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871eaecd2f092c392ca4d40
+                 data-title=秒杀系统设计思路
+                 data-url=miaosha>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

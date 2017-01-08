@@ -1,0 +1,354 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|LRU和LFU缓存置换算法</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> LRU和LFU缓存置换算法</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-05-05</p>
+            <p>分类: <a href="../tag/算法.html" target="_blank" >算法</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#为什么需要cache">为什么需要Cache</a></li>
+<li><a href="#cache是什么">Cache是什么</a></li>
+<li><a href="#cache无处不在">Cache无处不在</a></li>
+<li><a href="#常用的cache服务器">常用的Cache服务器</a></li>
+<li><a href="#为什么需要-cache">为什么需要 Cache</a></li>
+<li><a href="#为什么不全放在-cache中">为什么不全放在 Cache中</a></li>
+<li><a href="#为什么cache需要置换">为什么Cache需要置换</a></li>
+<li><a href="#lfu-cache置换算法">LFU Cache置换算法</a></li>
+<li><a href="#lru-cache置换算法">LRU Cache置换算法</a></li>
+<li><a href="#参考资料">参考资料</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="为什么需要cache">为什么需要Cache</h3>
+<ul>
+<li>为了解决俩个存储介质之间的速度不匹配，比如CPU和内存，比如内存和磁盘，比如本地和服务端。</li>
+<li>依据程序访问的局部性原理，近期访问的数据，在将来很有可能会被访问</li>
+</ul>
+<h3 id="cache是什么">Cache是什么</h3>
+<p>可以简单认为是一个HashMap，是一个key-value 结构，用来加速访问。</p>
+<h3 id="cache无处不在">Cache无处不在</h3>
+<p>缓存的种类：本地服务器缓存、网页缓存、硬盘缓存、一级高速缓存、二级高速缓存等</p>
+<h3 id="常用的cache服务器">常用的Cache服务器</h3>
+<ul>
+<li>Memcache</li>
+<li>Redis</li>
+</ul>
+<h3 id="为什么需要-cache">为什么需要 Cache</h3>
+<p>因为Cache在内存中，所以存储效率高</p>
+<h3 id="为什么不全放在-cache中">为什么不全放在 Cache中</h3>
+<ul>
+<li>内存的数据断电就会丢失</li>
+<li>Cache比硬盘贵</li>
+</ul>
+<h3 id="为什么cache需要置换">为什么Cache需要置换</h3>
+<p>Cache工作原理要求它尽量保存最新数据，但是Cache一般大小有限，当Cache容量达到上限时，就会产生Cache替换的问题。最理想的情况是置换出未来短期内不会被再次访问的数据，但是我们无法预知未来，所以只能从数据在过去的访问情况中寻找规律进行置换。</p>
+<h3 id="lfu-cache置换算法">LFU Cache置换算法</h3>
+<p><code>Least Frequently Used algorithm</code>
+LFU是首先淘汰一定时期内被访问次数最少的页!</p>
+<p>这种算法选择近期最少访问的页面作为被替换的页面。显然，这是一种合理的算法，因为到目前为止最少使用的页面，很可能也是将来最少访问的页面。</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/fnjgzdopi1hvbi9lktvdkxkd/20150420105345_48639.png" alt="20150420105345_48639.png-56.1kB"></p>
+<p>代码如下：</p>
+<pre><code>/**
+ * Created by kangkaisen on 16/5/4.
+ */
+import java.util.*;
+
+public class LFUCache {
+    private static final int DEFAULT_MAX_SIZE = 3;
+    private int capacity = DEFAULT_MAX_SIZE;
+    //保存缓存的访问频率和时间
+    private final Map&lt;Integer, HitRate&gt; cache = new HashMap&lt;Integer, HitRate&gt;();
+    //保存缓存的KV
+    private final Map&lt;Integer, Integer&gt; KV = new HashMap&lt;Integer, Integer&gt;();
+
+    // @param capacity, an integer
+    public LFUCache(int capacity) {
+        this.capacity = capacity;
+    }
+
+    // @param key, an integer
+    // @param value, an integer
+    // @return nothing
+    public void set(int key, int value) {
+        Integer v = KV.get(key);
+        if (v == null) {
+            if (cache.size() == capacity) {
+                Integer k = getKickedKey();
+                KV.remove(k);
+                cache.remove(k);
+            }
+            cache.put(key, new HitRate(key, 1, System.nanoTime()));
+        } else { //若是key相同只增加频率,更新时间,并不进行置换
+            HitRate hitRate = cache.get(key);
+            hitRate.hitCount += 1;
+            hitRate.lastTime = System.nanoTime();
+        }
+        KV.put(key, value);
+    }
+
+    public int get(int key) {
+        Integer v = KV.get(key);
+        if (v != null) {
+            HitRate hitRate = cache.get(key);
+            hitRate.hitCount += 1;
+            hitRate.lastTime = System.nanoTime();
+            return v;
+        }
+        return -1;
+    }
+    // @return 要被置换的key
+    private Integer getKickedKey() {
+        HitRate min = Collections.min(cache.values());
+        return min.key;
+    }
+
+    class HitRate implements Comparable&lt;HitRate&gt; {
+        Integer key;
+        Integer hitCount; // 命中次数
+        Long lastTime; // 上次命中时间
+
+        public HitRate(Integer key, Integer hitCount, Long lastTime) {
+            this.key = key;
+            this.hitCount = hitCount;
+            this.lastTime = lastTime;
+        }
+
+        public int compareTo(HitRate o) {
+            int hr = hitCount.compareTo(o.hitCount);
+            return hr != 0 ? hr : lastTime.compareTo(o.lastTime);
+        }
+    }
+
+    public static void main(String[] as) throws Exception {
+        LFUCache cache = new LFUCache(3);
+        cache.set(2, 2);
+        cache.set(1, 1);
+
+        System.out.println(cache.get(2));
+        System.out.println(cache.get(1));
+        System.out.println(cache.get(2));
+
+        cache.set(3, 3);
+        cache.set(4, 4);
+
+        System.out.println(cache.get(3));
+        System.out.println(cache.get(2));
+        System.out.println(cache.get(1));
+        System.out.println(cache.get(4));
+
+    }
+}
+</code></pre><h3 id="lru-cache置换算法">LRU Cache置换算法</h3>
+<p><code>Least Recently Used algorithm</code> 
+LRU是首先淘汰最长时间未被使用的页面!</p>
+<p>这种算法把近期最久没有被访问过的页面作为被替换的页面。它把LFU算法中要记录数量上的&quot;多&quot;与&quot;少&quot;简化成判断&quot;有&quot;与&quot;无&quot;，因此，实现起来比较容易。
+<img src="http://static.zybuluo.com/kangkaisen/ogfwmqj8b530w7g7qbixzuao/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202016-05-05%20%E4%B8%8A%E5%8D%8812.33.51.png" alt="屏幕快照 2016-05-05 上午12.33.51.png-123.4kB"></p>
+<p>代码如下：</p>
+<pre><code>import java.util.HashMap;
+
+/**
+ * Created by kangkaisen on 16/5/5.
+ */
+
+//实现起来比较简单. 维护一个链表,每次数据新添加或者有访问时移动到链表尾,
+//每次淘汰数据则是淘汰链表头部的数据.
+//也就是最近最少访问的数据在链表头部,最近刚访问的数据在链表尾部    
+
+public class LRUCache {
+    private class Node{
+        Node prev;
+        Node next;
+        int key;
+        int value;
+
+        public Node(int key, int value) {
+            this.key = key;
+            this.value = value;
+            this.prev = null;
+            this.next = null;
+        }
+    }
+
+    private int capacity;
+    private HashMap&lt;Integer, Node&gt; hs = new HashMap&lt;Integer, Node&gt;();
+    private Node head = new Node(-1, -1);
+    private Node tail = new Node(-1, -1);
+    // @param capacity, an integer
+    public LRUCache(int capacity) {
+        // write your code here
+        this.capacity = capacity;
+        tail.prev = head;
+        head.next = tail;
+    }
+
+    // @return an integer
+    public int get(int key) {
+        // write your code here
+        if( !hs.containsKey(key)) {
+            return -1;
+        }
+
+        // remove current
+        Node current = hs.get(key);
+        current.prev.next = current.next;
+        current.next.prev = current.prev;
+
+        // move current to tail
+        move_to_tail(current);
+
+        return hs.get(key).value;
+
+
+    }
+
+    // @param key, an integer
+    // @param value, an integer
+    // @return nothing
+    public void set(int key, int value) {
+        // write your code here
+        if( get(key) != -1) {
+            hs.get(key).value = value;
+            return;
+        }
+
+        if (hs.size() == capacity) {
+            hs.remove(head.next.key);
+            head.next = head.next.next;
+            head.next.prev = head;
+        }
+
+        Node insert = new Node(key, value);
+        hs.put(key, insert);
+        move_to_tail(insert);
+    }
+
+    private void move_to_tail(Node current) {
+        current.prev = tail.prev;
+        tail.prev = current;
+        current.prev.next = current;
+        current.next = tail;
+    }
+
+    public static void main(String[] as) throws Exception {
+        LRUCache cache = new LRUCache(3);
+        cache.set(2, 2);
+        cache.set(1, 1);
+
+        System.out.println(cache.get(2));
+        System.out.println(cache.get(1));
+        System.out.println(cache.get(2));
+
+        cache.set(3, 3);
+        cache.set(4, 4);
+
+        System.out.println(cache.get(3));
+        System.out.println(cache.get(2));
+        System.out.println(cache.get(1));
+        System.out.println(cache.get(4));
+
+    }
+}
+</code></pre><h3 id="参考资料">参考资料</h3>
+<p><a href="http://www.jiuzhang.com/?referer=38beb6">九章算法</a></p>
+<p><a href="http://blog.163.com/shi_shun/blog/static/237078492010420320196/">缓存中的算法-RAND算法,FIFO算法,LFU算法,LRU算法,OPT算法 </a></p>
+<p><a href="http://blog.csdn.net/yunhua_lee/article/details/7648549">缓存淘汰算法系列之2——LFU类</a></p>
+<p><a href="http://blog.csdn.net/definite_things/article/details/45705307">缓存淘汰算法 —— LFU-Aging（Java实现）</a> 该算法不正确</p>
+<p><a href="http://blog.csdn.net/summerhust/article/details/6867171">LRU和LFU的区别</a></p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871f438d2f092c392ca4d53
+                 data-title=LRU和LFU缓存置换算法
+                 data-url=lru-lfu>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦| 读书笔记——《深入浅出面向对象分析和设计》</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1>  读书笔记——《深入浅出面向对象分析和设计》</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-11-26</p>
+            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#一-写文章的技巧">一 写文章的技巧</a></li>
+<li><a href="#二-什么是伟大的软件">二 什么是伟大的软件？</a></li>
+<li><a href="#三-如何设计伟大软件">三 如何设计伟大软件？</a></li>
+<li><a href="#四-需求是什么">四 需求是什么？</a></li>
+<li><a href="#五-良好的设计">五 良好的设计</a></li>
+<li><a href="#六-架构设计">六 架构设计</a></li>
+<li><a href="#七-设计原则">七 设计原则</a></li>
+<li><a href="#八-迭代和测试">八 迭代和测试</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="一-写文章的技巧">一 写文章的技巧</h3>
+<ol>
+<li><p>视觉化——图像优于文字</p>
+</li>
+<li><p>使用对话方式和拟人化风格</p>
+</li>
+<li><p>第一人称角度</p>
+</li>
+<li>谈话式风格</li>
+<li>故事代替论述</li>
+<li><p>口语代替正式的术语和演说</p>
+</li>
+<li><p>让学习者更深入的思考</p>
+</li>
+<li>让读者集中注意力</li>
+<li>拨动读者的心弦</li>
+</ol>
+<h3 id="二-什么是伟大的软件？">二 什么是伟大的软件？</h3>
+<ol>
+<li>伟大软件必须让客户满意，满足客户的需求。</li>
+<li>伟大软件是设计良好，编码良好并且易于维护、重用及扩展。</li>
+</ol>
+<h3 id="三-如何设计伟大软件？">三 如何设计伟大软件？</h3>
+<ol>
+<li>确认软件做客户要他做的事。</li>
+<li>运用基本的OO原则来增加软件的灵活性。</li>
+<li>努力实现可维护、可重用的设计。</li>
+</ol>
+<h3 id="四-需求是什么？">四 需求是什么？</h3>
+<p>It&#39;s a <strong>specific thing</strong> your <strong>system</strong> has to <strong>do</strong> to work <strong>correctly</strong>.</p>
+<p>需求是系统为了正确运作所必须做的事情。</p>
+<p>取得好需求的最佳方式就是了解系统应该做什么。</p>
+<p><strong>客户永远是正确的。需求永远在变化。</strong></p>
+<p>需求的变更有时会暴露出关于系统你所不知的问题。</p>
+<p>需求的变更是经常的，随着你每次对需求的实现，系统总是随之改善。</p>
+<h4 id="41-用例是什么？">4.1  用例是什么？</h4>
+<p>A use case describes <strong>what</strong> your system <strong>does</strong> to accomplish a <strong>partilar</strong> <strong>customer goal</strong>.</p>
+<p>用例是把系统描述为实现特定用户目标要做的事情。</p>
+<p>好的用例以<strong>容易理解</strong>的语言，<strong>清楚</strong>且<strong>准确</strong>地解释了系统在做什么。</p>
+<p><strong>用例反应使用性，功能反应功能性。</strong></p>
+<p>用例的三要素：</p>
+<ul>
+<li>清楚的价值</li>
+<li>起点和终点</li>
+<li>外部启动者</li>
+</ul>
+<h4 id="42-文本分析">4.2 文本分析</h4>
+<p>查看用例中<strong>名词和动词</strong>以整理出<strong>类与方法</strong>的动作叫做文本分析。</p>
+<h3 id="五-良好的设计">五 良好的设计</h3>
+<ol>
+<li>抽象类是实际的实现类的占位符，抽象类定义行为，而子类实现该行为。</li>
+<li>将变化之物封装起来。</li>
+<li>要看看软件是否设计良好的最佳方式之一就是试着改变它。</li>
+<li>对接口编码，而不是对实现编码。</li>
+<li>每个类应该只有一个变动的理由。</li>
+<li><strong>设计是反复进行的，你必须愿意改变你的设计。</strong></li>
+<li>大多数的好设计都是通过分析坏设计而来的。</li>
+<li>内聚性：只专注处理一件事情，不会试着做其他事情。</li>
+<li>重构改变程序代码的内部结构，而不影响程序代码的行为。</li>
+<li>委托：一个对象将操作转交到另一个对象的动作，第二个对象代表第一个对象执行该操作。委托保护你的对象免受软件中其他对象实现改变的干扰。</li>
+</ol>
+<h3 id="六-架构设计">六 架构设计</h3>
+<p>架构是系统的组织结构，包含<strong>分解开来的各个部件</strong>、它们的<strong>连通性</strong>、<strong>交互机制</strong>以及你在系统设计中使用的<strong>指导原则和决策</strong>。</p>
+<ol>
+<li>将大问题化整为零，分解为许多功能片段，接着就单独解决每个片段。</li>
+<li>分析系统像什么，不像什么。</li>
+<li><strong>只要可以，就尽量把细节往后拖延</strong>。</li>
+<li>领域分析让你检查你的设计，并且是以客户所用的语言。</li>
+<li>应用程序中真正重要的事情是架构上重要的事情。</li>
+<li>一次把焦点放在一个功能上，减少项目的风险。</li>
+<li>有时候，编写伟大代码的最佳方式，是在<strong>允许的情况下</strong>将程序代码编写<strong>往后延</strong>。</li>
+<li>伟大软件不只是<strong>伟大程序代码</strong>。</li>
+</ol>
+<h4 id="什么是架构上重要的事情？">什么是架构上重要的事情？</h4>
+<ol>
+<li>它是系统本质的一部分吗？ 系统的本质是指在最基本的层次上系统是什么。</li>
+<li>这他妈的是什么意思？</li>
+<li>我“到底”该如何做？</li>
+</ol>
+<h3 id="七-设计原则">七 设计原则</h3>
+<ol>
+<li><strong>模拟是避免做傻事的最佳方式</strong>。</li>
+<li>开闭原则：对修改关闭，对扩展开放。</li>
+<li>不要自我重复原则。</li>
+<li>单一职责原则。</li>
+<li>里氏替换原子：子类型必须能够替换基类型。</li>
+<li>假如你需要使用另一个类的功能性，但不想改变该功能性，考虑以委托代替继承。</li>
+<li>组合。</li>
+<li>聚合。</li>
+</ol>
+<h3 id="八-迭代和测试">八 迭代和测试</h3>
+<p>伟大软件的编写是迭代进行的。</p>
+<p>先针对整体轮廓操作，接着迭代应用程序的每个片段，直到完成。</p>
+<p><strong>功能驱动开发</strong>：一次做单一功能，接着迭代，一次解决一个功能，直到你完成应用程序的整个功能性。</p>
+<p><strong>用例驱动开发</strong>：先实现用例的单一场景，接着再取出另一个场景完成它，直到所有场景完成。然后再迭代下一个用例，直到所有用例都能运作。</p>
+<p><strong>测试驱动开发</strong>：聚焦于让类的行为正确。</p>
+<p><strong>契约式编程</strong>：你正在与客户的程序代码合作，以对你将如何处理有问题的状况达成协议。</p>
+<p><strong>防御式编程</strong>：确保客户获得“安全的”响应，不管客户要什么。</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871fa5fd2f092c392ca4d61
+                 data-title= 读书笔记——《深入浅出面向对象分析和设计》
+                 data-url=head-first-object>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

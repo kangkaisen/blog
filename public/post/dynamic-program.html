@@ -1,0 +1,957 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|算法之美——动态规划</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 算法之美——动态规划</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-11-19</p>
+            <p>分类: <a href="../tag/算法.html" target="_blank" >算法</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#什么情况考虑动态规划">什么情况考虑动态规划</a></li>
+<li><a href="#什么情况下不考虑动态规划">什么情况下不考虑动态规划</a></li>
+<li><a href="#动态规划的实现方式">动态规划的实现方式</a></li>
+<li><a href="#动态规划的四要素">动态规划的四要素</a></li>
+<li><a href="#坐标型动态规划">坐标型动态规划</a></li>
+<li><a href="#单序列动态规划">单序列动态规划</a></li>
+<li><a href="#双序列动态规划">双序列动态规划</a></li>
+<li><a href="#数字三角形-triangle">数字三角形 triangle</a></li>
+<li><a href="#最小路径和-minimum-path-sum">最小路径和 minimum-path-sum</a></li>
+<li><a href="#不同的路径-unique-paths">不同的路径 unique-paths</a></li>
+<li><a href="#不同的路径-ii-unique-paths-ii">不同的路径 II unique-paths-ii</a></li>
+<li><a href="#爬楼梯-climbing-stairs">爬楼梯 climbing-stairs</a></li>
+<li><a href="#跳跃游戏-jump-game">跳跃游戏 jump-game</a></li>
+<li><a href="#跳跃游戏2-jump-game-ii">跳跃游戏2 jump-game-ii</a></li>
+<li><a href="#分割回文串-ii-palindrome-partitioning-ii">分割回文串 II palindrome-partitioning-ii</a></li>
+<li><a href="#单词切分-word-break">单词切分 word-break</a></li>
+<li><a href="#最长上升子序列-longest-increasing-subsequence">最长上升子序列 longest-increasing-subsequence</a></li>
+<li><a href="#最长公共子序列-longest-common-subsequence">最长公共子序列 longest-common-subsequence</a></li>
+<li><a href="#最长公共子串-longest-common-substring">最长公共子串  longest-common-substring</a></li>
+<li><a href="#编辑距离-edit-distance">编辑距离  edit-distance</a></li>
+<li><a href="#不同的子序列">不同的子序列</a></li>
+<li><a href="#交叉字符串">交叉字符串</a></li>
+<li><a href="#背包问题-backpack">背包问题 backpack</a></li>
+<li><a href="#背包问题-ii-backpack-ii">背包问题 II backpack-ii</a></li>
+<li><a href="#最小调整代价">最小调整代价</a></li>
+<li><a href="#k-数和">K 数和</a></li>
+<li><a href="#买卖股票的最佳时机-iv">买卖股票的最佳时机 IV</a></li>
+<li><a href="#最大子数组-iii">最大子数组 III ?</a></li>
+<li><a href="#参考资料">参考资料</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="什么情况考虑动态规划">什么情况考虑动态规划</h3>
+<ul>
+<li>求最大值最小值</li>
+<li>判断是否可行</li>
+<li>统计方案个数</li>
+</ul>
+<h3 id="什么情况下不考虑动态规划">什么情况下不考虑动态规划</h3>
+<ul>
+<li><strong>求出所有具体的方案而非方案个数</strong></li>
+<li><strong>输入数据是一个集合而不是 序列</strong></li>
+</ul>
+<h3 id="动态规划的实现方式">动态规划的实现方式</h3>
+<h4 id="多重循环">多重循环</h4>
+<ul>
+<li>优点：正规，存在空间优化的可能</li>
+<li>缺点：思考有难度</li>
+<li>实现方式： 自底向上 和 自顶向下</li>
+</ul>
+<h4 id="记忆化搜索">记忆化搜索</h4>
+<ul>
+<li>优点：容易从搜索算法直接 转化过来</li>
+<li>缺点：递归</li>
+</ul>
+<h3 id="动态规划的四要素">动态规划的四要素</h3>
+<h4 id="状态-state">状态 State</h4>
+<p>存储小规模问题的结果</p>
+<h4 id="方程-function">方程 Function</h4>
+<p>状态之间的联系,怎么通过小的状态,来算大的状态</p>
+<h4 id="初始化-initialization">初始化 Initialization</h4>
+<p>最极限的小状态是什么, 起点。</p>
+<p>初始化一个二维的动态规划时 就去初始化第0行和第0列。</p>
+<p>如果不是跟坐标相关的动态规划 一般有N个数/字符,就开N+1个位置的数组 第0个位置单独留出来作初始化。</p>
+<h4 id="答案-answer">答案 Answer</h4>
+<p>最大的那个状态是什么,终点。</p>
+<h3 id="坐标型动态规划">坐标型动态规划</h3>
+<pre><code>state:
+f[x] 表示我从起点走到坐标x
+f[x][y] 表示我从起点走到坐标x,y
+function: 研究走到x,y这个点之前的一步 
+intialize: 起点
+answer: 终点
+</code></pre><h3 id="单序列动态规划">单序列动态规划</h3>
+<pre><code>state: f[i]表示前i个位置/数字/字母等
+function: f[i] = f(f[j]) j是i之前的一个位置 
+initialize: f[0]
+answer: f[n-1]
+</code></pre><h3 id="双序列动态规划">双序列动态规划</h3>
+<pre><code>state: f[i][j]代表了第一个sequence的前i个数字/字符,配上第二个sequence 的前j个
+function: f[i][j] = 研究第i个和第j个的匹配关系
+initialize: f[i][0] 和 f[0][i]
+answer: f[s1.length()][s2.length()]
+</code></pre><h3 id="数字三角形-triangle">数字三角形 triangle</h3>
+<pre><code>// version 0: top-down
+public class Solution {
+    /**
+     * @param triangle: a list of lists of integers.
+     * @return: An integer, minimum path sum.
+     */
+    public int minimumTotal(int[][] triangle) {
+        if (triangle == null || triangle.length == 0) {
+            return -1;
+        }
+        if (triangle[0] == null || triangle[0].length == 0) {
+            return -1;
+        }
+
+        // state: f[x][y] = minimum path value from 0,0 to x,y
+        int n = triangle.length;
+        int[][] f = new int[n][n];
+
+        // initialize 
+        f[0][0] = triangle[0][0];
+        for (int i = 1; i &lt; n; i++) {
+            f[i][0] = f[i - 1][0] + triangle[i][0];
+            f[i][i] = f[i - 1][i - 1] + triangle[i][i];
+        }
+
+        // top down
+        for (int i = 1; i &lt; n; i++) {
+            for (int j = 1; j &lt; i; j++) {
+                f[i][j] = Math.min(f[i - 1][j], f[i - 1][j - 1]) + triangle[i][j];
+            }
+        }
+
+        // answer
+        int best = f[n - 1][0];
+        for (int i = 1; i &lt; n; i++) {
+            best = Math.min(best, f[n - 1][i]);
+        }
+        return best;
+    }
+}
+
+
+//Version 1: Bottom-Up
+public class Solution {
+    /**
+     * @param triangle: a list of lists of integers.
+     * @return: An integer, minimum path sum.
+     */
+    public int minimumTotal(int[][] triangle) {
+        if (triangle == null || triangle.length == 0) {
+            return -1;
+        }
+        if (triangle[0] == null || triangle[0].length == 0) {
+            return -1;
+        }
+
+        // state: f[x][y] = minimum path value from x,y to bottom
+        int n = triangle.length;
+        int[][] f = new int[n][n];
+
+        // initialize 
+        for (int i = 0; i &lt; n; i++) {
+            f[n - 1][i] = triangle[n - 1][i];
+        }
+
+        // bottom up
+        for (int i = n - 2; i &gt;= 0; i--) {
+            for (int j = 0; j &lt;= i; j++) {
+                f[i][j] = Math.min(f[i + 1][j], f[i + 1][j + 1]) + triangle[i][j];
+            }
+        }
+
+        // answer
+        return f[0][0];
+    }
+}
+
+
+//Version 2 : Memorize Search
+public class Solution {
+    private int n;
+    private int[][] minSum;
+    private int[][] triangle;
+
+    private int search(int x, int y) {
+        if (x &gt;= n) {
+            return 0;
+        }
+
+        if (minSum[x][y] != Integer.MAX_VALUE) {
+            return minSum[x][y];
+        }
+
+        minSum[x][y] = Math.min(search(x + 1, y), search(x + 1, y + 1))
+            + triangle[x][y];
+        return minSum[x][y];
+    }
+
+    public int minimumTotal(int[][] triangle) {
+        if (triangle == null || triangle.length == 0) {
+            return -1;
+        }
+        if (triangle[0] == null || triangle[0].length == 0) {
+            return -1;
+        }
+
+        this.n = triangle.length;
+        this.triangle = triangle;
+        this.minSum = new int[n][n];
+
+        for (int i = 0; i &lt; n; i++) {
+            for (int j = 0; j &lt; n; j++) {
+                minSum[i][j] = Integer.MAX_VALUE;
+            }
+        }
+
+        return search(0, 0);
+    }
+}
+</code></pre><h3 id="最小路径和-minimum-path-sum">最小路径和 minimum-path-sum</h3>
+<pre><code>public class Solution {
+    /**
+     * @param grid: a list of lists of integers.
+     * @return: An integer, minimizes the sum of all numbers along its path
+     */
+    public int minPathSum(int[][] grid) {
+        int n = grid.length;
+        int m = grid[n-1].length;
+        // state: minSum[x][y] = minimum path value from 0,0 to x,y
+        int[][] minSum = new int[n][m];
+
+        // initialize 
+        minSum[0][0] = grid[0][0];
+        for (int i = 1; i &lt; n; i++) {
+            minSum[i][0] = minSum[i - 1][0] + grid[i][0];
+        }
+        for (int i = 1; i &lt; m; i++) {
+            minSum[0][i] = minSum[0][i - 1] + grid[0][i];
+        }
+        //Function
+        for (int i = 1; i &lt; n;i++){
+            for (int j= 1; j &lt; m;j++){
+                minSum[i][j] = Math.min(minSum[i][j-1],minSum[i-1][j]) + grid[i][j];
+            }
+        }
+        //Answer
+        return minSum[n-1][m-1];
+    }
+}
+</code></pre><h3 id="不同的路径-unique-paths">不同的路径 unique-paths</h3>
+<pre><code>public class Solution {
+    /**
+     * @param n, m: positive integer (1 &lt;= n ,m &lt;= 100)
+     * @return an integer
+     */
+    public int uniquePaths(int m, int n) {
+        if (m == 0 || n == 0) {
+            return 0;
+        }
+        // state: count[x][y] = from 0,0 to x,y 路径条数
+        int[][] count = new int[m][n];
+        // initialize 
+        for (int i = 0; i &lt; m; i++){
+            count[i][0] = 1;
+        }
+        for (int i = 0; i &lt; n; i++){
+            count[0][i] = 1;
+        }
+        //Function
+        for (int i = 1; i &lt; m; i++){
+            for (int j = 1; j &lt; n; j++){
+                count[i][j] = count[i-1][j] + count[i][j-1];
+            }
+        }
+        //Answer
+        return count[m-1][n-1];
+    }
+}
+</code></pre><h3 id="不同的路径-ii-unique-paths-ii">不同的路径 II unique-paths-ii</h3>
+<pre><code>public class Solution {
+    /**
+     * @param obstacleGrid: A list of lists of integers
+     * @return: An integer
+     */
+    public int uniquePathsWithObstacles(int[][] obstacleGrid) {
+        // write your code here
+        int n = obstacleGrid.length;
+        int m = obstacleGrid[0].length;
+        int[][] count = new int[n][m];
+        if (obstacleGrid[0][0] == 1 || obstacleGrid[n-1][m-1] == 1)
+            return 0;
+        else 
+            count[0][0] = 1;
+        for (int i = 1; i &lt; n; i++){
+            if (obstacleGrid[i-1][0] == 0)
+                count[i][0] = 1;
+            else
+                break;
+        }
+        for (int i = 1; i &lt; m; i++){
+            if (obstacleGrid[0][i-1] == 0)
+                count[0][i] = 1;
+            else
+                break;
+
+        }
+        for (int i = 1; i &lt; n; i++){
+            for (int j = 1; j &lt; m; j++){
+                if (obstacleGrid[i-1][j] == 1 &amp;&amp; obstacleGrid[i][j-1] == 1)
+                    count[i][j] = 0;
+                else if (obstacleGrid[i-1][j] == 1)
+                    count[i][j] = count[i][j-1];
+                else if (obstacleGrid[i][j-1] == 1)
+                    count[i][j] = count[i-1][j];
+                else
+                    count[i][j] = count[i-1][j] + count[i][j-1];
+            }
+        }
+        return count[n-1][m-1];
+    }
+}
+</code></pre><h3 id="爬楼梯-climbing-stairs">爬楼梯 climbing-stairs</h3>
+<pre><code>public class Solution {
+    /**
+     * @param n: An integer
+     * @return: An integer
+     */
+    public int climbStairs(int n) {
+        // write your code here
+        if (n &lt;= 1) {
+            return 1;
+        }
+        int a1 = 1;
+        int a2 = 1;
+        int a3 = 0;
+        for (int i = 2; i &lt;= n; i++){
+            a3 = a1 + a2;
+            a1 = a2;
+            a2 = a3;
+        }
+        return a3;
+    }
+}
+</code></pre><h3 id="跳跃游戏-jump-game">跳跃游戏 jump-game</h3>
+<pre><code>public class Solution {
+    /**
+     * @param A: A list of integers
+     * @return: The boolean answer
+     */
+    public boolean canJump(int[] A) {
+        // wirte your code here
+        int n = A.length;
+        boolean[] can = new boolean[n];
+        can[0] = true;
+        for (int i = 1; i &lt; n; i++){
+            for (int j = 0; j &lt; i; j++){
+                if (can[j] &amp;&amp; A[j] &gt;= (i - j)){
+                    can[i] = true;
+                    break;
+                }
+            }
+        }
+        return can[n-1];
+    }
+}
+</code></pre><h3 id="跳跃游戏2-jump-game-ii">跳跃游戏2 jump-game-ii</h3>
+<pre><code>public class Solution {
+    /**
+     * @param A: A list of lists of integers
+     * @return: An integer
+     */
+    public int jump(int[] A) {
+        // write your code here
+        int n = A.length;
+        //count[i]代表到达当前位置需要几步
+        int[] count = new int[n];
+        // initialize 
+        count[0] = 0;
+        //Function
+        for (int i = 1; i &lt; n; i++){
+            count[i] = Integer.MAX_VALUE;
+            for (int j = 0; j &lt; i; j++){
+                if (count[j] != Integer.MAX_VALUE &amp;&amp; A[j] &gt;= i - j){
+                    count[i] = count[j] + 1;
+                    break;
+                }
+            }
+        }
+        //Answer
+        return count[n-1];
+    }
+}
+</code></pre><h3 id="分割回文串-ii-palindrome-partitioning-ii">分割回文串 II palindrome-partitioning-ii</h3>
+<pre><code>public class Solution {
+    /**
+     * @param s a string
+     * @return an integer
+     */
+
+    private boolean isPalindrome(String s, int start, int end) {
+        for (int i = start, j = end; i &lt; j; i++, j--) {
+            if (s.charAt(i) != s.charAt(j)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean[][] getIsPalindrome(String s) {
+        boolean[][] isPalindrome = new boolean[s.length()][s.length()];
+
+        for (int i = 0; i &lt; s.length(); i++) {
+            isPalindrome[i][i] = true;
+        }
+        for (int i = 0; i &lt; s.length() - 1; i++) {
+            isPalindrome[i][i + 1] = (s.charAt(i) == s.charAt(i + 1));
+        }
+
+        for (int length = 2; length &lt; s.length(); length++) {
+            for (int start = 0; start + length &lt; s.length(); start++) {
+                isPalindrome[start][start + length]
+                    = isPalindrome[start + 1][start + length - 1] &amp;&amp; s.charAt(start) == s.charAt(start + length);
+            }
+        }
+
+        return isPalindrome;
+    }
+
+
+    public int minCut(String s) {
+        // write your code here
+        if (s == null || s.length() == 0) {
+            return 0;
+        }
+
+        // preparation
+        //boolean[][] isPalindrome = getIsPalindrome(s);
+
+        // initialize
+        int[] f = new int[s.length() + 1];
+        for (int i = 0; i &lt;= s.length(); i++) {
+            f[i] = i - 1;
+        }
+
+         //Function
+        for (int i = 1; i &lt;= s.length(); i++) {
+            for (int j = 0; j &lt; i; j++) {
+                if (isPalindrome(s,j,i-1)) {
+                    f[i] = Math.min(f[i], f[j] + 1);
+                }
+            }
+        }
+         //Answer
+        return f[s.length()];
+    }
+};
+</code></pre><h3 id="单词切分-word-break">单词切分 word-break</h3>
+<pre><code>public class Solution {
+    /**
+     * @param s: A string s
+     * @param dict: A dictionary of words dict
+     */
+    private int getMaxLength(Set&lt;String&gt; dict) {
+        int maxLength = 0;
+        for (String word : dict) {
+            maxLength = Math.max(maxLength, word.length());
+        }
+        return maxLength;
+    }
+    public boolean wordBreak(String s, Set&lt;String&gt; dict) {
+        // write your code here   
+        if (s == null || dict == null ) {
+            return false;
+        }
+        if (s.length() == 0 &amp;&amp; dict.isEmpty()) {
+            return true;
+        }
+        if (s.length() == 0 || dict.isEmpty()) {
+            return false;
+        }
+        int n = s.length();
+        int maxLength = getMaxLength(dict);
+        //can[i] 表示前i个字符是否可以被切分
+        boolean[] can = new boolean[n+1];
+        can [0] = true;
+        for (int i = 1; i &lt;= n; i++) {
+            for (int j = 1; j &lt;= maxLength &amp;&amp; j &lt;= i; j++) {
+                if (can[i - j] &amp;&amp; dict.contains(s.substring(i-j,i))) {
+                    can[i] = true;
+                    break;
+                }
+            }
+        }
+        return can[n];
+    }
+}
+</code></pre><h3 id="最长上升子序列-longest-increasing-subsequence">最长上升子序列 longest-increasing-subsequence</h3>
+<pre><code>public class Solution {
+    /**
+     * @param nums: The integer array
+     * @return: The length of LIS (longest increasing subsequence)
+     */
+    public int longestIncreasingSubsequence(int[] nums) {
+        // write your code here
+        int n = nums.length;
+        //f[i]表示前i个数字中以第i个结尾的LIS的长度
+        int[] f =new int[n]; 
+        int max = 0;
+        for (int i = 0; i &lt; n; i++) {
+            f[i] = 1;
+            for (int j = 0; j &lt; i; j++) {
+                if (nums[j] &lt;= nums[i]) {
+                    f[i] = f[i] &gt; f[j] + 1 ? f[i] : f[j] + 1;
+                }
+            }
+            if (f[i] &gt; max) {
+                max = f[i];
+            }
+        }
+        return max;
+    }
+}
+</code></pre><h3 id="最长公共子序列-longest-common-subsequence">最长公共子序列 longest-common-subsequence</h3>
+<pre><code>public class Solution {
+    /**
+     * @param A, B: Two strings.
+     * @return: The length of longest common subsequence of A and B.
+     */
+    public int longestCommonSubsequence(String A, String B) {
+        // write your code here
+        if (A == null || B == null || A.length() == 0 || B.length() == 0)
+            return 0;
+        int lengthA = A.length();
+        int lengthB = B.length();
+        int[][] l = new int[lengthA + 1][lengthB + 1];
+
+        for (int i = 0; i &lt; lengthA; i++)
+            for (int j = 0; j &lt; lengthB; j++){
+                if (A.charAt(i) == B.charAt(j))
+                    l[i + 1][j + 1] = l[i][j] + 1;
+                else
+                    l[i + 1][j + 1] = Math.max(l[i + 1][j],l[i][j + 1]);
+            }
+        return l[lengthA][lengthB];
+    }
+}
+</code></pre><h3 id="最长公共子串-longest-common-substring">最长公共子串  longest-common-substring</h3>
+<pre><code>public class Solution {
+    /**
+     * @param A, B: Two string.
+     * @return: the length of the longest common substring.
+     */
+    public int longestCommonSubstring(String A, String B) {
+        // write your code here
+        if (A == null || B == null || A.length() &lt;= 0 || B.length() &lt;= 0)
+            return 0;
+        int lengthA = A.length();
+        int lengthB = B.length();
+        int[][] l = new int[lengthA + 1][lengthB + 1];
+        int result = 0;
+        for (int i = 0; i &lt; lengthA; i++) {
+             for (int j = 0; j &lt; lengthB; j++) {
+                if (A.charAt(i) == B.charAt(j))
+                    l[i + 1][j + 1] = l[i][j] + 1;
+                else
+                    l[i + 1][j + 1] = 0;
+                result = Math.max(result , l[i + 1][j + 1]);
+            } 
+        }
+        return result;
+    }
+}
+</code></pre><h3 id="编辑距离-edit-distance">编辑距离  edit-distance</h3>
+<pre><code>
+state: f[i][j]a的前i个字符最少要用几次编辑可以变成b的前j个字符 
+public class Solution {
+    /**
+     * @param word1 &amp; word2: Two string.
+     * @return: The minimum number of steps.
+     */
+    public int minDistance(String A, String B) {
+        // write your code here
+        if (A == null || B == null )
+            return 0;
+
+        int lengthA = A.length();
+        int lengthB = B.length();
+        int[][] l = new int[lengthA + 1][lengthB + 1];
+        for (int i = 0; i &lt; lengthA + 1; i++){
+            l[i][0] = i;
+        }
+        for (int i = 0; i &lt; lengthB + 1; i++){
+            l[0][i] = i;
+        }
+        for (int i = 0; i &lt; lengthA; i++)
+            for (int j = 0; j &lt; lengthB; j++){
+                if (A.charAt(i) == B.charAt(j))
+                    l[i + 1][j + 1] = l[i][j];
+                else
+                    l[i + 1][j + 1] = min(l[i + 1][j],l[i][j + 1],l[i][j]) + 1;
+            }
+        return l[lengthA][lengthB];
+    }
+
+    private int min(int a, int b, int c){
+        int temp = Math.min(a,b);
+        int result = Math.min(temp,c);
+        return result;
+    }
+}
+</code></pre><h3 id="不同的子序列">不同的子序列</h3>
+<pre><code>
+state: f[i][j] 表示 S的前i个字符中选取T的前j个字符,有多少种方案
+function: f[i][j] = f[i - 1][j] + f[i - 1][j - 1] // S[i-1] == T[j-1]
+= f[i - 1][j] (S[i-1] != T[j-1])
+
+public class Solution {
+    public int numDistinct(String S, String T) {
+        if (S == null || T == null) {
+            return 0;
+        }
+
+        int[][] nums = new int[S.length() + 1][T.length() + 1];
+
+        for (int i = 0; i &lt; S.length(); i++) {
+            nums[i][0] = 1;
+        }
+        for (int i = 1; i &lt;= S.length(); i++) {
+            for (int j = 1; j &lt;= T.length(); j++) {
+                nums[i][j] = nums[i - 1][j];
+                if (S.charAt(i - 1) == T.charAt(j - 1)) {
+                    nums[i][j] += nums[i - 1][j - 1];
+                }
+            }
+        }
+        return nums[S.length()][T.length()];
+    }
+}
+</code></pre><h3 id="交叉字符串">交叉字符串</h3>
+<pre><code>state: f[i][j]表示s1的前i个字符和s2的前j个字符能否交替组成s3的前i+j个字 符
+function: f[i][j] = (f[i-1][j] &amp;&amp; (s1[i-1]==s3[i+j-1]) ||
+(f[i][j-1] &amp;&amp; (s2[j-1]==s3[i+j-1])
+
+public class Solution {
+    /**
+     * Determine whether s3 is formed by interleaving of s1 and s2.
+     * @param s1, s2, s3: As description.
+     * @return: true or false.
+     */
+    public boolean isInterleave(String s1, String s2, String s3) {
+        if (s1.length() + s2.length() != s3.length()) {
+            return false;
+        }
+
+        boolean [][] interleaved = new boolean[s1.length() + 1][s2.length() + 1];
+        interleaved[0][0] = true;
+
+        for (int i = 1; i &lt;= s1.length(); i++) {
+            if(s3.charAt(i - 1) == s1.charAt(i - 1) &amp;&amp; interleaved[i - 1][0])
+                interleaved[i][0] = true;
+        }
+
+        for (int j = 1; j &lt;= s2.length(); j++) {
+            if(s3.charAt(j - 1) == s2.charAt(j - 1) &amp;&amp; interleaved[0][j - 1])
+                interleaved[0][j] = true;
+        }
+
+        for (int i = 1; i &lt;= s1.length(); i++) {
+            for (int j = 1; j &lt;= s2.length(); j++) {
+                if(((s3.charAt(i + j - 1) == s1.charAt(i - 1) &amp;&amp; interleaved[i - 1][j]))
+                    || ((s3.charAt(i + j - 1)) == s2.charAt(j - 1) &amp;&amp; interleaved[i][j - 1]))
+                interleaved[i][j] = true;
+            }
+        }
+
+        return interleaved[s1.length()][s2.length()];
+    }
+}
+</code></pre><h3 id="背包问题-backpack">背包问题 backpack</h3>
+<pre><code>public class Solution {
+    /**
+     * @param m: An integer m denotes the size of a backpack
+     * @param A: Given n items with size A[i]
+     * @return: The maximum size
+     */
+    public int backPack(int m, int[] A) {
+        // write your code here
+        if (A == null || A.length == 0)
+            return 0;
+        int n = A.length;
+        boolean[][] can = new boolean[n + 1][m + 1];
+
+        can[0][0] = true;
+
+        for (int i = 0; i &lt; n; i++) {
+            for (int j = 0; j &lt;= m; j++) {
+                can[i + 1][j] = can[i][j];
+                if (j - A[i] &gt;= 0 &amp;&amp; can[i][j - A[i]]) {
+                    can[i + 1][j] = true;
+                }
+
+            }
+        }
+
+        for (int i = m; i &gt; 0; i--) {
+            if (can[n][i] == true) {
+                return  i;
+            } 
+        }
+
+        return 0;
+    }
+}
+</code></pre><h3 id="背包问题-ii-backpack-ii">背包问题 II backpack-ii</h3>
+<pre><code>public class Solution {
+    /**
+     * @param m: An integer m denotes the size of a backpack
+     * @param A &amp; V: Given n items with size A[i] and value V[i]
+     * @return: The maximum value
+     */
+    public int backPackII(int m, int[] A, int V[]) {
+        // write your code here
+        if (A == null || A.length == 0)
+            return 0;
+        int[][] count = new int[A.length+1][m+1];
+        count[0][0] = 0;
+
+        for (int i=1; i&lt;=A.length; i++) {
+            for (int j=0; j&lt;=m; j++) {
+                count[i][j] = count[i-1][j];
+                if (j - A[i-1] &gt;= 0) {
+                    count[i][j] = Math.max(count[i-1][j], count[i-1][j-A[i-1]]+V[i-1]);
+                }
+            }
+        }
+
+        return count[A.length][m];
+    }
+}
+</code></pre><h3 id="最小调整代价">最小调整代价</h3>
+<pre><code>public class Solution {
+    /**
+     * @param A: An integer array.
+     * @param target: An integer.
+     */
+    public int MinAdjustmentCost(ArrayList&lt;Integer&gt; A, int target) {
+        // write your code here
+        if (A.size() &lt; 2) return 0;
+
+        int[][] cost = new int[A.size()][100];
+        for (int i = 0; i &lt; 100; i++)
+            cost[0][i] = Math.abs(A.get(0)-(i+1));
+
+        for (int i=1;i&lt;A.size();i++)
+            for (int j=0;j&lt;100;j++){
+                cost[i][j]=Integer.MAX_VALUE;
+                int diff = Math.abs(A.get(i)-(j+1));
+                int upper = Math.min(j+target,99);
+                int lower = Math.max(j-target,0);
+                for (int k=lower;k&lt;=upper;k++)
+                    if (cost[i-1][k]+diff&lt;cost[i][j])
+                        cost[i][j]=cost[i-1][k]+diff;
+            }
+
+        int res = Integer.MAX_VALUE;
+        for (int i=0;i&lt;100;i++)
+            if (cost[A.size()-1][i]&lt;res)
+                res = cost[A.size()-1][i];
+        return res;
+    }
+}
+</code></pre><h3 id="k-数和">K 数和</h3>
+<pre><code>public class Solution {
+    /**
+     * @param A: an integer array.
+     * @param k: a positive integer (k &lt;= length(A))
+     * @param target: a integer
+     * @return an integer
+     */
+     public int  kSum(int A[], int k, int target) {
+        int n = A.length;
+        int[][][] f = new int[n + 1][k + 1][target + 1];
+        for (int i = 0; i &lt; n + 1; i++) {
+            f[i][0][0] = 1;
+        }
+        for (int i = 1; i &lt;= n; i++) {
+            for (int j = 1; j &lt;= k &amp;&amp; j &lt;= i; j++) {
+                for (int t = 1; t &lt;= target; t++) {
+                    f[i][j][t] = 0;
+                    if (t &gt;= A[i - 1]) {
+                        f[i][j][t] = f[i - 1][j - 1][t - A[i - 1]];
+                    }
+                    f[i][j][t] += f[i - 1][j][t];
+                } // for t
+            } // for j
+        } // for i
+        return f[n][k][target];
+    }
+}
+</code></pre><h3 id="买卖股票的最佳时机-iv">买卖股票的最佳时机 IV</h3>
+<pre><code>class Solution {
+    /**
+     * @param k: An integer
+     * @param prices: Given an integer array
+     * @return: Maximum profit
+     */
+    public int maxProfit(int k, int[] prices) {
+        if (k == 0) {
+            return 0;
+        }
+        if(prices==null || prices.length==0)  
+        return 0;  
+        // K 大于 数组一半时， 直接处理
+        if (k &gt;= prices.length / 2) {
+            int profit = 0;
+            for (int i = 1; i &lt; prices.length; i++) {
+                if (prices[i] &gt; prices[i - 1]) {
+                    profit += prices[i] - prices[i - 1];
+                }
+            }
+            return profit;
+        }
+        int len = prices.length;  
+        int[][] local = new int[len][k+1];       
+        int[][] global = new int[len][k+1];     
+        for(int i=1; i&lt;len; i++) {  
+            int diff = prices[i] - prices[i-1];  
+            for(int j=1; j&lt;=k; j++) {  
+                local[i][j] = Math.max(global[i-1][j-1]+Math.max(diff,0), local[i-1][j ]+diff);  
+                global[i][j] = Math.max(global[i-1][j], local[i][j]);  
+            }  
+        }  
+        return global[len-1][k];   
+    }
+};
+</code></pre><h3 id="最大子数组-iii-">最大子数组 III ?</h3>
+<pre><code>public class Solution {
+    /**
+     * @param nums: A list of integers
+     * @param k: An integer denote to find k non-overlapping subarrays
+     * @return: An integer denote the sum of max k non-overlapping subarrays
+     */
+    public int maxSubArray(int[] nums, int k) {
+        // write your code here
+        if (nums == null)
+            return 0;
+        int len = nums.length;
+        if (len &lt; k)
+            return 0;
+        //k partitions of array with length len
+        int[][] globalMax = new int[k + 1][len + 1];
+        for (int i = 1; i &lt;= k; i++) {
+            int localMax = Integer.MIN_VALUE;
+            //array with length less than i cannot be partitioned
+            for (int j = i - 1; j &lt; len; j++) {
+                localMax = Math.max(localMax, globalMax[i - 1][j]) + nums[j];
+                if (j == i - 1)
+                    globalMax[i][j + 1] = localMax;
+                else
+                    globalMax[i][j + 1] = Math.max(globalMax[i][j], localMax);
+            }
+        }
+        return globalMax[k][len];
+    }
+}
+</code></pre><h3 id="参考资料">参考资料</h3>
+<p><a href="http://www.jiuzhang.com/?referer=38beb6">九章算法</a></p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871f94ed2f092c392ca4d5e
+                 data-title=算法之美——动态规划
+                 data-url=dynamic-program>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Java并发编程2：对象的共享</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Java并发编程2：对象的共享</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-11-19</p>
+            <p>分类: <a href="../tag/Java.html" target="_blank" >Java</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#1-可见性">1 可见性</a></li>
+<li><a href="#2-重排序">2 “重排序”</a></li>
+<li><a href="#3-非原子的64位操作">3 非原子的64位操作</a></li>
+<li><a href="#4-volatile变量">4 Volatile变量</a></li>
+<li><a href="#5-对象的发布与逸出">5 对象的发布与逸出</a></li>
+<li><a href="#6-线程封闭">6 线程封闭</a></li>
+<li><a href="#7-不变性">7 不变性</a></li>
+<li><a href="#8-安全发布">8 安全发布</a></li>
+<li><a href="#9-总结">9 总结</a></li>
+<li><a href="#10-参考资料">10 参考资料</a></li>
+</ul>
+<!-- toc stop -->
+<p>本文将介绍如何共享和发布对象，从而使它们能够安全地由多个线程同时访问。</p>
+<h3 id="1-可见性">1 可见性</h3>
+<p><strong>为了确保多个线程之间对内存写入操作的可见性，必须使用同步机制</strong>。</p>
+<p>加锁的含义不仅有互斥行为，还包括内存可见性。</p>
+<h3 id="2-“重排序”">2 “重排序”</h3>
+<p>在没有同步的情况下，<code>编译器</code>、<code>处理器</code>、<code>运行时</code>等都可能对<code>操作的执行顺序</code>进行一些意想不到的调整。在缺乏足够同步的多线程程序中，要想对内存操作的执行顺序进行判断，几乎无法得到正确的结论。</p>
+<h3 id="3-非原子的64位操作">3 非原子的64位操作</h3>
+<p>在多线程程序中使用<code>共享且可变</code>的<code>long和double</code>等类型的变量也是不安全的，除非用关键字<code>volatile</code>来声明它们，或者用锁保护起来。</p>
+<h3 id="4-volatile变量">4 Volatile变量</h3>
+<p>volatile变量不会被缓存在寄存器或者对其他处理器不可见的地方，因此在读取volatile类型的变量时总会返回最新写入的值。</p>
+<p>volatile变量只能确保内存可见性。</p>
+<p>volatile变量的一种典型用法：<strong>检查某个状态标记以判断是否退出循环</strong>。</p>
+<h3 id="5-对象的发布与逸出">5 对象的发布与逸出</h3>
+<p>对象的发布：使对象能够在当前作用域之外的代码中使用。</p>
+<p>对象的逸出：某个不应该发布的对象被发布。</p>
+<p>当发布一个对象时，在该对象的非私有域中引用的所有对象同样会被发布。</p>
+<pre><code>/**
+ * bad case: 使内部的可变状态逸出
+ * Created by kangkaisen on 2016/11/19.
+ */
+public class UnsafeStates {
+    private String[] states = new String[] { &quot;KKS&quot;, &quot;test&quot; };
+
+    public String[] getStates() {
+        return states;
+    }
+}
+</code></pre><pre><code>/**
+ * bad case: 隐式地使this引用逸出
+ * Created by kangkaisen on 2016/11/19.
+ */
+public class ThisEscape {
+    public ThisEscape(EventSource source) {
+        source.addErrorListener(
+                new EventListener() {
+                    public void onEvent(Event e) {
+                        doSomething(e);
+                    }
+                }
+        );
+    }
+}
+</code></pre><p><strong>如果需要在构造函数中注册一个事件监听器或启动线程，那么可以使用一个私有的构造函数和一个公共的工厂方法。</strong></p>
+<h3 id="6-线程封闭">6 线程封闭</h3>
+<p>线程封闭：仅在单线程内访问数据。</p>
+<ul>
+<li><strong>栈封闭</strong>：只能通过局部变量才能访问对象。</li>
+<li><strong>ThreadLocal</strong>。</li>
+</ul>
+<h3 id="7-不变性">7 不变性</h3>
+<p>不可变对象：一个对象在创建后其状态就不能被修改，则称此对象是不可变对象。</p>
+<p>不可变对象一定是线程安全的。</p>
+<p>不可变对象需要满足的条件：</p>
+<ul>
+<li><strong>对象创建以后其状态就不可改变</strong>。</li>
+<li><strong>对象的所有域都是final类型</strong>。</li>
+<li><strong>对象是正确创建的（在对象的创建期间，this引用没有逸出）</strong></li>
+</ul>
+<p>final域能够确保初始化过程中的安全性，从而可以不受限制地访问不可变对象，并在共享这些对象时无须同步。</p>
+<p><strong>除非某个域是可变的，否则应将其声明为final域</strong>。</p>
+<p><strong>每当需要对一组相关数据以原子方式执行某个操作时，就可以考虑创建一个不可变类来包含这些数据。</strong>也就是说，对于在访问和更新多个相关变量时出现的竞争条件问题，可以通过将这些变量全部保存在一个不可变对象中来消除。</p>
+<h3 id="8-安全发布">8 安全发布</h3>
+<p>一个正确构造的对象可以通过以下方式来安全地发布：</p>
+<ul>
+<li>在<strong>静态初始化函数</strong>中初始化一个对象引用。</li>
+<li>将对象的引用保存到<strong>volatile类型</strong>的域或<strong>者AtomicReference对象</strong>中。</li>
+<li>将对象的引用保存到<strong>某个正确构造对象的final类型域</strong>中。</li>
+<li>将对象的引用保存到一个<strong>由锁保护的域</strong>中。</li>
+</ul>
+<h3 id="9-总结">9 总结</h3>
+<p>对象的发布需求取决于它的可变性：</p>
+<ul>
+<li><strong>不可变对象可以通过任意机制来发布</strong>。</li>
+<li><strong>事实不可变对象</strong>（技术上是可变的，但是状态在发布后不再改变。例如<code>Date</code>对象）必须通过<strong>安全方式来发布</strong>。</li>
+<li><strong>可变对象必须通过安全方式来发布，并且必须是线程安全的或者是由某个锁保护起来</strong>。</li>
+</ul>
+<p>在并发程序中使用和共享对象时，可以使用的一些实用策略：</p>
+<ul>
+<li><strong>线程封闭</strong>。</li>
+<li><strong>只读共享</strong>：不可变对象和事实不可变对象。</li>
+<li><strong>线程安全共享</strong>。</li>
+<li><strong>保护对象</strong> ：被保护的对象只能通过持有特定的锁来访问。</li>
+</ul>
+<h3 id="10-参考资料">10 参考资料</h3>
+<p>本文是《Java 并发编程实战》的读书笔记。</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871fa0bd2f092c392ca4d60
+                 data-title=Java并发编程2：对象的共享
+                 data-url=java-concurrent-share-object>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

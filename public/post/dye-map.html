@@ -1,0 +1,202 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|地图染色算法详解</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 地图染色算法详解</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2016-11-19</p>
+            <p>分类: <a href="../tag/算法.html" target="_blank" >算法</a></p>
+            <hr/>
+            <p><strong>本文写于我大一或大二时，今天整理时发现了就贴出来</strong>。</p>
+<p>小梦今天给大家分享一下栈的应用：<strong>利用栈的思想和回溯算法来解决地图染色问题</strong>。</p>
+<h3 id="什么是回溯算法">什么是回溯算法</h3>
+<p>其实很简单，说白了就是试探法，像走迷宫一样，我们不断向前走着试探，遇到死路了，标记下，再往回退一步，再选择其他路线前进，如果在碰壁了，就标记下，再返回，再选择其他路线继续向着终点前进，如此循环，直到走到终点。</p>
+<h3 id="什么是地图染色问题">什么是地图染色问题</h3>
+<p>就是用颜色去染地图上不同的行政区域，使得相邻的区域不同色即可。首先我们要解决的第一个问题是，我们最少使用多少种颜色就可以解决任意多块行政区域的染色。这个问题的答案，伟大的数学家已经告诉我们了，那就是只需<code>四种颜色</code>。这也就是所谓的四色定理。</p>
+<h3 id="选择什么数据结构来存储图">选择什么数据结构来存储图</h3>
+<p>显而易见，由于地图本身的特点，我们首先会想到图的存储结构，又因为我们只关心图与图之间的相邻关系，所以我们选择图的邻接矩阵来存储图。这个很简单，如果i区域和j区域相邻，我们则对<code>[i][j]</code>和<code>[j][i]</code>赋值为1，若不相邻，则赋值为0.
+例如下图：</p>
+<p><img src="http://img02.taobaocdn.com/imgextra/i2/1576560244/T21z..XqBXXXXXXXXX_!!1576560244.jpg" alt="此处输入图片的描述"></p>
+<p>其对应的邻接矩阵即为：</p>
+<pre><code>{
+{0,1,1,1,1,1},
+{1,0,1,1,0,0},
+{1,1,0,1,1,1},
+{1,0,1,0,0,1},
+{1,1,1,0,0,1},
+{1,0,1,1,1,0},
+};
+</code></pre><p>图的存储结构搞定了。颜色就很简单了，我们用<strong>1,2,3,4依次来代表红，蓝，绿，黄四种颜色。用栈s[i]来表示地图的区域的颜色序号，N表示地图的区域个数。</strong></p>
+<h3 id="地图染色算法的基本思路">地图染色算法的基本思路</h3>
+<p>主要思想就是前面介绍的回溯思想</p>
+<p>从第一个行政区域开始，依次用1,2,3,4对每个区域染色。如果当前区域的颜色和周围之前已经染色的每个区域颜色都不相同，则用是栈s[i]记下当前区域的颜色序号。如果和之前区域颜色重复，依次用下一个颜色进行试探。如果当前区域用1,2,3,4四种颜色染色均重色，则开始退栈回溯，修改当前栈顶颜色序号，再进行试探，如此这样循环，直到所有区域都染色成功。</p>
+<h3 id="地图染色算法代码">地图染色算法代码</h3>
+<p><code>大一时的代码，注释和代码风格都很渣！</code></p>
+<pre><code>#include&lt;stdio.h&gt;
+
+#define N 6 // N表示区域个数
+
+int s[N];  //栈s[i]来表示地图的区域的颜色序号
+
+void MapColor(int dist[N][N],int s[N])
+{
+int color,area,k,i;  //color代表颜色，area 表示当前要染色的是第几个区域，k表示已经染色区域的颜色
+s[0]=1; //第一个区域先着色为颜色1
+area=1;//从第二区域开始试探染色
+color=1;//从第一种颜色开始试探
+while(area&lt;N)//是否全部染色完毕
+{
+
+while(color&lt;=4)
+{
+
+k=0;//对每一个区域，都从第一个区域的颜色开始比较。
+while((k&lt;area)&amp;&amp;(s[k]*dist[area][k]!=color))//判断是否重色
+
+//这个循环判定条件是整个算法的关键，理解了这个，整个算法就很easy了，所以小梦就啰嗦几句吧。  dist[area][k]表示当前即将染色区域和已经染色的第K个区域是否相邻。s[k]*dist[area][k] 若K区域和area区域相邻，则其表示当前第K个区域的颜色，若不相邻，则其值为0，则肯定不会重色，就可以将color复制给当前区域area的颜色s[k].解释的有些费劲，大家可以直接复制代码，运行一下，在对着图上的颜色跟着代码走几步就会理解了。
+k++;
+if(k&lt;area)
+color++;     //area 区域与K区域重色
+else
+{
+s[area]=color;  //保存area区域的颜色
+area++;     //准备颜色下一个区域
+if(area&gt;=N)
+break;
+color=1;  //每次都从第一个颜色开始试探
+}
+}
+if(color&gt;4)//area没有找到合适的颜色，需要进行回溯
+{
+area=area-1;  // 回溯并修改area-1域的颜色
+color=s[area]+1;  //将预备颜色换为当前栈顶区域的下一个颜色
+}
+
+}
+
+printf(“地图区域标号为1~6的染色情况为：\n”);
+for(i=0;i&lt;N;i++)
+{
+printf(“NO.%d:”,i+1);
+switch(s[i])
+{
+case 0:printf(“WRONG MAP!\n”);break;
+case 1:printf(“RED\n”);break;
+case 2:printf(“BLUE\n”);break;
+case 3:printf(“GREEN\n”);break;
+case 4:printf(“YELLOW\n”);break;
+default:printf(“什么的什么啊！1″);break;
+}
+}
+}
+
+int main()
+{
+int dist[N][N]={
+{0,1,1,1,1,1},//地图的邻接矩阵
+{1,0,1,1,0,0},
+{1,1,0,1,1,1},
+{1,0,1,0,0,1},
+{1,1,1,0,0,1},
+{1,0,1,1,1,0},
+};
+int s[N]={0};
+MapColor(dist,s);
+return 0;
+}
+</code></pre>
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5871f9a0d2f092c392ca4d5f
+                 data-title=地图染色算法详解
+                 data-url=dye-map>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>
