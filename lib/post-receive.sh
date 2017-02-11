@@ -15,16 +15,5 @@ echo " - Starting git pull" >> $LOGFILE
 cd "$DEPLOYDIR"; git pull;
 echo " - Finished git pull" >> $LOGFILE
 
-if [ -f "$PIDDIR" ]; then
- echo " - pm2 restart " >> $LOGFILE
- npm restart;
- echo " - Finished pm2 restart" >> $LOGFILE
-else
- echo " - pm2 start " >> $LOGFILE
- npm start;
- echo " - Finished pm2 start" >> $LOGFILE
-fi
-
-
 echo "Finished Deploy" >> $LOGFILE
 echo "结束: `date`" >> $LOGFILE
