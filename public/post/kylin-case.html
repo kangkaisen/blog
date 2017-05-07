@@ -1,0 +1,281 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|记Kylin的第一次夜间生产故障</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 记Kylin的第一次夜间生产故障</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2017-05-07</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#事故复盘和原因分析">事故复盘和原因分析</a></li>
+<li><a href="#连续两次kinit失败的原因">连续两次Kinit失败的原因</a></li>
+<li><a href="#kerberos认证失败为什么会导致http请求阻塞">Kerberos认证失败为什么会导致Http请求阻塞</a></li>
+<li><a href="#事故的逻辑链条">事故的逻辑链条</a></li>
+<li><a href="#事故的影响范围">事故的影响范围</a></li>
+<li><a href="#为什么在我们对kylin代码有高度掌控力的情况下事故处理时间依然长达3个小时">为什么在我们对Kylin代码有高度掌控力的情况下，事故处理时间依然长达3个小时</a></li>
+<li><a href="#kylin运维上的改进">Kylin运维上的改进</a></li>
+<li><a href="#kylin代码上的改进">Kylin代码上的改进</a></li>
+<li><a href="#事故的收获">事故的收获</a></li>
+</ul>
+<!-- toc stop -->
+<p>从2016年7月毕业正式入职美团点评负责Kylin以来，昨天5月6日（星期六）我进行了Kylin的第一次夜间生产故障处理。（我们Kylin的Cube按天生产已经保持连续半年稳定运行）虽然这次故障的影响范围并不大， <strong>但是这次故障处理暴露出我们运维本身和Kylin代码的几个严重问题，故障处理过程中也有好几处值得深深反思的地方</strong>，所以写下此文总结一下。</p>
+<h3 id="事故复盘和原因分析">事故复盘和原因分析</h3>
+<p>1 5月5日13点 我进行了线上JobServer扩容操作，将线上JobServer从2台扩容至3台物理机，并验证没有问题。于是当晚我和平常一样安心的睡觉了，并没有担心什么。</p>
+<pre><code>扩容的原因：
+
+1 线上Cube已有260多，JobServer内存压力较大，而JobServer的并发能力受限于内存。
+
+2 Kylin 2.0版本的字典MR构建只能对中小基数列开启，这个其实意义不大，因为真正带来内存压力的都是超高基数列的字典构建，所以即使升级也解决不了问题。
+</code></pre><p>所以我们短期内需要通过物理扩容来缓解JobServer内存压力，<strong>长期来看我们需要通过超高基数列的MR构建来彻底释放JobServer内存压力</strong>，我应该会在6月份开始进行这个工作。 如果超高基数列的字典编码能通过MR来构建，<strong>JobServer的并发能力应该会成百上千倍的提升</strong>。</p>
+<p>2 5月6日凌晨3点01分，<a href="https://github.com/gaodayue">dayue</a> 打电话叫醒我，说今天JobServer扩容有问题，好几个Cube构建失败了。（我睡觉比较死，报警都没听见）<strong>我内心有点郁闷， 我扩个容都能扩出故障，有这么挫吗？！而且我的确进行了认真的验证，怎么会出问题呢？</strong></p>
+<p>3 dayue在3点09分下线了JobServer03。</p>
+<p>4 我大概在3点10分左右开始分析事故原因，<strong>因为我不相信是扩容的问题</strong>。</p>
+<p><strong>首先并不是所有Cube构建都失败，只是部分Cube构建失败</strong>。</p>
+<p>其次失败的Cube都是在Cube构建的第3步 <code>Extract Fact Table Distinct Columns</code>失败的，异常如下：</p>
+<pre><code>java.lang.IllegalStateException
+    at org.apache.kylin.engine.mr.steps.FactDistinctColumnsJob.run(FactDistinctColumnsJob.java:113)
+    at org.apache.kylin.engine.mr.MRUtil.runMRJob(MRUtil.java:88)
+    at org.apache.kylin.engine.mr.common.MapReduceExecutable.doWork(MapReduceExecutable.java:120)
+    at org.apache.kylin.job.execution.AbstractExecutable.execute(AbstractExecutable.java:113)
+    at org.apache.kylin.job.execution.DefaultChainedExecutable.doWork(DefaultChainedExecutable.java:57)
+    at org.apache.kylin.job.execution.AbstractExecutable.execute(AbstractExecutable.java:113)
+    at org.apache.kylin.job.impl.threadpool.DistributedScheduler$JobRunner.run(DistributedScheduler.java:184)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+    at java.lang.Thread.run(Thread.java:745)
+</code></pre><p>这个异常对应的代码如下：</p>
+<pre><code>            CubeSegment segment = cube.getSegmentById(segmentID);
+            if (segment == null) {
+                logger.error(&quot;Failed to find {} in cube {}&quot;, segmentID, cube);
+                throw new IllegalStateException();
+</code></pre><p>也就是说<strong>构建这个Segment的JobServer并没有获取对应的Segment</strong>。根据segmentID获取Segment的代码如下：</p>
+<pre><code>    public CubeSegment getSegmentById(String segmentId) {
+        for (CubeSegment segment : segments) {
+            if (Objects.equal(segment.getUuid(), segmentId)) {
+                return segment;
+            }
+        }
+        return null;
+    }
+</code></pre><p><code>从代码中我们知道获取Segment是从JobServer本地缓存中获取的，并不是直接从HBase中获取的。</code> </p>
+<p><strong>那么为什么JobServer本地元数据缓存中没有Segment的元数据呢？</strong></p>
+<p>分布式调度的实现中对Segment加锁和释放锁的逻辑都是在<code>DistributedScheduler</code>中，只有成功获取到Segment锁的JobServer才会负责该Segment的构建。也就是说<code>接收Segment构建Http请求的JobServer并不一定是真正构建该Segment的JobServer</code>，比如你的Http请求是发送到JobServer01的，但是有可能是JobServer02构建该Segment。这样做的好处可以提高全部JobServer的资源利用率。比如JobServer01并发量已满时，其他JobServer可以处理提交到JobServer01的Job。<strong>在JobServer重启和takeover的时候都十分有用。</strong></p>
+<p><strong>而新Segment的元数据生成是在 接收该Segment构建Http请求的JobServer上处理的。</strong></p>
+<pre><code>JobService.submitJob():
+
+if (buildType == CubeBuildTypeEnum.BUILD) {
+          CubeSegment newSeg = getCubeManager().appendSegment(cube, startDate, endDate, startOffset, endOffset);
+</code></pre><p>上面的<code>appendSegment</code>方法会生成新的Segment，并会将Segment元数据通过Http请求同步到其他JobServer和所有QueryServer。</p>
+<p><strong>Http请求同步！</strong></p>
+<p><strong>Http请求同步！</strong></p>
+<p><strong>Http请求同步！</strong></p>
+<p>所以现在根据代码我们可以解释为什么JobServer本地元数据缓存中没有Segment的元数据，<code>因为新Segment的元数据信息没有成功同步到其他JobServer</code>。这同时也解释了为什么只是部分Cube构建失败，而不是全部Cube构建失败，因为<strong>如果 接收Segment构建Http请求的JobServer和构建该Segment的JobServer是同一个的话就不会有问题。</strong></p>
+<p>在当时除了从代码确认，还花了较长时间从log中确认。我分别仔细看了新扩容的JobServer03上一个构建成功和构建失败的日志，所以我确认<code>今天的Cube构建失败和JobServer扩容没有关系，原因是Cube元数据同步失败</code>。</p>
+<p>5 我3点55分在我们大象（公司IM工具）群公布了我的结论。</p>
+<p>6 接下来我们需要确认元数据Http请求同步失败的原因。</p>
+<pre><code>Http请求同步失败肯定只有3种:
+1. Http请求发送方没有成功发送
+2. Http请求因为网络原因丢失
+3. Http请求接收方没有成功接收
+</code></pre><p>我分析的时候是逆着来的。</p>
+<p>我首先确认Http请求的接收方有没有出问题。 我看了3台JobServer的Http请求日志，从16台QueryServer中抽看了8台。 发现所有节点的Http请求日志一致，<strong>所以可以确认不是Http请求接收方的问题。</strong></p>
+<p>其次我花了较长时间确认是不是网络的问题（因为近期我们机房出现了多次网络故障，所以我下意识的想先排除这个原因），我查了ping和TCP的监控指标，测了下ping的丢包率。但都没有发现什么明显的异常。</p>
+<p><strong>所以下来就只可能是Http请求发送方的有问题了。</strong></p>
+<ol>
+<li>5点21分 dayue发现是元数据同步请求失败是因为发送Http请求的线程池是
+newFixedThreadPool，且某些元数据同步的Http请求阻塞了，导致新的Http请求无法被执行，所以Cube元数据没有成功同步。dayue将<code>newFixedThreadPool</code>改为<code>newCachedThreadPool</code>，并给元数据同步线程设置了线程名&quot;CacheWiper %s %s&quot;, restClient, broadcastEvent&quot;。</li>
+</ol>
+<p>显然此处newCachedThreadPool是比newFixedThreadPool更加合理的，因为<strong>newCachedThreadPool可以灵活的根据需要新建线程和回收不必要的线程。</strong></p>
+<p>当然这里还有一个重要的问题，就是<code>元数据同步的Http请求为什么会阻塞</code>？</p>
+<p>这个问题在dayue为元数据同步的线程设置了线程名后找到了原因，有了线程名之后，根据jstack就知道了<code>是发送到3台QueryServer的Http请求阻塞了</code>。</p>
+<p>然后我就去重启这3台QueryServer，但是重启的时候重启几次都没起来，看log发现是kerberos认证失败了，然后再<code>klist</code>发现 Ticket的过期时间竟然是 <code>05/06/17 01:10:01</code>，这说明<code>是连续两次Kinit失败导致Ticket过期，最终导致kerberos认证失败</code>。</p>
+<p>在重启3台QuerySerever后，JobServer的Cube元数据同步终于正常，此时已经到了凌晨6点。</p>
+<h3 id="连续两次kinit失败的原因">连续两次Kinit失败的原因</h3>
+<p>5月6号12点多我们的小伙伴确认了连续两次Kinit失败的原因是我们的krb5.conf文件的第3个KDC Server地址配置有误，半年多来一直没有出问题是因为平常的认证请求都是发送到前两个KDC Server。<code>我奇怪的是这种重要的配置文件竟然会有配置错误，而且一直都没有发现。。。</code></p>
+<h3 id="kerberos认证失败为什么会导致http请求阻塞">Kerberos认证失败为什么会导致Http请求阻塞</h3>
+<p>当天6点多服务正常后，我就先去补觉了，醒来后我依然没想通的是Kerberos认证失败为什么会导致Http请求阻塞。</p>
+<p><strong>正常来讲，Kerberos认证失败最多导致Cube元数据同步时，在请求HBase时多重试几次，但应该在几分钟内失败返回，不至于阻塞几个小时。</strong> </p>
+<p>其Kylin log应该如下，应该会有对应的失败log。</p>
+<pre><code>2017-05-06 01:36:39,274 INFO  [http-bio-8080-exec-39] controller.CacheController:78 : wipe cache type: CUBE event:UPDATE name:work_day_record_ex
+2017-05-06 01:36:39,275 INFO  [http-bio-8080-exec-39] service.CacheService:165 : rebuild cache type: CUBE name:work_day_record_ex
+
+2017-05-06 01:38:13,377 ERROR [http-bio-8080-exec-39] cube.CubeManager:877 : Error during load cube instance, skipping : /cube/q.json
+
+2017-05-06 01:40:00,600 WARN  [http-bio-8080-exec-39] service.CacheService:293 : Failed to reset project cache
+</code></pre><p>Tomcat的请求log中也应该有记录</p>
+<pre><code>10.16.90.3 - - [06/May/2017:01:40:00 +0800] &quot;PUT /kylin/api/cache/cube/work_day_record_ex/update HTTP/1.1&quot; 200 -
+</code></pre><p><strong>吐槽一下，这失败的不能再失败的请求返回码竟然是200！</strong> reloadCubeLocalAt方法竟然把异常都吞了，弱弱的打了个error。</p>
+<p>奇怪的是在Kinit失败的QueryServer上好几个请求都只有前两个log，也就是说<strong>Cube元数据同步的代码阻塞住了，而且整整阻塞了几个小时。</strong> 最终我分析QueryServer重启前留下的Jstack文件时找到了原因。</p>
+<p><strong>在1台QueryServer上BLOCKED的Cube元数据同步线程竟然有16个！，它们都在等待锁 0x00000005e8bd2100</strong>。</p>
+<pre><code>&quot;http-bio-8080-exec-633&quot; #22516721 daemon prio=5 os_prio=0 tid=0x0000000004ccc000 nid=0x48fe waiting for monitor entry [0x00007ffe
+46f80000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+        at org.apache.kylin.cube.CubeManager.reloadCubeLocalAt(CubeManager.java:844)
+        - waiting to lock &lt;0x00000005e8bd2100&gt; (a org.apache.kylin.cube.CubeManager)
+        at org.apache.kylin.cube.CubeManager.reloadCubeLocal(CubeManager.java:614)
+        at org.apache.kylin.rest.service.CacheService.rebuildCubeCache(CacheService.java:230)
+        at org.apache.kylin.rest.service.CacheService.rebuildCache(CacheService.java:169)
+        at org.apache.kylin.rest.controller.CacheController.wipeCache(CacheController.java:83)
+</code></pre><p>而持有锁 0x00000005e8bd2100的线程却在等待锁 0x00000005e890d918</p>
+<pre><code>&quot;http-bio-8080-exec-670&quot; #22517031 daemon prio=5 os_prio=0 tid=0x0000000004de0800 nid=0x4a40 waiting for monitor entry [0x00007ffe3102e000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+        at org.apache.hadoop.hbase.client.HConnectionManager$HConnectionImplementation.locateRegionInMeta(HConnectionManager.java:1263)
+        - waiting to lock &lt;0x00000005e890d918&gt; (a java.lang.Object)
+        at org.apache.hadoop.hbase.client.HConnectionManager$HConnectionImplementation.locateRegion(HConnectionManager.java:1162)
+        at org.apache.hadoop.hbase.client.HConnectionManager$HConnectionImplementation.locateRegion(HConnectionManager.java:1119)
+        at org.apache.hadoop.hbase.client.HConnectionManager$HConnectionImplementation.getRegionLocation(HConnectionManager.java:960)
+        at org.apache.hadoop.hbase.client.RegionServerCallable.prepare(RegionServerCallable.java:74)
+        at org.apache.hadoop.hbase.client.RpcRetryingCaller.callWithRetries(RpcRetryingCaller.java:114)
+        - locked &lt;0x00000005f5f8e1a0&gt; (a org.apache.hadoop.hbase.client.RpcRetryingCaller)
+        at org.apache.hadoop.hbase.client.HTable.get(HTable.java:835)
+        at org.apache.hadoop.hbase.client.HTable.get(HTable.java:812)
+        at org.apache.kylin.storage.hbase.HBaseResourceStore.internalGetFromHTable(HBaseResourceStore.java:335)
+        at org.apache.kylin.storage.hbase.HBaseResourceStore.getFromHTable(HBaseResourceStore.java:315)
+        at org.apache.kylin.storage.hbase.HBaseResourceStore.getResourceImpl(HBaseResourceStore.java:223)
+        at org.apache.kylin.common.persistence.ResourceStore.getResource(ResourceStore.java:140)
+        at org.apache.kylin.cube.CubeManager.reloadCubeLocalAt(CubeManager.java:848)
+        - locked &lt;0x00000005e8bd2100&gt; (a org.apache.kylin.cube.CubeManager)
+        at org.apache.kylin.cube.CubeManager.reloadCubeLocal(CubeManager.java:614)
+</code></pre><p><code>而等待锁0x00000005e890d918 的线程足足有335个！</code>有这么多线程是因为请求HBase的线程都需要获得这个锁。 <strong>至此我们就清楚了为什么Cube元数据同步的Http请求足足阻塞了几个小时</strong>。</p>
+<h3 id="事故的逻辑链条">事故的逻辑链条</h3>
+<ol>
+<li>krb5.conf文件的KDC Server配置有误</li>
+<li>3台QueryServer连续两次Kinit失败</li>
+<li>3台QueryServer Kerberos认证失败</li>
+<li>QueryServer Cube元数据同步的Http请求因为等待HBase的锁而阻塞，且被唤醒的概率只有300分之一</li>
+<li>JobServer的元数据同步线程池是newFixedThreadPool，所有线程均被阻塞，无法处理新的线程</li>
+<li>JobServer的Cube元数据无法成功同步</li>
+<li>部分Job在Cube构建的第3步失败</li>
+</ol>
+<h3 id="事故的影响范围">事故的影响范围</h3>
+<p>本次事故其实影响并不大，事故发生的时间凌晨1点到6点是Cube按天生产的低峰期，而且只有部分Cube会失败，而且一般在3次重试后都会成功构建。</p>
+<h3 id="为什么在我们对kylin代码有高度掌控力的情况下，事故处理时间依然长达3个小时">为什么在我们对Kylin代码有高度掌控力的情况下，事故处理时间依然长达3个小时</h3>
+<ol>
+<li>当天我进行了JobServer扩容，所以开始以为是和JobServer扩容有关。</li>
+<li>我起来后没有看完所有报警，直接分析Cube构建失败的原因。如果我注意到QueryServer的报警，去看下QueryServer的log，可能很快就会定位是Kerberos的原因。</li>
+<li>我在分析元数据同步Http请求失败原因的时候，应该按照可能性大小去分析，当时大脑逻辑好像有些不太清晰（难道是没睡醒。。。），感觉浪费了较多时间。</li>
+<li>Kylin代码元数据同步这块logger太少。对于Http请求，我们应该打出开始log和结束log。</li>
+<li>我当时忘记了分析Jstack。</li>
+<li>Kerberos服务没有可用性探针，所以Kerberos认证失败几个小时我们竟然不知道。</li>
+</ol>
+<h3 id="kylin运维上的改进">Kylin运维上的改进</h3>
+<ol>
+<li>更新所有节点的Krb5.conf。</li>
+<li>更新Kinit策略，加上重试和报警。</li>
+<li>增加Kerberos探针。</li>
+<li>提高KDC服务的稳定性。</li>
+</ol>
+<h3 id="kylin代码上的改进">Kylin代码上的改进</h3>
+<ol>
+<li>dayue做的用newCachedThreadPool代替newFixedThreadPool，完善log，更有意义的线程名。</li>
+<li>Http请求应该加上超时机制。<strong>分布式系统中无超时机制的RPC请求和Http请求肯定是有问题的。</strong></li>
+<li>reloadCubeLocalAt 应该抛出异常，失败的请求返回200太不合理。</li>
+<li>reloadCubeLocalAt 标记为 synchronized 我认为是不必要的，reloadCubeLocalAt本质上只是元数据的读取操作，整个方法没有什么操作是不能并发的，除了usedStorageLocation这个Multimap的put操作。 而我认为usedStorageLocation使用Multimap也是不必要的，完全可以用ConcurrentMap代替掉，只需把key从CubeName改为SegmentName。</li>
+</ol>
+<h3 id="事故的收获">事故的收获</h3>
+<ol>
+<li><strong>凡是系统中重要的配置我们都应该多人Review，认真对待</strong>。</li>
+<li><strong>系统中坚决不能容许失败的运维操作我们都应该有重试机制和报警</strong>。</li>
+<li><strong>线上事故在处理前我们应该保留现场</strong>（log，jstack，jmap，监控截图等）</li>
+<li><strong>线上事故发生时的所有报警都有可能是有关联性的，无论报警是什么等级，我们都应该关注。</strong></li>
+<li><strong>一个易维护系统的log必须是充足的，合理的，有意义的，人可读的；其中所有线程都应该有极具标志性的线程名。</strong></li>
+<li><strong>凡是有可能发生的，终将会发生。</strong></li>
+</ol>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=590f4d9d760a1c0a32e03069
+                 data-title=记Kylin的第一次夜间生产故障
+                 data-url=kylin-case>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>
