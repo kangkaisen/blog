@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="../css/code.css" type="text/css"/>
     <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
     <link rel="stylesheet" href="../css/main.css" type="text/css"/>
-    <title>编程小梦|记Kylin的第一次夜间生产故障</title>
+    <title>编程小梦|记Kylin的第一次夜间生产事故</title>
 </head>
 <body>
 <nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
@@ -39,7 +39,7 @@
     <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> 记Kylin的第一次夜间生产故障</h1>
+            <h1> 记Kylin的第一次夜间生产事故</h1>
             <hr/>
             <p>作者: 康凯森</p>
             <p>日期: 2017-05-07</p>
@@ -52,10 +52,10 @@
 <li><a href="#kerberos认证失败为什么会导致http请求阻塞">Kerberos认证失败为什么会导致Http请求阻塞</a></li>
 <li><a href="#事故的逻辑链条">事故的逻辑链条</a></li>
 <li><a href="#事故的影响范围">事故的影响范围</a></li>
-<li><a href="#为什么在我们对kylin代码有高度掌控力的情况下事故处理时间依然长达3个小时">为什么在我们对Kylin代码有高度掌控力的情况下，事故处理时间依然长达3个小时</a></li>
+<li><a href="#为什么在对kylin代码有高度掌控力的情况下处理时间长达3个小时">为什么在对Kylin代码有高度掌控力的情况下处理时间长达3个小时</a></li>
 <li><a href="#kylin运维上的改进">Kylin运维上的改进</a></li>
 <li><a href="#kylin代码上的改进">Kylin代码上的改进</a></li>
-<li><a href="#事故的收获">事故的收获</a></li>
+<li><a href="#事故的反思">事故的反思</a></li>
 </ul>
 <!-- toc stop -->
 <p>从2016年7月毕业正式入职美团点评负责Kylin以来，昨天5月6日（星期六）我进行了Kylin的第一次夜间生产故障处理。（<strong>我们Kylin的Cube按天生产已经保持连续半年0事故</strong>）虽然这次故障的影响范围并不大， <strong>但是这次故障处理暴露出我们运维本身和Kylin代码的几个严重问题，故障处理过程中也有好几处值得深深反思的地方</strong>，所以写下此文总结一下。</p>
@@ -131,7 +131,7 @@ newFixedThreadPool，且某些元数据同步的Http请求阻塞了，导致新�
 <p>然后我就去重启这3台QueryServer，但是重启的时候重启几次都没起来，看log发现是kerberos认证失败了，然后再<code>klist</code>发现 Ticket的过期时间竟然是 <code>05/06/17 01:10:01</code>，这说明<code>是连续两次Kinit失败导致Ticket过期，最终导致kerberos认证失败</code>。</p>
 <p>在重启3台QuerySerever后，JobServer的Cube元数据同步终于正常，此时已经到了凌晨6点。</p>
 <h3 id="连续两次kinit失败的原因">连续两次Kinit失败的原因</h3>
-<p>5月6号12点多我们的小伙伴确认了连续两次Kinit失败的原因是我们的krb5.conf文件的第3个KDC Server地址配置有误，半年多来一直没有出问题是因为平常的认证请求都是发送到前两个KDC Server。<code>我奇怪的是这种重要的配置文件竟然会有配置错误，而且一直都没有发现。。。</code></p>
+<p>5月6号12点多我们的小伙伴确认了连续两次Kinit失败的原因是我们的krb5.conf文件的第3个KDC Server地址配置有误，<strong>最近才出现问题是因为第3个KDC Server最近刚刚下线了。。。</strong>krb5.conf文件中的前两个KDC Server是我们数据组自己维护的，第3个是公司维护的，作为备用，请求主要是发往前两个Server的。</p>
 <h3 id="kerberos认证失败为什么会导致http请求阻塞">Kerberos认证失败为什么会导致Http请求阻塞</h3>
 <p>当天6点多服务正常后，我就先去补觉了，醒来后我依然没想通的是Kerberos认证失败为什么会导致Http请求阻塞。</p>
 <p><strong>正常来讲，Kerberos认证失败最多导致Cube元数据同步时，在请求HBase时多重试几次，但应该在几分钟内失败返回，不至于阻塞几个小时。</strong> </p>
@@ -182,19 +182,19 @@ newFixedThreadPool，且某些元数据同步的Http请求阻塞了，导致新�
 <li>krb5.conf文件的KDC Server配置有误</li>
 <li>3台QueryServer连续两次Kinit失败</li>
 <li>3台QueryServer Kerberos认证失败</li>
-<li>QueryServer Cube元数据同步的Http请求因为等待HBase的锁而阻塞，且被唤醒的概率只有300分之一</li>
+<li>QueryServer Cube元数据同步的线程因为等待HBase的锁而阻塞，且被唤醒的概率只有300分之一</li>
 <li>JobServer的元数据同步线程池是newFixedThreadPool，所有线程均被阻塞，无法处理新的线程</li>
 <li>JobServer的Cube元数据无法成功同步</li>
 <li>部分Job在Cube构建的第3步失败</li>
 </ol>
 <h3 id="事故的影响范围">事故的影响范围</h3>
 <p>本次事故其实影响并不大，事故发生的时间凌晨1点到6点是Cube按天生产的低峰期，而且只有部分Cube会失败，而且一般在3次重试后都会成功构建。</p>
-<h3 id="为什么在我们对kylin代码有高度掌控力的情况下，事故处理时间依然长达3个小时">为什么在我们对Kylin代码有高度掌控力的情况下，事故处理时间依然长达3个小时</h3>
+<h3 id="为什么在对kylin代码有高度掌控力的情况下处理时间长达3个小时">为什么在对Kylin代码有高度掌控力的情况下处理时间长达3个小时</h3>
 <ol>
 <li>当天我进行了JobServer扩容，所以开始以为是和JobServer扩容有关。</li>
 <li>我起来后没有看完所有报警，直接分析Cube构建失败的原因。如果我注意到QueryServer的报警，去看下QueryServer的log，可能很快就会定位是Kerberos的原因。</li>
 <li>我在分析元数据同步Http请求失败原因的时候，应该按照可能性大小去分析，当时大脑逻辑好像有些不太清晰（难道是没睡醒。。。），感觉浪费了较多时间。</li>
-<li>Kylin代码元数据同步这块logger太少。对于Http请求，我们应该打出开始log和结束log。</li>
+<li>Kylin代码元数据同步这块logg太少。</li>
 <li>我当时忘记了分析Jstack。</li>
 <li>Kerberos服务没有可用性探针，所以Kerberos认证失败几个小时我们竟然不知道。</li>
 </ol>
@@ -207,18 +207,17 @@ newFixedThreadPool，且某些元数据同步的Http请求阻塞了，导致新�
 </ol>
 <h3 id="kylin代码上的改进">Kylin代码上的改进</h3>
 <ol>
-<li>dayue做的用newCachedThreadPool代替newFixedThreadPool，完善log，更有意义的线程名。</li>
+<li>dayue做的用newCachedThreadPool代替newFixedThreadPool，完善log，使用更有意义的线程名。</li>
 <li>Http请求应该加上超时机制。<strong>分布式系统中无超时机制的RPC请求和Http请求肯定是有问题的。</strong></li>
 <li>reloadCubeLocalAt 应该抛出异常，失败的请求返回200太不合理。</li>
 <li>reloadCubeLocalAt 标记为 synchronized 我认为是不必要的，reloadCubeLocalAt本质上只是元数据的读取操作，整个方法没有什么操作是不能并发的，除了usedStorageLocation这个Multimap的put操作。 而我认为usedStorageLocation使用Multimap也是不必要的，完全可以用ConcurrentMap代替掉，只需把key从CubeName改为SegmentName。</li>
 </ol>
-<h3 id="事故的收获">事故的收获</h3>
+<h3 id="事故的反思">事故的反思</h3>
 <ol>
-<li><strong>凡是系统中重要的配置我们都应该多人Review，认真对待</strong>。</li>
 <li><strong>系统中坚决不能容许失败的运维操作我们都应该有重试机制和报警</strong>。</li>
 <li><strong>线上事故在处理前我们应该保留现场</strong>（log，jstack，jmap，监控截图等）</li>
 <li><strong>线上事故发生时的所有报警都有可能是有关联性的，无论报警是什么等级，我们都应该关注。</strong></li>
-<li><strong>一个易维护系统的log必须是充足的，合理的，有意义的，人可读的；其中所有线程都应该有极具标志性的线程名。</strong></li>
+<li><strong>一个易维护系统的log必须是充足的，合理的，有意义的，人可读的；其中所有线程都应该有极具标志性的线程名。</strong> Kylin现在有些代码log就打的很烂，该打的log不打，不该打的log打一大堆。</li>
 <li><strong>稳定压倒一切</strong>，我们无法保证生产环境的稳定，我们就没法玩了。<strong>一个高可靠的系统源自可靠的系统设计，优秀的代码实现，充分的测试，可靠的运维，任何一个环节出现问题，都有可能导致事故的产生。</strong></li>
 <li>我们必须从事故处理，日常运维，日常客服这类工作中解脱出来，才会有更多精力满足我们用户更多的需求，才有可能打造一个高效，稳定，易用的平台。能解脱出来的前提是<strong>我们的系统是高可靠的，运维是自动化和高效的，我们的用户接入文档，使用文档，FAQ文档等是十分完善的，用户的对接和沟通过程应该是高度流程化和规范化的。</strong></li>
 <li><strong>分布式系统必须考虑容错和局部失败；必须认为网络是不可靠的，物理时钟是不可靠的；有并发读写的场景就必须考虑分布式一致性问题。</strong> Kylin 2.0版本的Segment并发构建就没有考虑分布式一致性问题。</li>
@@ -253,7 +252,7 @@ newFixedThreadPool，且某些元数据同步的Http请求阻塞了，导致新�
         <div class="col-md-10 col-sm-12">
             <div class="ds-thread"
                  data-thread-key=590f4d9d760a1c0a32e03069
-                 data-title=记Kylin的第一次夜间生产故障
+                 data-title=记Kylin的第一次夜间生产事故
                  data-url=kylin-case>
             </div>
         </div>
