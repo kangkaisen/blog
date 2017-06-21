@@ -1,0 +1,321 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Kylin 2.0升级总结</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Kylin 2.0升级总结</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2017-06-21</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#kylin-20的升级节奏">Kylin 2.0的升级节奏</a></li>
+<li><a href="#升级的大原则">升级的大原则</a></li>
+<li><a href="#升级的目标">升级的目标</a></li>
+<li><a href="#1-kylin-20-升级流程">1 Kylin 2.0 升级流程</a><ul>
+<li><a href="#11-kylin-20-代码合入">1.1 Kylin 2.0 代码合入</a></li>
+<li><a href="#12-配置更新和梳理">1.2 配置更新和梳理</a></li>
+<li><a href="#13-兼容性测试">1.3 兼容性测试</a></li>
+<li><a href="#14-cube构建测试">1.4 Cube构建测试</a></li>
+<li><a href="#15-cube查询测试">1.5 Cube查询测试</a></li>
+<li><a href="#16-web测试">1.6 web测试</a></li>
+</ul>
+</li>
+<li><a href="#2-升级中暴露的问题">2 升级中暴露的问题</a><ul>
+<li><a href="#21-查询机灰度中暴露的问题">2.1 查询机灰度中暴露的问题</a></li>
+<li><a href="#22-上线staging和prod后cube构建暴露的性能问题">2.2 上线Staging和Prod后Cube构建暴露的性能问题</a></li>
+<li><a href="#23-我自己代码的问题">2.3 我自己代码的问题</a></li>
+</ul>
+</li>
+<li><a href="#3-可供下次升级复用的经验">3 可供下次升级复用的经验</a></li>
+<li><a href="#4-我们如何保证复杂系统的可靠性">4 我们如何保证复杂系统的可靠性</a></li>
+<li><a href="#5-感谢kylin社区">5 感谢Kylin社区</a></li>
+<li><a href="#6-给kylin社区的建议">6 给Kylin社区的建议</a></li>
+<li><a href="#7-kylin-20升级总结">7 Kylin 2.0升级总结。</a></li>
+</ul>
+<!-- toc stop -->
+<p>我从5月中旬开始进行Kylin 2.0的升级，现在的版本是Kylin 1.5.4.1。本次升级的所有工作均由我一人完成，升级耗时和我之前估计的差不多，1个月左右，<strong>其中每天平均半天左右的时间在当“客服”</strong>（帮用户答疑，错误处理，调优，追查问题）。 本次Kylin 2.0升级已经基本完成，所以写下此文对本次Kylin 2.0升级进行下总结。总结主要包含以下内容：</p>
+<ul>
+<li>Kylin 2.0升级的流程</li>
+<li>Kylin 2.0升级过程中遇到的一些问题</li>
+<li>可以供下次升级复用的经验</li>
+<li>升级中暴露出来的一些问题的思考</li>
+<li>感谢Kylin 社区</li>
+<li>对Kylin 社区的一些建议</li>
+<li>整个升级过程的总结</li>
+</ul>
+<p>首先我们简要回顾下 Kylin 2.0的 升级节奏：</p>
+<h2 id="kylin-20的升级节奏">Kylin 2.0的升级节奏</h2>
+<p>（备注：我们的Kylin服务共有Dev, Test, Staging, Prod4个环境，这也应该是Kylin生产级别的标准配置，其中Dev和 Test环境共用一个HBase集群，Staging和Prod环境共用一个HBase集群）</p>
+<ol>
+<li>5月15日 开始Kylin 2.0 代码合入。</li>
+<li>5月17日 代码合入完成，Dev环境测试Kylin 2.0。</li>
+<li>5月19日 Test环境升级到Kylin 2.0。</li>
+<li>5月25日 灰度1台Prod的QueryServer到Kylin 2.0。</li>
+<li>6月5日  16台Prod的QueryServer全部升级到Kylin 2.0。</li>
+<li>6月6日  Staging环境2台JobServer升级到Kylin 2.0。</li>
+<li>6月8日  Prod环境3台JobServer升级到Kylin 2.0。</li>
+<li>6月19日 t-digest 算法原理分享（非计划内，纯粹兴趣使然，在业余时间内完成）</li>
+<li>ToDo    线上的调度脚本支持多Segment并发构建。</li>
+<li>Doing   Kylin 2.0 新特性调研和分享。</li>
+</ol>
+<h2 id="升级的大原则">升级的大原则</h2>
+<p><strong>稳定压倒一切。对稳定性有影响的功能直接禁用。稳定性达不到生产环境要求的新特性就不启用。</strong></p>
+<h2 id="升级的目标">升级的目标</h2>
+<p><strong>希望此次升级是一次对用户几乎透明，几乎无影响，平稳上线，无case的升级。</strong></p>
+<h2 id="1-kylin-20-升级流程">1 Kylin 2.0 升级流程</h2>
+<h3 id="11-kylin-20-代码合入">1.1 Kylin 2.0 代码合入</h3>
+<p>需要代码合入的原因是 <strong>我们内部的代码和社区的diff已经越来越多</strong>，所以必须将我们内部的代码合入到社区的2.0 版本中。</p>
+<p><strong>代码合入是一个十分耗神的苦力工作</strong>。因为我们早期的commit message 不是很规范，所以几乎每条commit我都要仔细认真的check下，确认每条commit是否已经合入社区，除非是我自己印象很深的commit。</p>
+<p><strong>代码合入要求我们对Kylin的代码本身必须是比较熟悉的</strong>，这样当cherry-pick出现diff时我们才能快速，合理的处理。</p>
+<p>为了减轻代码合入的成本并减少失误，dayue和我在今年2月份引入了以下规范：</p>
+<pre><code>1. 所有修改配置的commit，加上[CONFIG]前缀 //我们的配置和代码在一起，主要是为了实现一键代码编译，打包，部署，重启服务。这样可以明显提升开发测试效率，大幅缩短线上紧急bug修复的时间，现在从kylin的源代码到kylin的服务重启一般只需2到3分钟。
+2. 所有移植社区master某个功能的commit，加上[BACKPORT]前缀，表示社区master已有该commit
+3. 所有美团内部独有的commit，加上[MT]前缀
+4. 需要合入社区的改动，commit中最好同时带上我们的JIRA号和社区的JIRA号
+</code></pre><p>不过可以想见。即使我们引入了commit规范，如果让一个对Kylin代码和之前我们内部commit不熟悉的新人来合，也会有一定难度。至少其不仅得懂Java，也得了解下Angualr.js, 因为Kylin前端好像也被我改了蛮多。</p>
+<h3 id="12-配置更新和梳理">1.2 配置更新和梳理</h3>
+<p>KYLIN-2195 引入了配置的命名规范，更新了Kylin所有配置的命名。 虽然新旧配置是兼容的，但是为了和新版保持一致，我梳理了之前所有的旧配置，移除所有不必要的配置，更新了配置名。将配置从100多个删减到40多个。</p>
+<p>这次升级配置相关的问题，其实有好几个，后面会提到。</p>
+<h3 id="13-兼容性测试">1.3 兼容性测试</h3>
+<p>代码合入完成后，我首先进行了兼容性测试。 Kylin的兼容性主要分3个部分： <strong>元数据兼容性</strong>，<strong>Coprocessor兼容性</strong>， <strong>API兼容性</strong>。</p>
+<p><code>元数据不兼容 意味着升级几乎无法进行</code>
+<code>Coprocessor不兼容 意味着升级无法灰度，升级成本极高，升级难度极大</code>
+<code>API不兼容 其实只要能提前测试发现并提前通知用户即可</code>
+<code>所有的不兼容我们都可以改代码让其变得兼容，但是有些改动会太大，成本会很高</code></p>
+<h4 id="121-元数据兼容性">1.2.1 元数据兼容性</h4>
+<p>首先<strong>Kylin 2.0的元数据整体上是兼容Kylin 1.5.4.1的</strong>， 不过存在以下问题：</p>
+<ol>
+<li><strong>定长编码的兼容性</strong>。KYLIN-2642</li>
+<li><strong>Model元数据的兼容性</strong>。2.0版本之前由于<strong>Kylin前端有bug以及后端检查较松</strong>，当用户修改事实表后，会造成Model中dimensions字段中某一列只有table字段，但是columns列表是空；或者Model中dimensions字段有的table已经不存在。 
+对于前一种情况，我直接改了代码：<pre><code>//主要加了columns.length == 0的判断，跳过空列表的检查，因为我认为这么做是完全合理的。
+if (columns == null || columns.length == 0) {
+    return;
+}
+</code></pre>对于后一种情况，就必须得<strong>修复元数据了</strong>。 我开始是这样修复的：<pre><code>1 bin/metastore.sh fetch /model_desc/xxxx.json
+2 修改xxxx.json
+3 bin/metastore.sh restore meta_backups
+</code></pre>这种做法<strong>效率低下</strong>，而且<strong>危险系数也比较高</strong>，因为是直接改元数据。我改了几个model后，估计了下这么改下去我得花大半天时间，而且Staging和Prod环境都得改。 所以就用1个多小时开发测试了 web页面直接修改model json的功能（KYLIN-2665）。</li>
+</ol>
+<ol>
+<li><strong>Project元数据的兼容性</strong>。 这个坑应该说是<strong>我自己给我挖的坑</strong>。现象是我在staging升级到2.0后，发现每个Project的配置信息都没了。原因是我当初开发这个功能的时候，project配置属性用的是<code>overrideKylinProps</code>，liyang Review的时候改成了<code>override_kylin_properties</code>，关键是我当初发现了这一点，而且我还重构了ProjectRequest，但是我当时完全忘了考虑兼容性的问题。当然，这是个小问题。就是把每个project的配置再配置一次。</li>
+</ol>
+<h4 id="122-coprocessor兼容性">1.2.2 Coprocessor兼容性</h4>
+<p>Coprocessor兼容性主要是指Kylin QueryServer和HBase RegionServer的Coprocessor通信时<strong>序列化和反序列化的兼容性</strong>。 </p>
+<p>主要是KYLIN-2603和KYLIN-2212打破了兼容性。 我处理方式比较简单直接，就是<strong>Revert掉相关Commit</strong>。当然，我们也可以选择让这些功能<strong>变成可配置的</strong>，或者直接让这些功能<strong>变成兼容的</strong>。显然，后两种的成本会高一些。</p>
+<h4 id="123-api兼容性">1.2.3 API兼容性</h4>
+<p>实际上本次升级我几乎没有测试API兼容性的，只确定了元数据同步接口的兼容性，因为我觉得Kylin的用户一般是不需要直接调用Kylin的API（除了查询的API）。这次升级只暴露出一个API兼容性的问题，是我们的用户反馈出来的，关键是<strong>还被用户吐槽了一把</strong>。就是cube_desc的Dimension信息中的table字段内容格式被修改。2.0前table字段的格式是DBname.Tablename，2.0后table字段的格式是table的别名。其实这个合理的做法应该是新加个alias的字段来表示别名。</p>
+<h3 id="14-cube构建测试">1.4 Cube构建测试</h3>
+<p>构建测试就是<strong>抽取了30多个Cube进行build测试</strong>，为了节省资源，快速出结果，我没有选取一些复杂的大cube，这也导致了在测试的时候<strong>没有发现Cube构建的性能问题。</strong></p>
+<h3 id="15-cube查询测试">1.5 Cube查询测试</h3>
+<p>查询测试主要是利用我在上次升级时开发的<strong>线上查询回放测试工具</strong>。原理是一个线程用Presto从Hive表获取某个cube某天的所有查询SQL，然后再用一个线程池去查Kylin。其中查Kylin的时候每100条会对新旧两个版本的查询结果进行校验。最后会统计输出每个cube查询的成功率，查询时延，失败的具体SQL和异常。</p>
+<p>当然，对于PreparedStatement的查询，由于获取不到具体的SQL，我只能向用户要了10条左右的SQL进行手动验证。</p>
+<p>我的此次查询测试没有发现问题。</p>
+<h3 id="16-web测试">1.6 web测试</h3>
+<p>测试的过程主要是把project，cube，model,job的操作过了一遍，我测试的时候没有发现什么问题。  其实web前端的问题我主要是靠Staging 环境的用户发现并反馈，因为web的具体操作很多，我不可能把所有细节都测试一遍。 而且<strong>web出问题影响也不大，因为web的问题不会影响生产，而且只要web发现问题，一般我都可以较快修复</strong>。</p>
+<h2 id="2-升级中暴露的问题">2 升级中暴露的问题</h2>
+<h3 id="21-查询机灰度中暴露的问题">2.1 查询机灰度中暴露的问题</h3>
+<ul>
+<li>KYLIN-2652 现象是1台QuerServer灰度后，隔了大半天的时间，导致所有线上QuerServer查询都会随机失败。 主要原因是KYLIN-2195忽略了 <code>kylin.query.endpoint.compression.result</code>这条配置的特殊性以及CubeVisitService中的KylinConfig不是线程安全的，这会导致HBase返回的查询结果是压缩的，但是QuerServer按照不压缩的去反序列化，自然就失败了。</li>
+<li>KYLIN-2647</li>
+<li><code>case A when 0 then 0 else 1.0 * B/A end</code>  Kylin 2.0中如果A是null查询则会失败，列出这个问题是因为这个问题影响比较大，<strong>我们的好多用户都有这种写法</strong>。原因是新版Calcite 生成的代码有问题，没有处理A是null的情况。解决办法是SQL改写为 <code>case A when 0 then 0 else cast (B as double) /A end</code>，Calcite对这个SQL生成的代码对A等于null时有特殊处理，直接返回null，因为除以null本身没有意义。</li>
+<li>PreparedStatement的 Date类型的bug。起初我调试代码，以为是Calcite的bug，后来看了下Calcite的代码，才发现的确是Kylin的bug。 Calcite对Date类型有特殊处理，会将Date类型的值转成epoch time，比如2015-01-01 转为 16436，所以Kylin对Date类型也有特殊处理。</li>
+</ul>
+<p>对于Statement，Kylin中Date的转换格式如下：</p>
+<pre><code>1 Date类型的2015-01-01 在OLAPFilterRel.cast中 转为 1420070400000
+
+2 1420070400000 在请求HBase前后会有编码和解码
+
+3 1420070400000 在Tuple的convertOptiqCellValue转为16436(epoch time)
+</code></pre><p>对于PreparedStatement： Kylin的处理过程如下：</p>
+<pre><code>1 KylinClient的AvaticaPreparedStatement 将2015-01-01 转为 16436
+
+2 KylinClient的KylinPreparedStatement 将16436 转为 2015-01-01。
+
+3 KylinServer在setParam时 AvaticaPreparedStatement 再次将2015-01-01 转为 16436
+
+4 在OLAPEnumerator.bindVariable() 中对PreparedStatement的Date类型 还有特殊转换，不过此处有问题， 因为此处Kylin认为2015-01-01的格式应该是2015-01-01，但实际上是16436。
+</code></pre><p>所以我认为该问题的解决方法可以是：</p>
+<pre><code>在OLAPEnumerator.bindVariable() 将16436 转为1420070400000
+</code></pre><h3 id="22-上线staging和prod后cube构建暴露的性能问题">2.2 上线Staging和Prod后Cube构建暴露的性能问题</h3>
+<ul>
+<li><strong>字典的MR构建对基数超高的列性能很低下</strong>。 <strong>全部禁用了字典的MR构建。</strong></li>
+<li><strong>构建Base cuboid时全局字典频繁换入换出</strong>。  <strong>这个也是我自己埋的坑</strong>，因为我解决这个问题时在我们内部用的配置和我最终合入社区的配置不一致。社区的配置在Review时按照建议修改了。</li>
+<li><strong>计算列基数这一步变的异常慢</strong>。 原因是<code>kylin.engine.mr.uhc-reducer-count</code> 默认值变成了1。 我清晰的记得我当初专门把这个值改成了3，为了让IT可以cover这个feature。</li>
+<li><strong>HFile Reducer个数偏少</strong>。 我看log发现cuboid总大小估计的比较小，我开始以为是我设置的<code>kylin.cube.size-estimate-ratio</code> 和 <code>kylin.cube.size-estimate-countdistinct-ratio</code> 参数有问题，或者是新版估计cuboid大小算法有变化。 我新确认了cuboid大小估计算法的diff，发现虽然有略微区别，但本质上是一样的。后来我尝试掉了几次这两个参数的大小，发现并没有明显效果。后来当我注意到cuboid总大小，Region大小，HFile的大小关系时，才发现好几个Cube HFile的大小是egion大小的一半。 这时我才注意到计算HFile时的这个分支：<pre><code> // keep the tweak for sandbox test        
+ if (hfileSizeMB &gt; 0.0 &amp;&amp; kylinConfig.isDevEnv()) {        
+     hfileSizeMB = mbPerRegion / 2;        
+ }
+</code></pre><code>我开始一直以为kylinConfig.isDevEnv()是false</code>，就忽略这段代码，结果点进去后发现<strong>kylinConfig.isDevEnv()的默认值是true</strong>，而我这次梳理配置时把kylin.env的这个配置删除了，我觉得这个参数没啥用。而实际上，估算hfileSizeMB依赖kylin.env的配置肯定是不合理的，想cover IT，直接把sandbox的<code>kylin.storage.hbase.hfile-size-gb=</code>调小就可以。</li>
+</ul>
+<h3 id="23-我自己代码的问题">2.3 我自己代码的问题</h3>
+<ul>
+<li>精确去重的Segment粒度的AppendTrieDict之前不支持segment并发，现在已经支持。</li>
+<li>KYLIN-2606 对精准聚合的精确去重查询的优化。我之前在判断一个SQL是否是精准聚合时，遗漏了下面的情况：</li>
+</ul>
+<pre><code>SELECT MIN(A) A FROM table WHERE A = &#39;2017-06-05&#39;  //其中 A 是维度
+
+解决办法就是将 维度作为指标的情况 判为 非精准聚合
+</code></pre><h2 id="3-可供下次升级复用的经验">3 可供下次升级复用的经验</h2>
+<ol>
+<li>兼容性测试时元数据兼容性，Coprocessor兼容性， API兼容性这3点都需要考虑。</li>
+<li>Cube构建测试时需要选取一些复杂的大Cube进行测试，需要重点关注构建性能。</li>
+<li>增大线上查询回放的Cube个数，对更多的查询进行测试，重点不在于能测试多少条查询，<strong>在于能测试多少种不同类型的查询</strong>。</li>
+<li>升级顺序可以和本次一样，可以先灰度线上QueryServer，确定查询没有问题后，再升级Staging和Prod的JobServer。</li>
+<li>升级Staging和Prod的JobServer前，需要先确认旧版的代码是否可以构建新版的cube。如果可以，Staging和Prod的升级间隔就可以拉的很长，甚至可以在staging把Prod上全部cube构建一遍后再升级Prod。 否则，升级完Staging后就需要较快的升级Prod，因为没法切Cube，会对用户造成影响。 <strong>本次升级就属于后者，所以升级压力就会很大，必须快速解决暴露的所有问题。</strong></li>
+<li>应该考虑上线回滚方案，可以参考 <a href="https://blog.coding.net/blog/architecture-concept-and-practice-from-Google">来自 Google 的高可用架构理念与实践</a></li>
+<li>我们向社区贡献代码时，应该保证合入社区的配置名称，配置默认值，元数据的属性和我们内部一致。</li>
+</ol>
+<h2 id="4-我们如何保证复杂系统的可靠性">4 我们如何保证复杂系统的可靠性</h2>
+<p>这个问题可以近似等价于以下问题：</p>
+<ul>
+<li>我们如何确保我们的每次升级或者上线是一定没问题的？</li>
+<li>我们有没有可能写出没有bug的复杂系统？</li>
+<li>我们的测试到底需要测到什么程度?</li>
+</ul>
+<p>首先，这个世界上没有完全没有bug的系统，也不存在100%可用的系统。我们的目标只能是提供可用性尽可能高的系统，比如3个9的可用性，4个9的可用性。关于系统可用性的概念可以参考<a href="https://blog.coding.net/blog/architecture-concept-and-practice-from-Google">来自 Google 的高可用架构理念与实践</a>或者<a href="http://coolshell.cn/articles/17459.html">关于高可用的系统</a>。</p>
+<p>为什么复杂系统很慢保证可靠性？
+我认为可能有以下几点：</p>
+<p>1 复杂系统必然有很多模块，那么这些模块这件的相互影响就会比较复杂。 如果只写一个二分搜索或者快排函数，那么我们可以很容易确定我们的函数是没有问题的。 因为输入和输出是简单的，各种边界情况和异常情况也是有限的。  但是在复杂系统中，你有时候一个看似很简单的独立改动，也会对其他模块造成影响。 比如KYLIN-2619，我只是换个线程池，结果UT挂了，本质原因是Kylin使用的HTTPclient是不支持并发的。 比如KYLIN-2672，我只是优化了Cube迁移的缓存更新，结果没想到切完Cube后导致整个线上的查询挂了，本质原因是TblColRef在检查TableDesc一致性的时候用了 == 而不是 equals。其实我们应该使用equals。</p>
+<pre><code>checkArgument(tableRef.getTableDesc() == (col.column.getTable()));
+</code></pre><p>2 复杂系统实际应用时的具体环境和参数都是不同的，而不同的context可能会导致不一致的表现。很多时候系统会出现只是某一部分模块cover了所有已知的环境，但是某些模块只cover了部分。</p>
+<p>3 复杂系统的依赖一般比较多，越多的依赖必然引入越多的稳定性风险。比如Kylin很好的融入了Hadoop社区，这是其优点，也是其显著的缺点。<code>比如HBase，Mapreduce，Yarn，HDFS，Hive随便一个系统出点问题或者有bug，都会给Kylin带来显著影响</code>。新版还加入了Spark和Kafka的依赖。 此外，<code>越多的系统依赖，也使得Kylin的日常运维成本极高</code>，此处的运维不仅指你需要确保Kylin所依赖系统的稳定性，了解Kylin所依赖系统的原理，最主要的是<strong>你还需要教给你的用户这些系统的简单原理，它们在Kylin中的作用，出了问题怎么排查。</strong></p>
+<p>4 现在的复杂系统一般都是分布式系统，而我们知道分布式系统天生就有许多难题：不可靠的网络，不可靠的时钟，进程无响应，单机挂掉等。</p>
+<p>说了这么多，我其实一直挺好奇<strong>像神舟飞船这种完全不能出错的系统到底是怎么保障可靠性的</strong>？</p>
+<p>我谷歌了下，发现尽然有专门的大学专业：<strong>可靠性系统工程</strong>。 还买了两篇相关的论文读了下：《可靠性系统工程的理论与技术框架》，《航天器环境试验和航天产品的质量与可靠性保证》。 结果发现这教授写的论文和我的本科论文一样水，没啥干货。 最后在《握手太空的航天科技》书中谷歌到一点答案，其实发现和我们保证一个高可用的软件系统原理是一样的：</p>
+<p>首先是大量，严密的测试确保飞船的一些组件，功能是正常的。 和软件系统一样。</p>
+<p>其次是关键部件的备份，冗余，takeover，关键设备都是<strong>3份同时工作</strong>。 和软件系统一样。</p>
+<p>最后是分析飞船可能出现的所有故障情况，并给出应急方案。 也和软件系统一样，我们既然不能保证不出case，<strong>那么我就尽可能保证出了case立即发现，立即处理，立即恢复。</strong></p>
+<p>可以发现，<code>保证系统可靠性的原理和思路在任何领域都是一致的！</code>  除了以上几点，可靠性的系统当然需要可靠优秀的总体设计或者架构设计，也需要可靠的细节实现或者代码实现。</p>
+<p>当然，还有个显然的问题就是，神舟飞船在地面怎么测试太空的场景？答案是<code>模拟</code>。 </p>
+<p>所以我们现在可以回答 <strong>我们的测试到底需要测到什么程度</strong> 这个问题。
+答案是，如果你能在线下造出和线上完全相同的环境，那么你就可以用线上真实的数据或者case进行测试，Kylin在升级时其实是完全可以做到的，只不过这种做法成本太高，所以我们就需要模拟。有人会问，网络隔离，磁盘挂掉，机器down掉，CPU持续飙高等情况可以模拟吗，答案是可以模拟的，请参考以下篇文章：</p>
+<p><a href="https://segmentfault.com/a/1190000007866223">分布式系统测试那些事儿——理念</a></p>
+<p><a href="https://segmentfault.com/a/1190000007997635">分布式系统测试那些事儿——错误注入</a></p>
+<p><a href="https://segmentfault.com/a/1190000007997941">分布式系统测试那些事儿——信心的毁灭与重建</a></p>
+<p>这3片文章对测试的讲解十分深入，值得大家一读，大家也可以反思自己系统的测试。</p>
+<h2 id="5-感谢kylin社区">5 感谢Kylin社区</h2>
+<p>Kylin 2.0为我们带来多Segment并发重导，TrieDictionaryForest字典，雪花模型，百分位函数，Steaming cubing，Spark cubing等实用功能和新特性，以及若干bug Fix 和性能提升。<strong>十分感谢Kylin社区</strong>，身为Kylin commiter，能够理解每位Kylin contributor的付出，因为很多时候，我们都是在自己的业余时间和假期向Kylin社区贡献。</p>
+<h2 id="6-给kylin社区的建议">6 给Kylin社区的建议</h2>
+<ol>
+<li><strong>我们每个Kylin的contributor和commiter都应该考虑兼容性问题，具体包括元数据的兼容性，Coprocessor兼容性， API兼容性。</strong>比如像1.2.3 API兼容性中举的例子，只要我们有考虑到这一点，这个兼容性问题完全可以避免掉。</li>
+<li><p>我们每个JIRA的Assignee都应该在JIRA中描述必要的信息。
+Bug类型的issue应该描述bug产生的原因，Fix bug的思路。
+Improve类型的issue应该描述是如何改进的，如果有性能对比则更好。
+New Feature类型的issue应该描述清楚背景或动机，并简要描述实现思路。<br>issue Fix后应该在JIRA中给出github commit的链接。</p>
+<p><strong>现在Kylin的大多数JIRA描述信息太过简单，要想知道基本的实现思路，必须自己去读代码，而且具体的commit信息还得根据JIRA号去找。</strong></p>
+</li>
+<li><p>建议用Github的PR代替patch。 
+好处是首先代码阅读更方便，代码Review更方便，这样commit中就不会有那么多code review的commit。
+其次是Github可以和很多自动化工具集成，目前kylin中commit中经常有Fix UT和FIX IT，如果可以让每个PR自动跑UT和IT，只有通过后才允许合入Master，就不会有这个问题。</p>
+</li>
+<li><p>每个commit至少应该有至少1个其他commiter Review通过。
+理由如第4节所述，复杂系统的各个模块间的影响十分复杂，一个看似十分独立的改动都有可能对其他模块产生影响，1个人不可能熟悉一个复杂系统的每一行代码，而多人的Review其实有可能较早的发现这种问题。</p>
+</li>
+<li><p>每个Bug Fix后，需要Test的话，尽量应该加上对应的test。比如KYLIN-1817在1.5.3 版本Fix后，我测试的1.5.4.1和2.0版本依旧都有这个bug。</p>
+</li>
+<li><p>建议Kylin参考下其他开源系统，实现自动化测试，甚至是错误注入。</p>
+</li>
+<li><p>建议Kylin丰富下测试集，现有的Sample cube许多性能问题都无法暴露。</p>
+</li>
+</ol>
+<h2 id="7-kylin-20升级总结。">7 Kylin 2.0升级总结。</h2>
+<p><strong>本次升级基本符合目标。</strong></p>
+<p>一个意外是在所有环境升级2.0的4天之后，发生了一次查询事故。事故的原因是升级2.0后，由于新版的Coprocessor会加载更多的类，所以HBase RegionServer的PermGen增加了10M左右，超过了MaxPermSize，所以PermGen就OOM了。事故的本质原因是RegionServer的PermGen配置较小和Kylin Coprocessor 中catch了OOM异常。而<strong>事实上OOM异常几乎没有理由去catch，Kylin Coprocessor中更不应该去catch OOM</strong>。</p>
+<p>个人感觉<code>任何系统的升级都几乎是一个没有任何成就感，十分无聊，十分琐碎而且极其耗费心神的事情</code>。 可以预见，我们升级的成本会越来越高昂。 连续搞了两次Kylin 升级的我表示再也不想升级Kylin 第3次，<code>我们的大好青春真的不应该浪费在升级这种无聊的事情之上</code>。</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=594a99c4e40af9e419c1e425
+                 data-title=Kylin 2.0升级总结
+                 data-url=kylin-upgrade>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>
