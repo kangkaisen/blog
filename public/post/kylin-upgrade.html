@@ -242,12 +242,6 @@ Bug类型的issue应该描述bug产生的原因，Fix bug的思路。Improve类�
 <li><p>建议用Github的PR代替patch。 
 好处是首先代码阅读更方便，代码Review更方便，这样commit中就不会有那么多code review的commit。其次是Github可以和很多自动化工具集成，目前kylin中commit中经常有Fix UT和FIX IT，如果可以让每个PR自动跑UT和IT，只有通过后才允许合入Master，就不会有这个问题。</p>
 </li>
-<li><p>每个Bug Fix后，可以加Test的话，尽量应该加上对应的test。比如KYLIN-1817在1.5.3 版本Fix后，我测试的1.5.4.1和2.0版本依旧都有这个bug。</p>
-</li>
-<li><p>建议Kylin参考下其他开源系统，实现自动化测试，甚至是错误注入。</p>
-</li>
-<li><p>建议Kylin丰富下测试集，现有的Sample cube许多性能问题都无法暴露，或者在新版本正式release前，找几个合作伙伴用生产级别的数据测试下。</p>
-</li>
 </ol>
 <h2 id="7-kylin-20升级总结。">7 Kylin 2.0升级总结。</h2>
 <p><strong>本次升级基本符合目标。</strong></p>
