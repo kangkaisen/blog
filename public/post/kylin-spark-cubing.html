@@ -80,7 +80,7 @@
 <p>Spark 计算Cuboid只会用1个 Application计算：
 <img src="http://kylin.apache.org/images/blog/spark-cubing-layer.png" alt="此处输入图片的描述"></p>
 <p>Spark Cubing的核心实现类是<code>SparkCubingByLayer</code>。</p>
-<h4 id="为什么目前只有计算cuboid的步骤用spark计算？">为什么目前只有计算Cuboid的步骤用Spark计算？</h4>
+<h4 id="为什么目前只有计算cuboid这一步用spark计算？">为什么目前只有计算Cuboid这一步用Spark计算？</h4>
 <p>个人认为主要有以下两点：</p>
 <ol>
 <li>实现并不复杂。</li>
@@ -88,10 +88,10 @@
 </ol>
 <p>我认为第2点是主要原因。</p>
 <p><strong>Cube构建的其他步骤不可以用Spark计算吗？</strong></p>
-<p>当然可以！ 其中第1步 建立Hive的大宽表 和 第5步 生成HFile 替换为Spark是十分简单的，但是<strong>性能提升可能不会十分明显</strong>。 至于2步计算列基数，其代码逻辑应该是整个Cube构建中最复杂的一步，<strong>复杂的主要原因就是这一步肩负的使命略多。</strong> 还有第3步MR构建字典，<strong>因为MR构建本身尚不成熟，自然不急着迁移到Spark</strong>。</p>
-<p>Spark Cubing beta版本目前最大的问题就是不支持启用Kerberos认证的HBase集群，而事实上不少企业级的HBase服务都启用了Kerberos认证。不支持的原因主要是Spark Cubing需要直接从HBase中访问cube，dict等元数据信息。</p>
+<p>当然可以！ 其中第1步 建立Hive的大宽表 和 第5步 生成HFile 替换为Spark是十分简单的，但是<strong>性能提升可能不会十分明显</strong>。 至于2步计算列基数，<strong>其代码逻辑应该是整个Cube构建中最复杂的一步</strong>，复杂的主要原因就是这一步肩负的使命略多。 还有第3步MR构建字典，<strong>因为MR构建本身尚不成熟，自然不急着迁移到Spark</strong>。</p>
+<p><strong>Spark Cubing beta版本目前最大的问题就是不支持启用Kerberos认证的HBase集群</strong>，而事实上不少企业级的HBase服务都启用了Kerberos认证。不支持的原因主要是Spark Cubing需要直接从HBase中访问cube，dict等元数据信息。</p>
 <h3 id="spark-cubing-访问-kerberos认证的-hbase-解1">Spark Cubing 访问 Kerberos认证的 HBase 解1</h3>
-<p>第一种简单的做法是将访问HBase的token从Kylin的JobServer传递到executor中，这种做法的限制是只能用在Yarn-client模式中，即必须让driver运行在Kylin的JobServer中。 关于yarn-cluster mode和yarn-client mode两种模式的区别可以参考：
+<p>第一种简单的做法是将访问HBase的token从Kylin的JobServer传递到executor中，这种做法的限制是只能运行在Yarn-client模式中，即必须让driver运行在Kylin的JobServer中。 关于yarn-cluster mode和yarn-client mode两种模式的区别可以参考：
 <a href="http://blog.cloudera.com/blog/2014/05/apache-spark-resource-management-and-yarn-app-models/">Apache Spark Resource Management and YARN App Models</a>。</p>
 <p>这种做法的实现方式很简单，只需在SparkCubingByLayer的new SparkConf()之前加入以下3行代码：</p>
 <pre><code>        Configuration configuration = HBaseConnection.getCurrentHBaseConfiguration();
@@ -115,14 +115,14 @@
 <p><strong>所以下面的问题就是我们如何将HBase中的元数据转移到HDFS 和如何将HBaseResourceStore 转为 HDFSResourceStore？</strong></p>
 <ol>
 <li>确定Spark Job需要读取哪些Kylin元数据</li>
-<li>将需要的Kylin元数据dump到本地目录</li>
+<li>将需要的Kylin元数据dump到本地</li>
 <li>改写kylin.metadata.url并将所有配置写到本地的元数据目录</li>
 <li>利用ResourceTool将本地的元数据上传到指定的HDFS目录</li>
-<li>在Spark executor中根据指定HDFS元数据目录的Kylin配置构造出HDFSResourceStore。</li>
+<li>在Spark executor中根据指定HDFS元数据目录的Kylin配置文件构造出HDFSResourceStore。</li>
 </ol>
 <p>当然，在最后我们需要清理掉指定HDFS目录的元数据。 整个思路比较简单清晰，但是实际实现中还是有很多细节需要去考虑。</p>
 <h3 id="spark-cubing-参数配置">Spark Cubing 参数配置</h3>
-<p>以下是我使用的Spark配置，目的是尽可能让用户不改Spark的参数。</p>
+<p>以下是我使用的Spark配置，目的是尽可能让用户不需要关心Spark的配置</p>
 <pre><code>//运行在yarn-cluster模式
 kylin.engine.spark-conf.spark.master=yarn
 kylin.engine.spark-conf.spark.submit.deployMode=cluster 
@@ -141,9 +141,6 @@ kylin.engine.spark-conf.spark.driver.memory=4G
 kylin.engine.spark-conf.spark.executor.memory=4G 
 kylin.engine.spark-conf.spark.executor.cores=1
 
-//在有大字典的场景下可以考虑增加该参数，增大executor中User Memory的大小，给Kylin字典更多的内存
-kylin.engine.spark-conf.spark.memory.fraction=0.5
-
 //心跳超时
 kylin.engine.spark-conf.spark.network.timeout=600
 
@@ -157,27 +154,27 @@ kylin.engine.spark.rdd-partition-cut-mb=100
 <p>此外，我专门测试了数十亿级源数据或者有超大字典的情况，构建提速也十分明显：</p>
 <h4 id="测试cube1">测试Cube1</h4>
 <p>原始数据量： 27亿行  9个维度  包含1个精确去重指标 字典基数7千多万</p>
-<p>MR Cuboid构建耗时  75分钟</p>
-<p>Spark Cuboid第一次构建耗时 40分钟
+<p>MR Cuboid构建耗时：  75分钟</p>
+<p>Spark Cuboid第一次构建耗时： 40分钟
 （spark.executor.memory = 8G，没有加spark.memory.fraction参数）</p>
-<p>Spark Cuboid第二次构建耗时 24分钟
+<p>Spark Cuboid第二次构建耗时： 24分钟
 （spark.executor.memory = 8G，spark.memory.fraction = 0.5）</p>
 <p>为什么减小spark.memory.fraction可以加速构建？</p>
-<p>因为减小spark.memory.fraction，可以增大executor中User Memory的大小，给Kylin字典更多的内存，这样就可以避免全局字典换入传出，减少GC。</p>
+<p>因为减小spark.memory.fraction，可以增大executor中User Memory的大小，给Kylin字典更多的内存，这样就可以避免全局字典换入换出，减少GC。</p>
 <h4 id="测试cube2">测试Cube2</h4>
-<p>原始数据量：24亿行  13个维度 38个指标（其中9个精确去重指标） 这个cube的精确去重指标基数比较小，只有几百万。</p>
-<p>MR Cuboid构建耗时  31分钟</p>
-<p>Spark Cuboid构建耗时  8分钟</p>
-<p>总结来说，<code>Spark Cubing的构建性能相比MR有1到3倍的提升</code>。</p>
+<p>原始数据量：24亿行  13个维度 38个指标（其中9个精确去重指标） 不过这个cube的精确去重指标基数比较小，只有几百万。</p>
+<p>MR Cuboid构建耗时： 31分钟</p>
+<p>Spark Cuboid构建耗时： 8分钟</p>
+<p>总结来说，<code>Spark Cubing的构建性能相比MR有1倍到3倍的提升</code>。</p>
 <h3 id="spark-cubing-的资源消耗">Spark Cubing 的资源消耗</h3>
-<p>除了构建性能，我们肯定会关注资源消耗。在这次测试中我没有对所以测试结果进行资源消耗分析，只分析了几个Cube。</p>
-<p>我的结论是，<code>在我采用的Spark配置情况下，对于中小规模数据集Spark的资源消耗是小于MR的</code>（executor的内存是4G）； 对于有超大字典的情况（executor的内存是8G），CPU资源Spark是小于MR的，但是内存资源Spark会比MR略多，<code>即使在这种情况下，我们也只是用了不多内存代价换取了较高的效率</code>。</p>
+<p>除了构建性能，我们肯定还会关注资源消耗。在这次测试中我没有对所以测试结果进行资源消耗分析，只分析了几个Cube。</p>
+<p>我的结论是，<code>在我采用的Spark配置情况下，对于中小规模数据集Spark的资源消耗是小于MR的</code>（executor的内存是4G）； 对于有大字典的情况（executor的内存是8G），CPU资源Spark是小于MR的，但是内存资源Spark会比MR略多，<code>在这种情况下，我们相当于用内存资源来换取了执行效率</code>。</p>
 <h3 id="spark-cubing-的优缺点">Spark Cubing 的优缺点</h3>
 <p>优点：</p>
 <ul>
 <li>利用RDD的Cache特性，尽可能利用内存来避免重复IO</li>
-<li>资源复用</li>
 <li>大部分场景下Cuboid构建速度有明显提升</li>
+<li>在集群资源充足的情况下，我们可以用更多的资源换取更好的构建性能</li>
 </ul>
 <p>缺点：</p>
 <ul>
@@ -200,7 +197,7 @@ kylin.engine.spark.rdd-partition-cut-mb=100
 <li>给全局字典的AppendTrieDictionary中使用的LoadingCache增加maximumSize。 <strong>我用了一个有6亿基数的全局字典测试了这个优化，优化后GC时间明显缩短。</strong></li>
 </ol>
 <h3 id="spark-学习资料推荐">Spark 学习资料推荐</h3>
-<p>如果只推荐一份资料的话，我推荐：
+<p>网上公开资料如果只推荐一份的话，我推荐：
 <a href="https://spark-internals.books.yourtion.com/">spark-internals</a></p>
 <p>此外，这几篇文章也不错：</p>
 <p><a href="https://0x0fff.com/spark-memory-management/">Spark Memory Management</a></p>
@@ -209,6 +206,7 @@ kylin.engine.spark.rdd-partition-cut-mb=100
 <p><a href="http://blog.cloudera.com/blog/2015/03/how-to-tune-your-apache-spark-jobs-part-2/">how-to-tune-your-apache-spark-jobs-part-2</a></p>
 <p><a href="http://tech.meituan.com/spark-tuning-basic.html">Spark性能优化指南——基础篇</a></p>
 <p><a href="http://tech.meituan.com/spark-tuning-pro.html">Spark性能优化指南——高级篇</a></p>
+<p><a href="http://jerryshao.me/architecture/2013/04/21/Spark%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E4%B9%8B-scheduler%E6%A8%A1%E5%9D%97/">Spark源码分析之-scheduler模块</a></p>
 <p>当然，看的资料再多自己不思考都没啥卵用。 学习一个系统，我们可以从系统的整体架构和设计层面开始，自顶向下的学习，也可以从一个具体的问题把整个系统涉及的所有模块串起来，切面式学习。 个人感觉两种方式结合着效率会比较高，而且一般从具体问题入手会让印象更深刻，理解更深入。</p>
 <h3 id="总结">总结</h3>
 <p>用HDFSResourceStore替换HBaseResourceStore后，Spark Cubing已经具备了在启用Kerberos的HBase集群环境下大规模使用的基础。后续我将开放Spark Cubing功能让感兴趣的用户使用。<strong>最后，十分感谢我们团队Spark 小伙伴的给力支持。</strong></p>
