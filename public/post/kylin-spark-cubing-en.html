@@ -1,0 +1,218 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Improving Spark Cubing in Kylin 2.0 </title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Improving Spark Cubing in Kylin 2.0 </h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2017-07-10</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#make-spark-could-connect-hbase-using-kerberos">Make Spark could connect HBase using Kerberos</a></li>
+<li><a href="#use-hdfs-manage-the-metadata-for-spark-cubing">Use HDFS manage the metadata for Spark Cubing</a></li>
+<li><a href="#the-spark-configuration-for-spark-cubing">The Spark configuration for Spark Cubing</a></li>
+<li><a href="#the-performance-test-result-of-spark-cubing">The performance test result of Spark Cubing</a></li>
+<li><a href="#the-pros-and-cons-of-spark-cubing">The pros and cons of Spark Cubing</a></li>
+<li><a href="#the-applicable-scenario-of-spark-cubing">The applicable scenario of Spark Cubing</a></li>
+<li><a href="#the-improvement-for-dict-loading-in-spark-cubing">The improvement for dict loading in Spark Cubing</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+<!-- toc stop -->
+<p>Apache Kylin is a OALP Engine that speeding up query by Cube precomputation. The Cube is multi-dimensional dataset which contain precomputed all measures in all dimension combination. Before v2.0, Kylin uses MapReduce to build Cubes. In order to get better performance, Kylin 2.0 introduced the Spark Cubing. About the principle of Spark Cubing, please refer to this official blog：<a href="http://kylin.apache.org/blog/2017/02/23/by-layer-spark-cubing/">By-layer Spark Cubing</a>.</p>
+<p>In this blog, I mainly talk about the following points:</p>
+<ul>
+<li>How to make Spark Cubing support HBase cluster using Kerberos </li>
+<li>The Spark configuration for Spark Cubing</li>
+<li>The performance test result of Spark Cubing</li>
+<li>The pros and cons of Spark Cubing</li>
+<li>The applicable scenario of Spark Cubing</li>
+<li>The improvement for dict loading in Spark Cubing</li>
+</ul>
+<p>In currently Spark Cubing(beta) version, it doesn&#39;t support HBase cluster using Kerberos bacause Spark Cubing need to get matadata from HBase. To solve this problem, we have two solutions: ony way is to make Spark could connect HBase using Kerberos, another way is to avoid Spark connect HBase in Spark Cubing.</p>
+<h3 id="make-spark-could-connect-hbase-using-kerberos">Make Spark could connect HBase using Kerberos</h3>
+<p>If we only want to run Spark Cubing in Yarn client mode, we only need to add three line code before new SparkConf() in SparkCubingByLayer:</p>
+<pre><code>        Configuration configuration = HBaseConnection.getCurrentHBaseConfiguration();
+        HConnection connection = HConnectionManager.createConnection(configuration);
+        //Obtain an authentication token for the given user and add it to the user&#39;s credentials.
+        TokenUtil.obtainAndCacheToken(connection, UserProvider.instantiate(configuration).create(UserGroupInformation.getCurrentUser()));
+</code></pre><p>As for How to make Spark connect HBase using Kerberos in Yarn cluster mode, please refer to SPARK-6918,SPARK-12279,HBASE-17040. The solution maybe could work, but not elegant. So I try the sencond solution.</p>
+<h3 id="use-hdfs-manage-the-metadata-for-spark-cubing">Use HDFS manage the metadata for Spark Cubing</h3>
+<p>The core idea is uploading the necessary metadata job related to HDFS and using HDFSResourceStore manage the metadata.</p>
+<p>Before introducing how I use HDFSResourceStore instead of HBaseResourceStore in Spark Cubing. Let’s see what&#39;s Kylin metadata format and how kylin manage the metadata.</p>
+<p>Every concrete metadata for table, cube, model and project is a JSON file in Kylin . The whole metadata is organized by file directory. The picture below is the root directory for Kylin metadata,
+<img src="http://static.zybuluo.com/kangkaisen/t1tc6neiaebiyfoir4fdhs11/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202017-07-02%20%E4%B8%8B%E5%8D%883.51.43.png" alt="屏幕快照 2017-07-02 下午3.51.43.png-20.7kB">
+This picture shows the content of project dir, the &quot;learn_kylin&quot; and &quot;kylin_test&quot; are both project name.
+<img src="http://static.zybuluo.com/kangkaisen/4dtiioqnw08w6vtj0r9u5f27/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202017-07-02%20%E4%B8%8B%E5%8D%883.54.59.png" alt="屏幕快照 2017-07-02 下午3.54.59.png-11.8kB"></p>
+<p>Kylin manage the metadata using ResourceStore, ResourceStore is a abstract class, which abstract the CRUD Interface for metadata. ResourceStore has three implementation classes：</p>
+<ul>
+<li>FileResourceStore  (store with Local FileSystem)</li>
+<li>HDFSResourceStore  </li>
+<li>HBaseResourceStore         </li>
+</ul>
+<p>Currently, only HBaseResourceStore could use in prod env. FileResourceStore mainly used for test. HDFSResourceStore still has some concurrent issue, but which could be used for read safely. Kylin use the &quot;kylin.metadata.url&quot; config to decide which kind of ResourceStore will be used.</p>
+<p>Now, Let’s see How I use HDFSResourceStore instead of HBaseResourceStore in Spark Cubing.</p>
+<ol>
+<li>Determine the necessary metadata for Spark Cubing job</li>
+<li>Dump the necessary metadata from HBase to local</li>
+<li>Update the kylin.metadata.url and then write all Kylin config to &quot;kylin.properties&quot; file in local metadata dir.</li>
+<li>Use ResourceTool upload the local metadata to HDFS.</li>
+<li>Construct the HDFSResourceStore from the HDFS &quot;kylin.properties&quot; file in Spark executor.</li>
+</ol>
+<p>Of course, We need to delete the HDFS metadata dir.</p>
+<h3 id="the-spark-configuration-for-spark-cubing">The Spark configuration for Spark Cubing</h3>
+<p>These are the Spark configuration I used for Spark Cubing. The goal is to make our user set less spark config.</p>
+<pre><code>//running in yarn-cluster mode
+kylin.engine.spark-conf.spark.master=yarn
+kylin.engine.spark-conf.spark.submit.deployMode=cluster 
+
+//enable the dynamic allocation for Spark to avoid user set the number of executors explicitly
+kylin.engine.spark-conf.spark.dynamicAllocation.enabled=true
+kylin.engine.spark-conf.spark.dynamicAllocation.minExecutors=10
+kylin.engine.spark-conf.spark.dynamicAllocation.maxExecutors=1024
+kylin.engine.spark-conf.spark.dynamicAllocation.executorIdleTimeout=300
+kylin.engine.spark-conf.spark.shuffle.service.enabled=true
+kylin.engine.spark-conf.spark.shuffle.service.port=7337
+
+//the memory config
+kylin.engine.spark-conf.spark.driver.memory=4G
+//should enlarge the executor.memory when the cube dict is huge
+kylin.engine.spark-conf.spark.executor.memory=4G 
+//because kylin need to load the cube dict in executor
+kylin.engine.spark-conf.spark.executor.cores=1
+
+//enlarge the timeout
+kylin.engine.spark-conf.spark.network.timeout=600
+
+kylin.engine.spark-conf.spark.yarn.queue=root.hadoop.test
+
+kylin.engine.spark.rdd-partition-cut-mb=100
+</code></pre><h3 id="the-performance-test-result-of-spark-cubing">The performance test result of Spark Cubing</h3>
+<p>For the source data level is from million to hundreds of millions of，my test result is consistent with the <a href="http://kylin.apache.org/blog/2017/02/23/by-layer-spark-cubing/">By-layer Spark Cubing</a> basically. The performance improvement is Remarkable. Moreover I tested with billions of source data or having huge dict specially.</p>
+<p>The test Cube1 has 2.7 billion source data, 9 dimensions, one precise distinct count measure having 70 million cardinality.(which means the dict also has 70 million cardinality)</p>
+<p>Test test Cube2 has 2.4 billion source data, 13 dimensions, 38 measures(contains 9 precise distinct count measures).</p>
+<p>The test result is shown in below picture, the unit of time is minute.<img src="http://static.zybuluo.com/kangkaisen/1urzfkal8od52fodi1l6u0y5/image.png" alt="image.png-38.1kB"></p>
+<p>In a word, <strong>Spark cubing is much faster than MR cubing in most scenes</strong>.</p>
+<h3 id="the-pros-and-cons-of-spark-cubing">The pros and cons of Spark Cubing</h3>
+<p>In my opinion, the advantage for Spark Cubing is:</p>
+<ol>
+<li>Because of the RDD cache, Spark Cubing could take full advantage of memory to avoid disk I/O.</li>
+<li>When we have enough memory resource，Spark Cubing could use more memory resource to exchange more better build performance.</li>
+</ol>
+<p>On the contrary，the drawback for Spark Cubing is:</p>
+<ol>
+<li>Spark Cubing couldn&#39;t handle huge dict well.(hundreds of millions of cardinality)</li>
+<li>Spark Cubing isn&#39;t stable enough currently.</li>
+</ol>
+<h3 id="the-applicable-scenario-of-spark-cubing">The applicable scenario of Spark Cubing</h3>
+<p>In my opinion, Except the huge dict scenario, we all could use Spark Cubing instead of MR Cubing, especially the following scenarios:</p>
+<ol>
+<li>There is more cube build level.</li>
+<li>There is smaller dict.</li>
+<li>There is lesser source data.</li>
+</ol>
+<h3 id="the-improvement-for-dict-loading-in-spark-cubing">The improvement for dict loading in Spark Cubing</h3>
+<p>As we all known, A big difference for MR and Spark is the task for MR is running in progress and the task for Spark is running in thread. So, in MR Cubing, the dict of Cube only laod once, but in Spark Cubing, the dict will load many times in one executor, which will result in GC frequently in Spark Cubing.</p>
+<p>So, I have done the two improvement:</p>
+<ol>
+<li>Only load the dict once in one executor.</li>
+<li>Add maximumSize for LoadingCache in the AppendTrieDictionary to make the dict removed as early as possible.</li>
+</ol>
+<h3 id="conclusion">Conclusion</h3>
+<p>Spark Cubing is a great feature for Kylin 2.0, Thanks Kylin community. I will popularize Spark Cubing in our company. I believe Spark Cubing will be more robust and efficient.</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=59637c50950872fe5a4223cc
+                 data-title=Improving Spark Cubing in Kylin 2.0 
+                 data-url=kylin-spark-cubing-en>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="http://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>
