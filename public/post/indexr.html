@@ -1,0 +1,239 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|IndexR 原理和架构</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> IndexR 原理和架构</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2017-08-28</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#1-what-indexr">1 What IndexR</a></li>
+<li><a href="#2-why-indexr">2 Why IndexR</a></li>
+<li><a href="#3-indexr-architecture">3 IndexR Architecture</a></li>
+<li><a href="#4-indexr-storage">4 IndexR Storage</a></li>
+<li><a href="#5-indexr-index">5 IndexR Index</a></li>
+<li><a href="#6-indexr-常见问题">6 IndexR 常见问题</a></li>
+<li><a href="#7-indexr-亮点">7 IndexR 亮点</a></li>
+<li><a href="#8-indexr-不足">8 IndexR 不足</a></li>
+<li><a href="#9-indexr-是最快的数据库吗">9 IndexR 是最快的数据库吗？</a></li>
+<li><a href="#10-参考资料">10 参考资料</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="1-what-indexr">1 What IndexR</h3>
+<p>IndexR是由舜飞科技研发的实时OLAP系统。其作者认为IndexR具有以下特点：</p>
+<ol>
+<li>超大数据集，低查询延时（超大数据集由HDFS保证，查询低延迟由MPP架构的Drill和IndexR专门设计的存储格式保证）</li>
+<li>准实时 （和Druid实时摄入的思路类似，从Kafka实时摄入数据）</li>
+<li>高可用，易扩展（架构设计简单，只有一种节点，可以轻易横向扩展）</li>
+<li>易维护（支持Schema在线更新）</li>
+<li>SQL支持 （由Drill支持，实际上Drill也是利用Calcite实现的）</li>
+<li>与Hadoop生态整合（Hive，Kafka，Spark, Zookeeper, HDFS）</li>
+</ol>
+<h3 id="2-why-indexr">2 Why IndexR</h3>
+<p>IndexR的作者认为现有的<strong>各类OLAP系统均存在各种缺点</strong>，无法满足其公司实际的OLAP需求，所以开发了IndexR。</p>
+<ul>
+<li>Mysql，PostgreSQL等关系型数据库：无法满足超大规模数据集。</li>
+<li>ES等搜索系统：对OLAP场景没有特殊优化，在大数据量场景下内存和磁盘压力比较大。</li>
+<li>Druid，Pinot等时序数据库：在查询条件命中大量数据情况下可能会有性能问题，而且排序、聚合等能力普遍不太好，从IndexR作者的使用经验来看运维比较困难，灵活性和扩展性不够，比如缺乏Join、子查询等。</li>
+<li>Infobright，ClickHose等列式数据库： 不是基于Hadoop生态的。</li>
+<li>Kylin：查询灵活性不足，无法进行探索式分析。</li>
+<li>Impala，Presto，SparkSQL，Drill等计算引擎 + Parquet等存储引擎：这也是IndexR的架构。IndexR的优势是更有效的索引设计，并且支持数据实时摄入。</li>
+</ul>
+<h3 id="3-indexr-architecture">3 IndexR Architecture</h3>
+<p>IndexR中只有一种节点IndexR Node，现在IndexR作为Drill插件嵌入了Drillbit进程，下图是IndexR的服务部署图：</p>
+<p><img src="https://raw.githubusercontent.com/shunfei/sfmind/master/indexr_white_paper/deploy_architecture.png" alt="此处输入图片的描述"></p>
+<p>Drill是一个类似Presto的MPP数据库，Drillbit是一个类似Presto Work节点的常驻进程，和Hadoop的DN进程混部，可以利用HDFS的短路读的特性。Zookeeper主要用来存储表和segment的一些元信息。</p>
+<p>IndexR的架构图如下：</p>
+<p><img src="https://raw.githubusercontent.com/shunfei/sfmind/master/indexr_white_paper/ecosystem.png" alt="此处输入图片的描述"></p>
+<p>IndexR支持从Kafka实时读取数据。IndexR支持通过Drill，Hive，Spark查询数据，不过Hive，Spark只能查询历史数据，Drill可以同时查询实时数据和历史数据。</p>
+<h3 id="4-indexr-storage">4 IndexR Storage</h3>
+<h4 id="41-基本概念">4.1 基本概念</h4>
+<p><strong>Table</strong>：表是对用户可见的概念，用户的查询需要指定Table。
+<strong>Segment</strong>： 1个Table由多个Segment组成，Segment自解释，自带索引，是实时数据和离线数据转换的纽带，实时的segment和离线的segment具体结构稍有不同。
+<strong>Column</strong>:  IndexR是列式存储的，即某一列的数据会集中存放在一起。某一列的索引和数据是存放在一起的。
+<strong>Pack</strong>: 列数据在内部会进一步细分为Pack，每个Pack有65536行记录，Pack是基本的IO和索引单位。
+<strong>Row</strong>: 表示一行数据。实时数据摄入和离线导入的时候数据都是以行为单位加入一个segment的。</p>
+<h4 id="42-离线segment的存储格式">4.2 离线Segment的存储格式</h4>
+<p>IndexR 在HDFS存储的一个文件是一个Segment，一个Segment保存一个表的部分行，包含所有的列。</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/ais93bb9gmz3btmymn4gv89u/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202017-08-28%20%E4%B8%8B%E5%8D%8810.14.28.png" alt="屏幕快照 2017-08-28 下午10.14.28.png-68kB"></p>
+<p>Segment 文件由4部分组成：版本号，Segment的元数据，所有Column 和 Pack的倒排索引。 </p>
+<p>Segment的元数据包括：行数，列数，每列的MAX和MIN值，每列的name, type，每列的各种索引的偏移量等。</p>
+<p>Column包含多个Pack，每个Pack由DataPackNode，PackRSIndex，PackExtIndex，DataPack4部分组成，但是存储的时候是先存储所有Pack的索引数据，再存储所有Pack的实际数据，这样的好处是可以通过只读取索引文件来快读过滤掉不必要的Pack，来减少随机IO。图中DataPack是实际的数据；DataPackNode是Pack元数据信息，包括索引文件的大小和偏移等；PackRSIndex是Pack的Rough Set索引，后面会详细介绍；PackExtIndex是Pack的内索引，包括equal，in, greater, between, like 5种。图中的outerIndex是Pack级别的倒排索引，主要用于Pack之间的精准过滤。</p>
+<h4 id="43-实时segment">4.3 实时Segment</h4>
+<p>实时Segment存储在实时节点 本机的文件系统，和离线Segment的主要区别是每个Column的数据，元数据，索引都是单独一个文件。实时节点会定期的对本机的实时Segment进行merge，将多个segment合并为一个segment，并将所有Column写入一个segment文件中。 基本原理和Druid类似，就不再赘述。</p>
+<p><img src="https://raw.githubusercontent.com/shunfei/sfmind/master/indexr_white_paper/realtime_segment.png" alt="此处输入图片的描述"></p>
+<p><img src="https://raw.githubusercontent.com/shunfei/sfmind/master/indexr_white_paper/realtime_process.png" alt="此处输入图片的描述"></p>
+<h3 id="5-indexr-index">5 IndexR Index</h3>
+<p><img src="http://static.zybuluo.com/kangkaisen/twua5vcs139f26ohya211ptv/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202017-08-28%20%E4%B8%8B%E5%8D%889.29.09.png" alt="屏幕快照 2017-08-28 下午9.29.09.png-377kB">
+上图是IndexR的3层索引，依次是Rough Set Index（粗糙集索引）， Inverted Index（倒排索引），PackExtIndex（内索引）</p>
+<h4 id="51-rough-set-index">5.1 Rough Set Index</h4>
+<p>RSIndex的思路和Bloomfilter一样，可以快速判断某个值是否在某个Pack中。RSIndex的构建过程十分简单，就是将Pack中某一列的所有值进行N等分，
+如果这列的区间长度m小于1024，则N等于m，否则N等于1024。然后将每个值映射到这N个区间，每个区间用1个bit表示。</p>
+<p>对于如下的date列：</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/f5l9uzgbuixxfyq7jhnxoola/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202017-08-28%20%E4%B8%8B%E5%8D%889.34.39.png" alt="屏幕快照 2017-08-28 下午9.34.39.png-20.4kB"></p>
+<p>因为区间长度（20170110 -  20170101 = 9）小于1024，所以每个值对应的bit就是和该列最小值的差值,所以生成的RSIndex如下，value等于1表示存储，等于0表示不存在。</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/hprcsn6qq69no4xd5vsllxw1/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202017-08-28%20%E4%B8%8B%E5%8D%889.35.13.png" alt="屏幕快照 2017-08-28 下午9.35.13.png-42.6kB"></p>
+<p>所以当我们有以下查询时：</p>
+<pre><code>SELECT column FROM A WHERE date = &#39;20170104&#39;
+</code></pre><p>我们知道 20170104 的value是0，所以确定20170104不在该pack，可以直接跳过。</p>
+<p>由于Pack内的数据是根据维度有序的，每个Pack总共有65536行记录，所有有很大概率1个Pack的维度列的基数是小于1024的。所以RSIndex的索引文件很小，而且索引效率较高。</p>
+<h4 id="52-inverted-index">5.2 Inverted Index</h4>
+<p>IndexR对于需要倒排索引的列会建立倒排索引，用于Pack之间的精准过滤。
+倒排索引的构建过程如下：</p>
+<ol>
+<li>首先Pack内部会使用红黑树对value进行字典编码，然后将字典保存下来。</li>
+<li>在生成离线 Segment的时候，每一列会建立倒排索引。</li>
+<li>倒排索引会保留每个value到packID的映射。</li>
+<li>查询时会根据value找到对应的packID。</li>
+</ol>
+<h4 id="53-packextindex">5.3 PackExtIndex</h4>
+<p>PackExtIndex是Pack的扩展索引，包括equal, in, greater, between, like 5种，主要用于查询时的对于Pack内部数据的快速过滤。PackExtIndex的实现方式有两种，一种是基于字典的，一种是基于bit的简单索引。</p>
+<h4 id="54-有了inverted-index为什么还需要rsindex">5.4 有了Inverted Index为什么还需要RSIndex</h4>
+<p>一个很明显的问题，既然倒排索引已经可以很精准的对Pack进行过滤，为啥还多此一举再加个粗糙集索引呢？  因为倒排索引是可选项，而且存储成本较高。</p>
+<h3 id="6-indexr-常见问题">6 IndexR 常见问题</h3>
+<h4 id="61-数据实时摄入如何实现">6.1 数据实时摄入如何实现</h4>
+<p>实现思路和Druid基本类似，实时节点直接从Kafka拉取数据，生成RT Segment。</p>
+<h4 id="62-indexr如何支持hive查询">6.2 IndexR如何支持Hive查询</h4>
+<p>实现了IndexRInputFormat 和 IndexROutputFormat。</p>
+<h4 id="63-indexr-如何支持spark查询">6.3 IndexR 如何支持Spark查询</h4>
+<p>实现了IndexRFileFormat，该类实现了接口org.apache.spark.sql.execution.datasources.FileFormat。</p>
+<h4 id="64-indexr-如何整合drill">6.4  IndexR 如何整合Drill</h4>
+<p>IndexR主要负责存储层，作为Drill的1个存储插件，还会对具体的查询过程进行优化，比如常见的条件下推，limit下推。</p>
+<p><img src="https://drill.apache.org/docs/img/DrillbitModules.png" alt="此处输入图片的描述"></p>
+<h4 id="65-indexr-的存储性能">6.5 IndexR 的存储性能</h4>
+<p>作者声称VLT模式的Segment的Scan速度比Parquet快2倍，而且仅需要 75%的存储。Basic模式的Segment使用了Infobright的压缩算法，可以实现极高的压缩比。</p>
+<h4 id="66-indexr-如何实现schema的在线更新">6.6 IndexR 如何实现Schema的在线更新</h4>
+<p>当addColumn，deleteColumn，alterColumn时，生成新的SegmentSchema，然后通过MR job生成新的Segment，当Job commit时，删除旧的Segment，并将新Segment从tmp目录move到标准目录，最后通知该Segment已更新。 </p>
+<h4 id="67-indexr-堆外内存的实现">6.7 IndexR 堆外内存的实现</h4>
+<ol>
+<li>利用sun.misc.Unsafe直接操作堆外内存。</li>
+<li>像C语言一样直接用指针从内存get值，用指针直接set值。</li>
+<li>读取文件时直接读写到DirectByteBuffer。</li>
+<li>用到DirectByteBuffer的类一定及时释放。</li>
+</ol>
+<h3 id="7-indexr-亮点">7 IndexR 亮点</h3>
+<ol>
+<li>丰富的索引。</li>
+<li>丰富的谓词下推。</li>
+<li>只有一种节点，外部依赖较少。</li>
+<li>同时支持OLAP和明细查询。</li>
+<li>支持Schema在线更新。</li>
+<li>使用堆外内存避免GC。</li>
+<li>压缩算法使用C++实现。</li>
+</ol>
+<h3 id="8-indexr-不足">8 IndexR 不足</h3>
+<ol>
+<li>数据类型仅支持int, long, float, double, string。</li>
+<li>聚合函数仅支持sum, max, min, first, last。</li>
+<li>Drillbit和DN混部，可能会影响HDFS的稳定性。</li>
+<li>强依赖Drill，必须先部署Drill。</li>
+</ol>
+<h3 id="9-indexr-是最快的数据库吗？">9 IndexR 是最快的数据库吗？</h3>
+<p>显然不是！</p>
+<p>没有预计算的系统肯定不会是最快的OLAP数据库，对于需要大量Scan，大量计算，大量聚合的SQL， 不经过预计算则不可能实现秒级查询。IndexR的作者显然也知道这个问题，所以提出了父子表的概念，也就是对于一些查询经常用到的高频维度组合，可以把这些高频的维度组合提前计算出来，作为一张子表，这就是预计算的思想，和Kylin能够保证Cube和HBase的透明性相比，IndexR必须要求应用层实现表的路由，并且查询时需要明确的指定不同表的名称。</p>
+<p>其实实际业务的查询一般也是符合二八定律的，我们只需要将高频的20%的维度组合预计算出来，就可以满足80%查询的性能要求。 Kylin一直在维度组合优化上努力，而360也在Druid中引入了类似Kylin中cubooid的概念。</p>
+<p>所以我们可以得出，<strong>要想打造出一个高并发，足够稳定，秒级响应的OLAP系统，预计算肯定是必要的，但关键是我们需要在预计算的度上进行自动化，智能化的把控</strong>。</p>
+<h3 id="10-参考资料">10 参考资料</h3>
+<ol>
+<li><a href="https://github.com/shunfei/indexr">Index源码</a></li>
+<li><a href="https://github.com/shunfei/sfmind/blob/master/indexr_white_paper/indexr_white_paper.md">IndexR 技术白皮书</a></li>
+<li>韦万的IndexR的分享</li>
+</ol>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=59a4243cd9be29e0cb05933c
+                 data-title=IndexR 原理和架构
+                 data-url=indexr>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>
