@@ -1,0 +1,237 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Apache Kylin 跨机房迁移实战</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Apache Kylin 跨机房迁移实战</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2017-09-08</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <p>历经20天准备，30天逐个Project迁移，Kylin跨机房迁移终于完成，本次迁移累计迁移Project 20+，Cube 200 +, 其中8个Project以对用户零影响的方式完成迁移。本文对整个迁移过程进行回顾，总结。
+(下文的S指迁移的源机房和集群，D指迁移的目标机房和集群)</p>
+<!-- toc -->
+<ul>
+<li><a href="#一-背景">一 背景</a></li>
+<li><a href="#二-目标">二 目标</a></li>
+<li><a href="#三-方案简介">三 方案简介</a></li>
+<li><a href="#四-方案实施的关键点">四 方案实施的关键点</a></li>
+<li><a href="#五-反思">五 反思</a></li>
+<li><a href="#六-致谢">六 致谢</a></li>
+<li><a href="#七-总结">七 总结</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="一-背景">一 背景</h3>
+<ol>
+<li>Kylin依赖的S HBase集群存储资源紧张且S机房无法扩容，已经无法应对快速增长的业务需求。</li>
+<li>Kylin查询没有实现业务隔离，业务线之间的大查询会相互影响。</li>
+<li>Kylin依赖的HBase版本是0.98.13，希望升级到1.X版本。</li>
+<li>主集群的HDFS会将部分业务线数据迁移到D机房。</li>
+</ol>
+<h3 id="二-目标">二 目标</h3>
+<ol>
+<li>Kylin 服务具备多机房部署和运维的能力。</li>
+<li>D的HBase集群升级到1.X。</li>
+<li>D的Kylin查询可以实现业务隔离。</li>
+<li>Kylin 将部分业务线从S迁移到D。</li>
+</ol>
+<h3 id="三-方案简介">三 方案简介</h3>
+<p>方案的整体思路是我们在D新部署1套1.2.4版本的HBase服务，部署1套Kylin的线上JobServer服务和QueryServer服务，部署1套Staging环境的服务。然后将Kylin的部分业务线从S迁移到D。在实际迁移过程中，我们实际采用了两个方案，方案一主要是采用迁移HBase数据的思路，方案二主要是采用重新Build Kylin Cube的思路。前期我采用了方案一，后来我发现方案一过程较为繁琐，后改用方案二，效率有较大提升。 无论采用哪种迁移方案，我们的准备工作都是一样的：</p>
+<h4 id="31-跨机房迁移的准备工作">3.1 跨机房迁移的准备工作</h4>
+<ol>
+<li>D部署1.2.4的HBase集群。</li>
+<li>D部署Kylin服务。</li>
+<li>Kylin的代码从HBase-0.98升级到HBase-1.2.4。</li>
+<li>Kylin 支持跨机房元数据迁移。</li>
+<li>Kylin 迁移相关的数据统计。</li>
+<li>Kylin 调度脚本支持双机房双跑。</li>
+<li>Kylin 支持HBase的RSGroup特性。（Kylin查询的业务隔离就是通过RSGroup特性实现的）</li>
+<li>Kylin Cube数据一致性校验工具。</li>
+<li>Kylin 一键删除Project下所有Cube，Model，Table。</li>
+<li>Kylin 根据Project获取全量HBase表名和新增的HBase表名。（方案1使用）</li>
+<li>Kylin 一键根据S集群已有Segment重新构建D的Cube。（方案2使用）</li>
+<li>上层的两个直接依赖Kylin的系统需要支持Kylin双机房。</li>
+</ol>
+<h4 id="32-迁移方案一">3.2 迁移方案一</h4>
+<ol>
+<li>D新建Project。</li>
+<li>D新建Hadoop队列。</li>
+<li>迁移历史HBase表。</li>
+<li>迁移增量HBase表。</li>
+<li>HBase表元数据修复。</li>
+<li>元数据跨机房迁移。 （Copy CubeDesc，CubeInstance相关的元数据）</li>
+<li>更新Coprocessor。</li>
+<li>同步S查询账号到D。（权限相关）</li>
+<li>数据一致性检查。</li>
+<li>调度双机房双跑。</li>
+<li>用户切换查询。</li>
+<li>S下线Project。</li>
+</ol>
+<p>方案一最大的痛点是Kylin的每张HBase表都有Coprocessor，而HBase有个很大的bug：如果一张HBase表的Coprocessor无法正确加载，不仅是对应的Region无法正确加载，而是这台RegionServer会挂掉，更进一步，这些Region会不断尝试重新加载，然后整个HBase集群就会挂掉。 我感觉HBase这个处理逻辑简直奇葩！</p>
+<p>为了防止出现这个问题，我们在迁移完HBase表数据后，需要删除掉旧的tabledesc文件，再用HBCK生成新的tabledesc文件，然后迁移Kylin元数据时将hostname,segment,SPLIT_POLICY等信息写入HTableDescriptor，最后再更新HBase表的Coprocessor。所以整个过程比较繁琐，当然我们可以开发个工具直接更新tabledesc二进制文件，也可以通过让D的HBase集群可以访问S的HBase集群的HDFS来解决这个问题。 这个方案最不好的地方是HBase HBCK耗时很长，而且还可能失败，失败后当然可以修，但是比较麻烦。</p>
+<p>方案一还有一个问题，正常Copy Cube元数据还需要copy Cube的Cuboid文件，但是Cuboid文件的大小一般是比HBase表大，如果Copy Cuboid数据，1个project 元数据迁移的时间估计得一整天， 所以我没有Copy Cuboid文件，但是不Copy Cuboid文件会导致迁移后的Cube auto merge时失败，这个问题我简单的改了下Kylin代码，就是merge的输入文件不存在时，则不merge。</p>
+<p>正因为方案一有着以上的痛点，我换到了方案二。可以看到方案二的操作步骤很少，效率比方案一高很多。 那为什么我一开始没有采用方案二呢？ 因为开始觉得所有Cube完全从头构建会消耗大量的集群资源，而且耗时较长。 但是后来发现D集群资源在白天比较空闲，所以资源不是问题。 耗时长的问题可以通过并发Segment构建来解决，我在具体实施的过程中将Segment的并发调到了20，迁移过程中同时Running的Job达到了500左右。 这同时也体现了我之前开发的全局字典MR构建的意义，现在Kylin JobServer的并发瓶颈已经不再是字典构建，而是Hive客户端和Spark客户端的内存占用。</p>
+<h4 id="33-迁移方案二">3.3 迁移方案二</h4>
+<ol>
+<li>D新建Project。</li>
+<li>元数据跨机房迁移。（Only Copy CubeDesc 相关的元数据）</li>
+<li>根据S已有的Segment重新构建D的Cube。</li>
+<li>数据一致性检查。</li>
+<li>调度双机房双跑。</li>
+<li>用户切换查询。</li>
+<li>S下线Project。</li>
+</ol>
+<h4 id="34-回滚方案">3.4 回滚方案</h4>
+<ol>
+<li>用户切换查询地址之前，不会影响用户。</li>
+<li>用户切换查询地址后的双跑期间，如果发现D查询有问题，可以随时切换回S。</li>
+</ol>
+<h3 id="四-方案实施的关键点">四 方案实施的关键点</h3>
+<p>整个跨机房迁移的细节很多，我就不就一一细说，只介绍几个关键点：</p>
+<h4 id="41-kylin-支持跨机房元数据迁移">4.1 Kylin 支持跨机房元数据迁移</h4>
+<p>Kylin默认的元数据迁移工具CubeMigrationCLI要求必须是同一个HDFS集群，同一个HBase集群，不支持跨HBase集群元数据Copy。Kylin用CubeMetaExtractor和CubeMetaIngester支持跨HBase集群的元数据Copy，原理是从A集群将元数据从HBase Copy到本地，然后需要手动将本地的元数据Copy到目标节点，最后在目标节点Load进HBase。显然，现有的工具都不能用，我们需要一个可以一键跨HBase集群迁移元数据的工具。</p>
+<p>这个实现的难点在于1个Kylin服务只能有1个KylinConfig，并且所有的元数据管理类都是基于KylinConfig的单列，1个Kylin服务中也只能有1个HBaseConfiguration和1个HBaseConnection。 所以实现的关键点是：</p>
+<ol>
+<li>源集群的config只在迁移的一开始使用，然后destroy掉，再构造出目标集群的config。</li>
+<li>在合适的时机清掉HBaseConnection的所有缓存并构造出目标集群的HBaseConfiguration，其中关键是Zookeeper连接地址。</li>
+</ol>
+<h4 id="42-kylin-调度脚本双机房双跑">4.2 Kylin 调度脚本双机房双跑</h4>
+<p>为了保证可以及时回滚，我们决定调度脚本支持双机房双跑。实现的基本思路是用一个Python主进程启动两个Python子进程的方式进行处理，发现Cube在哪个集群就启动一个子进程执行之前的调度脚本，将JobServer的hostname作为参数传给子进程。这样的好处是实现简单，能保证对用户透明，未迁移的Cube不受影响，Cube迁移到D后就自动进行双跑，S下线后自动变成D单跑。双跑另外一个好处是可以将迁移的粒度降至Cube，不必要求整个Project1次性迁移完成。</p>
+<h4 id="43-跨机房带宽的影响">4.3 跨机房带宽的影响</h4>
+<p>我们知道跨机房带宽是很宝贵的资源，我们应该尽量避免跨机房读写。所以我们迁移Project的原则是HDFS数据迁移到D，我们肯定也会迁移到D；每天上游Hive新增数据很大的Project我们不迁移。</p>
+<p>我们知道，Kylin的Cube构建是一系列MR或Spark作业，Cube构建时的跨机房读取可以发生在两处：</p>
+<ol>
+<li>读取上游Hive表时跨机房。</li>
+<li>生成HFile时跨机房。</li>
+</ol>
+<p>最终我们选择的是1，在读取上游Hive表时跨机房。</p>
+<h4 id="44-如何确保迁移期间数据的一致性">4.4 如何确保迁移期间数据的一致性</h4>
+<p>我们的规范是所有的Cube Schema变更都需要在staging环境进行，测试没问题后再切到线上环境，所以在迁移期间我们只需要禁止用户的一键上线即可（为了提高运维效率，释放我自己，我将CubeMigrationCLI封装到Web UI上并和公司内部IM工具整合，让用户自己可以在Web页面上一键上线），只要保证了线上数据在迁移期间是没有变化的，我们就可以确保S集群和D集群的数据一致性。当然，在迁移完成后，肯定还需要在对数据正确性进行校验，主要就是写个脚本对于Project下所有Cube进行count。</p>
+<h4 id="45-跨机房迁移的那些坑">4.5 跨机房迁移的那些坑</h4>
+<p>在整个跨机房迁移过程中，由于我们是第一个迁移到D，并在D正式投入生产的应用，踩到了很多坑，有底层依赖的坑，有基础服务的坑，有运维操作上的坑。这里就不详细讲了，仅仅简单提一下：</p>
+<ul>
+<li>HDFS客户端需要手动修改mountTable.xml文件。</li>
+<li>由上面问题导致的D的Hive客户端需要修改访问Metastore的方式。</li>
+<li>HBase集群由于NN节点的HDFS账号Principal有问题，导致NN无法重启，导致HBase集群不可用。</li>
+<li>新服务申请和域名负载均衡申请竟然耗时大半天。（流程不规范，负责人不明确）</li>
+<li>负载均衡504问题。（调整Nginx参数即可解决）</li>
+<li>Spark Cubing 由于没有获取正确的Configuration而无法读取HDFS文件。（Kylin本身Bug）</li>
+</ul>
+<h3 id="五-反思">五 反思</h3>
+<h4 id="51-如何设计出靠谱的方案？">5.1 如何设计出靠谱的方案？</h4>
+<p>开始确定采用方案一的原因是，之前和HBase同学协商，HBase的数据迁移是由HBase同学或者SRE同学来完成的，也就是说方案一中的3，4，5是不用我操心的，而且HBase同学也有了迁移其他HBase集群的先例。但是当我让SRE同学迁移HBase数据时，发现处理时间很慢，于是确认了下HBase数据迁移的步骤，发现竟然有6步，而且是在多个节点上执行。执行步骤很多的原因就是由于Kylin的HBase表中有Coprocessor，后来我把这个操作步骤优化到2步，并且由我来执行HBase的数据迁移，但是由于前面提到的原因，我放弃这种了这种方案，采用了方案二。</p>
+<p>出现方案更换的原因是我和HBase同学都忽略了Kylin HBase表有Coprocessor的特殊性，而在一开始有小伙伴提出方案二时，被我直接否决了，当时顾虑的原因是前面提到的两点：资源消耗和迁移时间消耗，关键是我当时内心已经倾向了方案一这种正统的HBase数据迁移思路，所以没有对方案二认真考虑和调研。其实这也是我们大多数人决策时常犯的一个错误，一旦我们已经倾向于一个方案，我们就会一心想着这个方案的优点，对于其他方案，我们就会一心挑缺点。这就和&quot;情人眼里出西施&quot;一样。所以我们在确定方案时，一定要放下心中的感性偏见，用理性，逻辑，事实，调研来确定合理的方案。</p>
+<p><strong>那么我们如何制定出靠谱的方案呢？</strong></p>
+<p>其实可以分四步走：第一步是明确需求，确定我们的目标是什么，我们最在乎的是什么，只有明确了我们最在乎的是什么后，在确定具体方案时，我们才能进行tradeoff，因为没有最好的方案，只有最合适的方案；第二步是调研，可以参考业界已有的成熟系统，可以参考学术界的理论，确定出方案的主体内容和思路；第三步是设计方案，此时只需要确定方案最核心的部分，不要求面面俱到，确定出最有可能的一个或两个方案；第四步是POC，快速验证备选方案的核心部分，确定方案的可行性，剔除不可行的备选方案，明确最终方案，完善方案细节。 这次我出现变更方案的情况就是在调研阶段出了问题。</p>
+<h4 id="52-再牛逼的个人也需要一个强大的团队">5.2 再牛逼的个人也需要一个强大的团队</h4>
+<p>这次跨机房迁移，我深刻感受到团队的重要性，准确的说，一个强大的，靠谱的团队的重要性。在大公司中，大家的分工都比较明确，即使你再牛逼，甚至你自己也可以做这件事，但是由于权限，由于流程，由于规范，你不可能自己去操作，必须让对应系统负责的同学去处理。 在这次跨机房迁移中，我需要为D机房的Kylin查询设置负载均衡，之前搞的时候，我只是给我们的SRE说了一声，然后过了几十分钟就好了，我没有花费任何精力。 但在这次申请域名负载均衡的时候，竟然专门拉了个群，5，6个人撕了大半天才搞好，你说我内心TM是多郁闷，之所以如此费劲，是因为现在的流程不清晰，对应操作的负责人不明确。不过庆幸的是我所在的离线大数据团队还是十分强大和靠谱的。</p>
+<p>其实这也是我们选择工作的标准，选择工作最重要是我们能不能做一些有挑战的，有难度的，有价值的，能帮助我们快速成长的事情，其次是我们所在的团队的水准怎么样，直属leader怎么样，碰上一个水货团队或者水货leader，你个人成长的速度就会大幅降低，最后就是整个公司的技术实力，这一点肯定有影响，但是对个人的影响远没有前两者大。</p>
+<h4 id="53-规范统一的基础环境十分重要">5.3 规范统一的基础环境十分重要</h4>
+<p>这次跨机房迁移中遇到了很多基础环境的问题，比如，操作系统相关的，JDK相关的，Hadoop各个系统配置相关的，Jar包冲突的，kerberos问题，兼容性问题等等，基础环境的问题一般追查起来都比较麻烦，耗时费力也没啥价值。 所以公司内部我们必须把各种基础环境统一，一切严格按照流程规范来。</p>
+<h3 id="六-致谢">六 致谢</h3>
+<p>感谢我们团队HBase,HDFS,SRE,Hive,Yarn,Spark同学在迁移期间的给力支持！</p>
+<h3 id="七-总结">七 总结</h3>
+<p>本次跨机房迁移在技术上没有什么挑战，Kylin主要是开发了跨HBase集群元数据Copy工具，此外就是写了十几个Python和Shell脚本。本次跨机房迁移重点的是如何保证对用户影响最小，如何设计一个高效的迁移方案，如何保证迁移过程数据的一致性和正确性，如何保证整个迁移过程是平稳的，如何和用户高效沟通并推动用户迁移。</p>
+<p>本次跨机房迁移成果如下：</p>
+<ol>
+<li>Kylin HBase存储资源紧张的情况得以缓解，可以满足快速增长的业务需求</li>
+<li>Kylin 依赖的HBase版本从0.98升级到1.2.4</li>
+<li>D的Kylin查询可以在HBase端实现业务隔离</li>
+<li>Kylin 具备多机房部署和运维的能力</li>
+</ol>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=59cce9ac7f1307d9da7e256b
+                 data-title=Apache Kylin 跨机房迁移实战
+                 data-url=kylin-migrate>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>

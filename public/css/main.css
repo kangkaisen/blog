@@ -1,6 +1,6 @@
 body {
     font-family:"lucida grande", "lucida sans unicode", lucida, helvetica, "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
-    font-size: 18px;
+    font-size: 16px;
 }
 
 P {
@@ -13,7 +13,6 @@ H1 {
 
 H2 {
     font-family: "Palatino Linotype", "Book Antiqua", Palatino, Helvetica, STKaiti, SimSun, serif;
-    margin-bottom: 60px;
     margin-bottom: 40px;
     padding: 5px;
     border-bottom: 2px LightGrey solid;
