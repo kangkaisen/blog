@@ -1,0 +1,165 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Apache Kylin CubeHFileJob 终极优化</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Apache Kylin CubeHFileJob 终极优化</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2017-10-22</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#前言">前言</a></li>
+<li><a href="#背景">背景</a></li>
+<li><a href="#hbase的hfile-shuffle排序实现原理">HBase的HFile Shuffle排序实现原理</a></li>
+<li><a href="#kylin目前的cubehfilejob实现原理">Kylin目前的CubeHFileJob实现原理</a></li>
+<li><a href="#kylin的hfile-shuffle排序实现原理">Kylin的HFile Shuffle排序实现原理</a></li>
+<li><a href="#总结">总结</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="前言">前言</h3>
+<p>在<a href="https://blog.bcmeng.com/post/kylin-cube.html">Apache Kylin Cube 构建原理</a> 一文中我们介绍了Kylin 的Cube构建原理，我们知道目前Kylin的Cube最终是要存储在HBase中，所以Cube构建的最后一步需要生成HFile，关于生成HFile的原理，注意事项，优化技巧我在<a href="https://blog.bcmeng.com/post/hbase-bulkload.html">Hive 数据 bulkload 导入 HBase</a>中有介绍，本文主要介绍我是如何对Kylin中的HFile生成进行进一步优化，从而避免CubeHFileJob的Reducer阶段OOM。</p>
+<h3 id="背景">背景</h3>
+<p>我们知道，目前Kylin中生成HFile的reducer十分简单，就是用的HBase中的KeyValueSortReducer。 其代码很短, 逻辑也十分简单，就是利用TreeSet排序后，再输出。 但是这样会有一个问题，就是当1个rowkey对应的KeyValue很大且很多时，经常会OOM，而这种情况在Kylin Merge的时候十分容易发生。</p>
+<pre><code>    TreeSet&lt;KeyValue&gt; map = new TreeSet&lt;KeyValue&gt;(KeyValue.COMPARATOR);
+    for (KeyValue kv: kvs) {
+      try {
+        map.add(kv.clone());
+      } catch (CloneNotSupportedException e) {
+        throw new java.io.IOException(e);
+      }
+    }
+    context.setStatus(&quot;Read &quot; + map.getClass());
+    int index = 0;
+    for (KeyValue kv: map) {
+      context.write(row, kv);
+      if (++index % 100 == 0) context.setStatus(&quot;Wrote &quot; + index);
+    }
+</code></pre><p>前几天和我们HBase同学无意中聊起时，他提到可以将排序放到Shuffle阶段，这样Reducer节点就不用排序，自然不会有OOM问题，并且他很早已经向HBase社区提交了Patch，已经合入了HBase master分支 <a href="https://issues.apache.org/jira/browse/HBASE-13897">HBASE-13897</a>。于是我就准备优化下Kylin的CubeHFileJob。</p>
+<h3 id="hbase的hfile-shuffle排序实现原理">HBase的HFile Shuffle排序实现原理</h3>
+<ol>
+<li>将Reducer的key通过createKeyOnly方法将完整的KeyValue改为仅HBase的Rowkey的KeyValue。</li>
+<li>实现一个自定义的KeyValueWritableComparable利用CellComparator.COMPARATOR.compar对Rowkey进行排序。</li>
+<li>实现一个自定义的KeyValueWritableComparablePartitioner同样利用CellComparator.COMPARATOR.compar进行分区，为了保证全局有序，分隔点是根据Region的startKey确定的，一个reducer处理1个region。</li>
+<li>Reducer中没有任何额外操作，直接输出记录。</li>
+</ol>
+<p>HBase中的实现不能直接在Kylin中使用：</p>
+<ol>
+<li>HBase是根据Region来进行Recuer切分的，但是在Kylin中是根据HFile来切分Reducer的。只根据Region来切分的话，Reducer的个数会很少，Reducer执行就会很慢。</li>
+<li>HBase中获取Region startKey的时候，是通过直接访问HBase来获取的，但是在Kylin中我们不希望在MR中访问HBase。</li>
+</ol>
+<h3 id="kylin目前的cubehfilejob实现原理">Kylin目前的CubeHFileJob实现原理</h3>
+<ol>
+<li>Kylin在Cube构建的前几步会估算出Cuboid的大小。</li>
+<li>在建HBase表的时候，根据统计信息计算出分裂点，写入临时文件。分裂点的Key是ShardID，或者ShardID+Cuboid，其中ShardID对应Region，ShardID+Cuboid对应HFile。Key的类型是ImmutableBytesWritable，Value是NullWritable。</li>
+<li>CubeHFileJob的mapper阶段就是Cuboid的格式转化为KeyValue。</li>
+<li>CubeHFileJob的reducer阶段利用KeyValueSortReducer对KeyValue进行排序。</li>
+<li>CubeHFileJob是利用TotalOrderPartitioner进行全局排序的。</li>
+</ol>
+<h3 id="kylin的hfile-shuffle排序实现原理">Kylin的HFile Shuffle排序实现原理</h3>
+<ol>
+<li>TotalOrderPartitioner 可以接受的partition key有两种：BinaryComparable 和 RawComparator，所以我们依旧可以使用TotalOrderPartitioner来实现全局排序，只要我们的sortComparatorClass是BinaryComparable或者RawComparator的子类， 不需要像HBase中自定义Partitioner 类，自然也就不需要访问HBase。</li>
+<li>KeyValueWritableComparable 是借助CellComparator.compareStatic来比较KeyValue的，这样的前提是我们必须在Comparator反序列化出KeyValue，而实际上我们可以利用KeyValue.KVComparator()直接对字节进行排序，不需要反序列化。</li>
+<li>Kylin中确定HFile的分割点是在生成Cuboid之前，而此时我们只知道cuboid，不知道具体的rowkey，不知道具体的列族和列，所以不能直接构造出具体的真实KeyValue， 但是kylin的cuboid是Rowkey的起始部分，所以我们可以用KeyValue.createFirstOnRow方法根据cuboid构造出第一个合法的可能的KeyValue。</li>
+</ol>
+<p>综上，实际我们只需要实现一个RowKeyWritable，然后将PartitionFile和CubeHFileJob Mapper的Key都改为RowKeyWritable就可以。</p>
+<h3 id="总结">总结</h3>
+<p>虽然我们的灵感来源于HBase，但最终没有使用HBase现有的类，我们的实现更简洁，更优秀。</p>
+<p>在实现过程中有一个坑需要注意，就是TotalOrderPartitioner在setconf的时候用的是ComparatorClass的确是mapreduce.job.output.key.comparator.class，但是其调用的方法是comparator.compare(splitPoints[i], splitPoints[i+1])，并不是compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2)。也就是说我们仅仅继承WritableComparator实现一个Comparator是不够的，我们还必须实现WritableComparable接口来重写compareTo(T o)方法，因为WritableComparator的compare方法调用了compareTo方法。</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=59ec4a0e3689edba14bea04f
+                 data-title=Apache Kylin CubeHFileJob 终极优化
+                 data-url=kylin-hfile-improve>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>
