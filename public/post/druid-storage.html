@@ -1,0 +1,253 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Druid Storage 原理</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Druid Storage 原理</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2017-11-02</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#what-is-druid">What is Druid</a></li>
+<li><a href="#why-druid">Why Druid</a></li>
+<li><a href="#druid-架构">Druid 架构</a></li>
+<li><a href="#column">Column</a></li>
+<li><a href="#segment">Segment</a></li>
+<li><a href="#segment的存储格式">Segment的存储格式</a></li>
+<li><a href="#指标列的存储格式">指标列的存储格式</a></li>
+<li><a href="#string-维度的存储格式">String 维度的存储格式</a></li>
+<li><a href="#segment生成过程">Segment生成过程</a></li>
+<li><a href="#segment-load过程">Segment load过程</a></li>
+<li><a href="#segment-query过程">Segment Query过程</a></li>
+<li><a href="#druid的编码和压缩">Druid的编码和压缩</a></li>
+<li><a href="#总结">总结</a></li>
+<li><a href="#参考资料">参考资料</a></li>
+</ul>
+<!-- toc stop -->
+<p>本文主要介绍Druid Storage的原理，包括Druid Storage的存储格式，不同列的Serde方式，以及Druid Storage的底层查询原理。在介绍Druid Storage之前，我先对Druid的整体架构和核心概念做下简单介绍。</p>
+<h3 id="what-is-druid">What is Druid</h3>
+<p>Druid是一个开源的实时OLAP系统，可以对超大规模数据提供亚秒级查询，其具有以下特点：</p>
+<ol>
+<li>列式存储</li>
+<li>倒排索引 （基于Bitmap实现）</li>
+<li>分布式的Shared-Nothing架构 （高可用，易扩展是Druid的设计目标）</li>
+<li>实时摄入 （数据被Druid实时摄入后便可以立即查询）</li>
+</ol>
+<h3 id="why-druid">Why Druid</h3>
+<p>为了能够提取利用大数据的商业价值，我们必然需要对数据进行分析，尤其是多维分析， 但是在几年前，整个业界并没有一款很好的OLAP工具，各种多维分析的方式如下图所示：</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/ylyrw0m93dvwhp9bbne6z9x8/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202017-10-31%20%E4%B8%8B%E5%8D%888.27.50.png" alt="屏幕快照 2017-10-31 下午8.27.50.png-1080.8kB"></p>
+<p>其中直接基于Hive，MR，Spark的方式查询速度一般十分慢，并发低；而传统的关系型数据库无法支撑大规模数据；以HBase为代表的NoSQL数据库也无法提供高效的过滤，聚合能力。正因为现有工具有着各种各样的痛点，Druid应运而生，以下几点自然是其设计目标：</p>
+<ol>
+<li>快速查询</li>
+<li>可以支撑大规模数据集</li>
+<li>高效的过滤和聚合</li>
+<li>实时摄入</li>
+</ol>
+<h3 id="druid-架构">Druid 架构</h3>
+<p><img src="http://static.zybuluo.com/kangkaisen/ai72bxqu5zxe90opawprvf64/image.png" alt="image.png-181kB"></p>
+<p>Druid的整体架构如上图所示，其中主要有3条路线：</p>
+<ol>
+<li><p>实时摄入的过程：
+ 实时数据会首先按行摄入Real-time Nodes，Real-time Nodes会先将每行的数据加入到1个map中，等达到一定的行数或者大小限制时，Real-time Nodes 就会将内存中的map 持久化到磁盘中，Real-time Nodes 会按照segmentGranularity将一定时间段内的小文件merge为一个大文件，生成Segment，然后将Segment上传到Deep Storage（HDFS，S3）中，Coordinator知道有Segment生成后，会通知相应的Historical Node下载对应的Segment，并负责该Segment的查询。</p>
+</li>
+<li><p>离线摄入的过程：
+ 离线摄入的过程比较简单，就是直接通过MR job 生成Segment，剩下的逻辑和实时摄入相同：</p>
+</li>
+<li><p>用户查询过程：
+ 用户的查询都是直接发送到Broker Node，Broker Node会将查询分发到Real-time节点和Historical节点，然后将结果合并后返回给用户。</p>
+</li>
+</ol>
+<p>各节点的主要职责如下：</p>
+<h4 id="historical-nodes">Historical Nodes</h4>
+<p>Historical 节点是整个Druid集群的骨干，主要负责加载不可变的segment，并负责Segment的查询（注意，Segment必须加载到Historical 的内存中才可以提供查询）。Historical 节点是无状态的，所以可以轻易的横向扩展和快速恢复。Historical 节点load和un-load segment是依赖ZK的，但是即使ZK挂掉，Historical依然可以对已经加载的Segment提供查询，只是不能再load 新segment，drop旧segment。</p>
+<h4 id="broker-nodes">Broker Nodes</h4>
+<p>Broker 节点是Druid查询的入口，主要负责查询的分发和Merge。 之外，Broker还会对不可变的Segment的查询结果进行LRU缓存。</p>
+<h4 id="coordinator-nodes">Coordinator Nodes</h4>
+<p>Coordinator 节点主要负责Segment的管理。Coordinator 节点会通知Historical节点加载新Segment，删除旧Segment，复制Segment，以及Segment间的复杂均衡。</p>
+<p>Coordinator 节点依赖ZK确定Historical的存活和集群Segment的分布。</p>
+<h4 id="real-time-node">Real-time Node</h4>
+<p>实时节点主要负责数据的实时摄入，实时数据的查询，将实时数据转为Segment，将Segment Hand off 给Historical 节点。</p>
+<h4 id="zookeeper">Zookeeper</h4>
+<p>Druid依赖ZK实现服务发现，数据拓扑的感知，以及Coordinator的选主。</p>
+<h4 id="metadata-storage">Metadata Storage</h4>
+<p>Metadata storage（Mysql） 主要用来存储 Segment和配置的元数据。当有新Segment生成时，就会将Segment的元信息写入metadata store, Coordinator 节点会监控Metadata store 从而知道何时load新Segment，何时drop旧Segment。注意，查询时不会涉及Metadata store。</p>
+<h4 id="deep-storage">Deep Storage</h4>
+<p>Deep storage (S3 and HDFS)是作为Segment的永久备份，查询时同样不会涉及Deep storage。</p>
+<h3 id="column">Column</h3>
+<p><img src="http://static.zybuluo.com/kangkaisen/oz58hcl3f3s9axu3qeghxdea/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202017-10-27%20%E4%B8%8B%E5%8D%883.45.05.png" alt="屏幕快照 2017-10-27 下午3.45.05.png-278kB"></p>
+<p>Druid中的列主要分为3类：时间列，维度列，指标列。Druid在数据摄入和查询时都依赖时间列，这也是合理的，因为多维分析一般都带有时间维度。维度和指标是OLAP系统中常见的概念，维度主要是事件的属性，在查询时一般用来filtering 和 group by，指标是用来聚合和计算的，一般是数值类型，像count,sum，min，max等。</p>
+<p>Druid中的维度列支持String，Long，Float，不过只有String类型支持倒排索引；指标列支持Long，Float，Complex， 其中Complex指标包含HyperUnique，Cardinality，Histogram，Sketch等复杂指标。强类型的好处是可以更好的对每1列进行编码和压缩， 也可以保证数据索引的高效性和查询性能。</p>
+<h3 id="segment">Segment</h3>
+<p>前面提到过，Druid中会按时间段生成不可变的带倒排索引的列式文件，这个文件就称之为Segment，Segment是Druid中数据存储、复制、均衡、以及计算的基本单元， Segment由dataSource_beginTime_endTime_version_shardNumber唯一标识，1个segment一般包含5–10 million行记录，大小一般在300~700mb。</p>
+<h3 id="segment的存储格式">Segment的存储格式</h3>
+<p><img src="http://static.zybuluo.com/kangkaisen/hlzzezc4ebqr40mhvxpkjhy4/image.png" alt="image.png-90kB">
+Druid segment的存储格式如上图所示，包含3部分：</p>
+<ul>
+<li>version文件</li>
+<li>meta 文件</li>
+<li>数据文件</li>
+</ul>
+<p>其中meta文件主要包含每1列的文件名和文件的偏移量。（注，druid为了减少文件描述符，将1个segment的所有列都合并到1个大的smoosh中，由于druid访问segment文件的时候采用MMap的方式，所以单个smoosh文件的大小不能超过2G，如果超过2G，就会写到下一个smoosh文件）。</p>
+<p>在smoosh文件中，数据是按列存储中，包含时间列，维度列和指标列，其中每1列会包含2部分：ColumnDescriptor和binary数据。其中ColumnDescriptor主要保存每1列的数据类型和Serde的方式。</p>
+<p>smoosh文件中还有index.drd文件和metadata.drd文件，其中index.drd主要包含该segment有哪些列，哪些维度，该Segment的时间范围以及使用哪种bitmap；metadata.drd主要包含是否需要聚合，指标的聚合函数，查询粒度，时间戳字段的配置等。</p>
+<h3 id="指标列的存储格式">指标列的存储格式</h3>
+<p>我们先来看指标列的存储格式：</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/m7g6r148whqf3s9ql9cyk8y9/image.png" alt="image.png-35.9kB"></p>
+<p>指标列的存储格式如上图所示：</p>
+<ul>
+<li>version </li>
+<li>value个数 </li>
+<li>每个block的value的个数（druid对Long和Float类型会按block进行压缩，block的大小是64K）</li>
+<li>压缩类型 （druid目前主要有LZ4和LZF俩种压缩算法）</li>
+<li>编码类型 （druid对Long类型支持差分编码和Table编码两种方式，Table编码就是将long值映射到int，当指标列的基数小于256时，druid会选择Table编码，否则会选择差分编码）</li>
+<li>编码的header （以差分编码为例，header中会记录版本号，base value，每个value用几个bit表示）</li>
+<li>每个block的header （主要记录版本号，是否允许反向查找，value的数量，列名长度和列名）</li>
+<li>每1列具体的值</li>
+</ul>
+<h4 id="long型指标">Long型指标</h4>
+<p>Druid中对Long型指标会先进行编码，然后按block进行压缩。编码算法包含差分编码和table编码，压缩算法包含LZ4和LZF。</p>
+<h4 id="float型指标">Float型指标</h4>
+<p>Druid对于Float类型的指标不会进行编码，只会按block进行压缩。</p>
+<h4 id="complex型指标">Complex型指标</h4>
+<p>Druid对于HyperUnique，Cardinality，Histogram，Sketch等复杂指标不会进行编码和压缩处理，每种复杂指标的Serde方式由每种指标自己的ComplexMetricSerde实现类实现。</p>
+<h3 id="string-维度的存储格式">String 维度的存储格式</h3>
+<p><img src="http://static.zybuluo.com/kangkaisen/3b4nbjn2q7d44vouetrjmyry/image.png" alt="image.png-81.2kB"></p>
+<p>String维度的存储格式如上图所示，前面提到过，时间列，维度列，指标列由两部分组成：ColumnDescriptor和binary数据。 String维度的binary数据主要由3部分组成：dict，字典编码后的id数组，用于倒排索引的bitmap。</p>
+<p>以上图中的D2维度列为例，总共有4行，前3行的值是meituan，第4行的值是dianing。Druid中dict的实现十分简单，就是一个hashmap。图中dict的内容就是将meituan编码为0，dianping编码为1。 Id数组的内容就是用编码后的ID替换掉原始值，所以就是[1,1,1,0]。第3部分的倒排索引就是用bitmap表示某个值是否出现在某行中，如果出现了，bitmap对应的位置就会置为1，如图：meituan在前3行中都有出现，所以倒排索引1：[1,1,1,0]就表示meituan在前3行中出现。</p>
+<p>显然，倒排索引的大小是列的基数*总的行数，如果没有处理的话结果必然会很大。不过好在如果维度列如果基数很高的话，bitmap就会比较稀疏，而稀疏的bitmap可以进行高效的压缩。</p>
+<h3 id="segment生成过程">Segment生成过程</h3>
+<ol>
+<li>Add Row to Map</li>
+<li>Begin persist to disk</li>
+<li>Write version file</li>
+<li>Merge and write dimension dict</li>
+<li>Write time column</li>
+<li>Write metric column</li>
+<li>Write dimension column</li>
+<li>Write index.drd</li>
+<li>Merge and write bitmaps</li>
+<li>Write metadata.drd</li>
+</ol>
+<h3 id="segment-load过程">Segment load过程</h3>
+<p><img src="http://static.zybuluo.com/kangkaisen/t0cyzxhvrgt3m1irh2buy2vh/meta.png" alt="meta.png-44.3kB"></p>
+<ol>
+<li>Read version</li>
+<li>Load segment to MappedByteBuffer</li>
+<li>Get column offset from meta</li>
+<li>Deserialize each column from ByteBuffer</li>
+</ol>
+<h3 id="segment-query过程">Segment Query过程</h3>
+<p>Druid查询的最小单位是Segment，Segment在查询之前必须先load到内存，load过程如上一步所述。如果没有索引的话，我们的查询过程就只能Scan的，遇到符合条件的行选择出来，但是所有查询都进行全表Scan肯定是不可行的，所以我们需要索引来快速过滤不需要的行。Druid的Segmenet查询过程如下：</p>
+<ol>
+<li>构造1个Cursor进行迭代</li>
+<li>查询之前构造出Fliter</li>
+<li>根据Index匹配Fliter，得到满足条件的Row的Offset</li>
+<li>根据每列的ColumnSelector去指定Row读取需要的列。</li>
+</ol>
+<h3 id="druid的编码和压缩">Druid的编码和压缩</h3>
+<p>前面已经提到了，Druid对Long型的指标进行了差分编码和Table编码，Long型和Float型的指标进行了LZ4或者LZF压缩。</p>
+<p>其实编码和压缩本质上是一个东西，一切熵增的编码都是压缩。 在计算机领域，我们一般把针对特定类型的编码称之为编码，针对任意类型的通用编码称之为压缩。</p>
+<p>编码和压缩的本质就是让每一个bit尽可能带有更多的信息。</p>
+<h3 id="总结">总结</h3>
+<p>本文主要分享了Druid Storage的眼里，既然Druid Storage专门为了OLAP场景设计，我们在Kylin中是不是可以用Druid Storage 替换掉HBase呢？ 下一篇我将分享《Apache Kylin on Druid Storage 原理和实践》</p>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://druid.io/docs/0.10.0/design/index.html">Druid 官方文档和论文</a></p>
+<p><a href="https://github.com/druid-io/druid">Druid 源码</a></p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=59fb1b6d8b5f663e5a131c86
+                 data-title=Druid Storage 原理
+                 data-url=druid-storage>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>
