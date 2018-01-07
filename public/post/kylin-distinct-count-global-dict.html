@@ -1,0 +1,277 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Apache Kylin 精确去重和全局字典权威指南</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Apache Kylin 精确去重和全局字典权威指南</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2018-01-07</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <p>Kylin官方现在关于精确去重的blog <a href="http://kylin.apache.org/blog/2016/08/01/count-distinct-in-kylin/">Use Count Distinct in Apache Kylin</a>是基于Kylin 1.5.3的，其中的使用方式和优化方法已经过时，本文将基于Kylin 2.3.0 介绍精确去重和全局字典的用法，调优，FAQ和核心原理。</p>
+<p>本文的主要内容如下：</p>
+<!-- toc -->
+<ul>
+<li><a href="#kylin精确去重指标的用法">Kylin精确去重指标的用法</a></li>
+<li><a href="#kylin精确去重指标的优化">Kylin精确去重指标的优化</a></li>
+<li><a href="#kylin精确去重和全局字典的faq">Kylin精确去重和全局字典的FAQ</a></li>
+<li><a href="#全局字典相关的cube构建问题">全局字典相关的Cube构建问题</a></li>
+<li><a href="#kylin精确去重的原理">Kylin精确去重的原理</a></li>
+<li><a href="#kylin全局字典的原理">Kylin全局字典的原理</a></li>
+<li><a href="#总结">总结</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="kylin精确去重指标的用法">Kylin精确去重指标的用法</h3>
+<p><img src="http://static.zybuluo.com/kangkaisen/ixjuby1bd5i9koxasr93qwos/count-distinct.png" alt="count-distinct.png-93kB"></p>
+<p>如上图，编辑指标时<strong>Expression选择COUNT_DISTINCT</strong>，<strong>Return Type选择 Precisely</strong>。 如果你的精确去重列的基数很小，你就已经可以愉快地利用Kylin进行精确去重计算了。</p>
+<h3 id="kylin精确去重指标的优化">Kylin精确去重指标的优化</h3>
+<p>当精确去重指标列的基数达到数千万，数亿，或者有多个精确去重指标时，我们就需要进行一些优化。大家可以根据下面的Case 进行优化，不同的优化方法是可以叠加的。</p>
+<p><strong>Case1 : 全局字典的复用</strong></p>
+<p>如果1个Cube中有多个全局字典列，且存在A列是B列子集的情况，我们就可以让A列复用B列的全局字典。比如日支付用户数一般就是日活跃用户数的子集，这种关系一般在ETL生产中表现为<code>if (pay = true, uuid, null) as pay_uuid</code>， 我们就可以让pay_uuid reuse uuid的全局字典，如下图：</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/pu3yrube0nnjf4a9t2ueun3i/global-dict-reuse.png" alt="global-dict-reuse.png-81.2kB"></p>
+<p><strong>Case2: 1个Cube只有1个超高基数列的精确去重指标</strong></p>
+<p>如果1个Cube有1个或者多个精确去重指标，但是只有1个超高基数列，像PV，UV，订单量这种去重指标，我们可以配置以下参数来优化：</p>
+<pre><code>kylin.source.hive.flat-table-cluster-by-dict-column=LOAD_UUID（精确去重指标的列名，不需要加Hive表名）
+</code></pre><p>这个参数的原理是在Cube构建的第2步 &quot;Redistribute Flat Hive Table&quot; 中将Hive表数据按照配置的列Cluster by，让Hive表数据按照Cluster by列有序，以此来减少 &quot;Build Base Cuboid&quot; 这一步对精确去重指标编码时全局字典的内存置换次数。</p>
+<p><strong>Case3: 1个Cube有多个超高基数列的精确去重指标</strong></p>
+<p>如果一个Cube中同时有用户数和设备数这种超高基数的精确去重指标，可以考虑拆分成两个cube，转化成Case2，如果不能拆分成两个Cube，就需要增大&quot;Build Base Cuboid&quot; 这一步MR的内存，可以配置以下参数：</p>
+<pre><code>kylin.source.hive.flat-table-cluster-by-dict-column=基数最高的精确去重列名 （不需要加Hive表名）
+
+kylin.engine.mr.base-cuboid-config-override.mapred.map.child.java.opts = -Xmx4g
+kylin.engine.mr.base-cuboid-config-override.mapreduce.map.memory.mb = 4500
+</code></pre><p><strong>Case4： 精确去重指标无需跨Segment上卷聚合</strong></p>
+<p>如果你的精确去重指标只需要按天进行去重，那么可以用 Segment Dictionary 代替 Global Dictionary  。 如图：
+<img src="http://static.zybuluo.com/kangkaisen/qpsl5iazwbedjcq1jcdh1xkk/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-01-07%20%E4%B8%8B%E5%8D%884.40.52.png" alt="屏幕快照 2018-01-07 下午4.40.52.png-87.6kB"></p>
+<p>按天进行精确去重可以理解为你的SQL会按照dt字段Group by，不会有类似下面的SQL：</p>
+<pre><code>SELECT A, B, count(distinct uuid),
+FROM table
+WHERE dt between &#39;20170125&#39; and &#39;20170224&#39;
+</code></pre><p>使用Segment Dictionary的优点是构建速度会十分快，因为Segment Dictionary是基于Segment粒度的，不是全局的。</p>
+<p><strong>Case5： Cube是非分区的</strong></p>
+<p>如果你的Cube是非分区的，每天全量构建，那么和Case 4一样，也可以用 Segment Dictionary 代替 Global Dictionary。</p>
+<p><strong>Case6： 一个Cube包含较多精确去重指标</strong></p>
+<p>如果你的Cube有10多个甚至几十个精确去重指标，且大多数查询一次只会查询1个或者几个精确去重指标，那么可以考虑将精确去重指标拆分到多个列族，这样做到好处是可以加速查询，Kylin默认是把所有精确去重指标都放在HBase的1个列族中。拆分列族是在Cube编辑的第5步的Advanced ColumnFamily部分，如图：</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/vsbrebyiwu339xa6jc5jdzyj/column-family.png" alt="column-family.png-64.4kB"></p>
+<h3 id="kylin精确去重和全局字典的faq">Kylin精确去重和全局字典的FAQ</h3>
+<p>Q: Kylin的精确去重指标查询性能如何？</p>
+<p>A：相比Sum，Count这种简单指标，精确去重指标的查询会慢一些，根据查询的复杂程度，时间范围，去重指标的数量等因素不同，查询时延从数百毫秒，几秒，10多秒不等。 一般情况下都可以秒级响应。</p>
+<hr/>
+
+<p>Q: Kylin的精确去重指标支持跨Segment上卷吗？</p>
+<p>A：支持。</p>
+<hr/>
+
+<p>Q: Kylin的精确去重指标为什么可以跨Segment上卷？</p>
+<p>A：因为Kylin的精确去重指标使用了Bitmap保留明细值，并使用全局字典保证所有Value在所有Bitmap中对应的Int值都是确定且唯一的。</p>
+<hr/>
+
+<p>Q: Kylin的精确去重指标为什么不只存储最终的去重值？</p>
+<p>A：因为在Kylin中精确去重指标需要支持上卷聚合，所以仅保留最终的去重值会导致查询出错。</p>
+<hr/>
+
+<p>Q: Kylin的精确去重指标为什么使用Bitmap进行存储？</p>
+<p>A：因为在Kylin中精确去重指标需要支持上卷聚合，所以需要保留明细，而计算机存储的最小单位是bit, 所以我们可以很自然地想到Bitmap这种数据结构。</p>
+<hr/>
+
+<p>Q: Kylin的精确去重指标在HBase中存储格式？</p>
+<p>A：是RoaringBitmap序列化后的二进制数据。</p>
+<hr/>
+
+<p>Q: Kylin的精确去重指标为什么需要全局字典？</p>
+<p>A：为了保证String类型的数值在不同Segment中始终可以映射到相同的Int值。</p>
+<hr/>
+
+<p>Q: Kylin查询时需要加载全局字典吗？</p>
+<p>A：不需要，全局字典的作用是在构建时对非Int类型的精确去重指标进行编码，在Cube构建时会更新全局字典，然后在&quot;Build Base Cuboid&quot; 加载全局字典进行编码。</p>
+<hr/>
+
+<p>Q: Kylin的维度列可以使用全局字典吗？</p>
+<p>A：不可以，因为全局字典仅支持根据Value查询Id，不可以根据Id反向查找Value。</p>
+<hr/>
+
+<p>Q: Kylin的全局字典是什么粒度的全局？</p>
+<p>A：Kylin的全局字典是针对Hive表的某一列的，在1个Kylin集群中，某个Hive表的某一列只会有1个全局字典。</p>
+<hr/>
+
+<p>Q: Kylin的全局字典存储在哪？</p>
+<p>A：HDFS上。其路径是kylin.env.hdfs-working-dir+resources/GlobalDict/dict+/sourceTable+/sourceColumn</p>
+<hr/>
+
+<p>Q: Kylin的全局字典构建会不会越来越慢？</p>
+<p>A：会。如果使用Global Dictionary的话全局字典会越来越大，构建也会越来越慢。使用Segment Dictionary则不会有这个问题。</p>
+<hr/>
+
+<p>Q: Kylin的全局字典支持Segment并发构建吗？</p>
+<p>A：支持。 但是全局字典为了保证分布式环境下数据的一致性，在构建全局字典时，必须先获取分布式锁，所以构建全局字典这一步是串行的。</p>
+<hr/>
+
+<p>Q: Kylin中某1列可以作为精确去重指标又作为维度吗？</p>
+<p>A：可以。 如果是Int类型，不需要做特殊处理；如果是非Int类型，作为维度时不能选择默认的dict编码方式，需要选择整型或者定长编码。</p>
+<hr/>
+
+
+<h3 id="全局字典相关的cube构建问题">全局字典相关的Cube构建问题</h3>
+<p><strong>问题1： &quot;Build Base Cuboid&quot; java.lang.IllegalArgumentException: Value XXX not exists!</strong></p>
+<p><strong>该问题的一般原因是全局字典的Reuse设置有误或者Hive表有脏数据。</strong></p>
+<p>解决方法：</p>
+<p><strong>1 确认全局字典的Reuse设置是否合理</strong></p>
+<p>参考 精确去重指标的优化的Case1，设置A列Reuse B列的全局字典时，一定要确保在ETL的Hive表定义中A列的数据就是B列数据的子集，不要想当然根据业务含义来确定A列是否是B列的子集。</p>
+<p><strong>2 确认Hive表是否有脏数据</strong></p>
+<p>在Kylin页面点击MR job链接，查看MR log，找到如下log, 确认Insane record 这条记录是不是脏数据。</p>
+<pre><code>2017-04-14 17:14:19,309 ERROR [main] org.apache.kylin.engine.mr.steps.BaseCuboidMapperBase: Insane record: [17184, 2450, 24205, 440800, C, 6, 4, 2, 7.7, -998, 0, 0, 17.5, 17.5, 17.5, 17.5, 17.5, 17.5, 1, 1, 1, 20170116~20170122, 湛江, 团购android, 团购app, 团购, 未知, \N, \N, \N, \N, \N, 0, �Q;���=�����1 �6,� �_����;���7�, ��������~)� ����������[, �Q;���=�����1 �6,� �_����;���7�, ��������~)� ����������[, �Q;���=�����1 �6,� �_����;���7�, ��������~)� ����������[, \N, \N, \N, 315174395
+java.lang.IllegalArgumentException: Value &#39;�Q;���=�����1 �6,� �_����;���7�&#39; (\xEF\xBF\xBDQ;\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD=\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD1 \xEF\xBF\xBD6\x05,\xEF\xBF\xBD \xEF\xBF\xBD_\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD\xEF\xBF\xBD;\xEF\xBF\xBD\x12\x00\xEF\xBF\xBD\xEF\xBF\xBD7\xEF\xBF\xBD) not exists!
+    at org.apache.kylin.common.util.Dictionary.getIdFromValueBytes(Dictionary.java:162)
+    at org.apache.kylin.dict.AppendTrieDictionary.getIdFromValueImpl(AppendTrieDictionary.java:153)
+    at org.apache.kylin.common.util.Dictionary.getIdFromValue(Dictionary.java:98)
+    at org.apache.kylin.common.util.Dictionary.getIdFromValue(Dictionary.java:78)
+    at org.apache.kylin.measure.bitmap.BitmapMeasureType$1.valueOf(BitmapMeasureType.java:118)
+</code></pre><p>如果可以容忍脏数据，请添加以下参数，否则请清理脏数据。</p>
+<pre><code>kylin.job.error-record-threshold = 100 //该参数表示每个mapper可以容忍的异常记录数，默认是0。
+</code></pre><p><strong>问题2： &quot;Build Base Cuboid&quot; 这一步Mapper 进度很慢或者 Timed out after 600 secs</strong></p>
+<p>这个问题的一般原因是Cube中的全局字典很大，Mapper 内存不足，导致全局字典进行频繁的内存置换。解决方法可以参考精确去重指标的优化的Case1，Case2，Case3，Case4，Case5。</p>
+<h3 id="kylin精确去重的原理">Kylin精确去重的原理</h3>
+<p>精确去重指标实现的两个核心难点：</p>
+<ol>
+<li><strong>支持任意粒度的上卷聚合</strong></li>
+<li><strong>支持String等非Int类型数据</strong></li>
+</ol>
+<p>难点的解决方案：</p>
+<ol>
+<li>前面提到，为了支持任意粒度的上卷聚合，我们需要保留明细数据，而计算机存储的最小单位是bit，所以采用了Bitmap来存储Kylin的精确去重指标。Kylin在实际工程中采用的是业界中广泛使用， 性难最优的RoaringBitmap库。</li>
+<li>RoaringBitmap仅支持Int类型数据，为了支持String等非Int类型数据，我们需要一个String到Int的映射，而且要求所有Segment中同一个String始终映射到同一个Int。 为什么呢? 假如UUID列的String &quot;A&quot; 在Segment1中映射到Int 1，但是String &quot;A&quot; 却在Segment2中映射到INT 2，那么当UUID列需要跨Segment1和Segment2去重时，显然就会出错。 所以我们引入了全局字典，来保证String等非Int类型数据始终映射到同一个Int值。</li>
+</ol>
+<p><strong>无需上卷的精确去重查询优化</strong>：</p>
+<p>前面提到，为了支持任意粒度的上卷聚合，我们使用Bitmap存储精确去重指标。所以在查询时，我们需要先从HBase端将整个Bitmap传输给Kylin的QueryServer，Kylin的QueryServr再根据Bitmap计算出 去重值。但是在实际的使用场景中，用户的一些甚至多数精确去重查询是不需要上卷聚合的， 比如用户的Cube按照dt列分区，且已经预计算好（A，dt）的Cuboid，那么下面的SQL查询时在HBase端和Kylin的QueryServer端都是无需聚合的：</p>
+<pre><code>SELECT A, count(distinct uuid),
+FROM table
+WHERE dt between &#39;20170125&#39; and &#39;20170224&#39;
+group by dt, A
+</code></pre><p>针对上面提到的场景，我们进行了优化，符合优化规则的查询会在HBase端直接返回最终的去重值，该优化可以将精确去重的查询提高一个数量级，原本需要几秒的查询优化后只需数百毫秒；同时也降低了Kylin QueryServr的内存使用。</p>
+<h3 id="kylin全局字典的原理">Kylin全局字典的原理</h3>
+<p>全局字典的意义是保证所有Value映射到全局唯一且连续的Int ID ，唯一是保证精确去重查询可以跨Segment上卷，连续的原因是RoaringBitmap对连续的值可以进行更好的压缩。全局字典实现的几个核心难点：</p>
+<ol>
+<li><strong>核心数据结构的选择</strong></li>
+<li><strong>分布式环境下数据一致性的保证</strong></li>
+<li><strong>超大字典构建时的内存使用</strong></li>
+<li><strong>超大字典加载时的内存使用</strong></li>
+</ol>
+<p>难点的解决方案：</p>
+<p> 1 <strong>可追加可分裂的Trie树</strong>：</p>
+<p>全局字典使用的核心数据结构是AppendTrieDictionary，根据Trie树改造而来。我们知道Trie树中Value对应的Id是根据Value在树中的位置决定的，所以Trie树是不可变的，不可以追加数据，因为追加数据后同一个Value就会映射到不同的Id，为了解决这一点，<strong>AppendTrieDictionary将Value对应的Id直接写入了节点本身</strong>，这样就保证了同一个Value始终会映射到同一个Id，但同时也导致了AppendTrieDictionary只能根据Value查找Id，不能根据Id查找Value。</p>
+<p>因为全局字典是全局的，会不断进行追加，所以全局字典会越来越大，我们不可能一次将整个AppendTrieDictionary 加载到内存，所以AppendTrieDictionary是可以分裂的，当一棵子树的节点个数超过一定值（默认是1千万），就会将一棵子树从中间分裂成两棵子树。每个分裂的子树是一个slice。 <strong>AppendTrieDictionary的构建是逐个slice进行构建，内存中同时只会有一个slice</strong>； <strong>AppendTrieDictionary的加载是使用LoadingCache的softValues策略来管理slice的换入换出</strong>。</p>
+<p>关于AppendTrieDictionary的更多细节，可以参考：<a href="http://hexiaoqiao.github.io/blog/2016/11/27/exact-count-and-global-dictionary-of-apache-kylin/">Apache Kylin精确计数与全局字典揭秘</a></p>
+<p> 2 <strong>分布式环境下数据一致性的保证</strong>:</p>
+<p> <strong>MVCC</strong>: 全局字典最终是持久化在HDFS目录上，为了避免读写冲突，我们采用了MVCC，当读AppendTrieDictionary时，永远只读取最新的Version目录；当写AppendTrieDictionary时，会将最新的Verion目录copy到working目录，修改完成且通过正确性校验后，会将working目录rename为新的Version目录。</p>
+<p> <strong>分布式锁</strong>：通过分布式锁，我们保证了在多JobServer的多Segment并发构建下，1个Kylin集群在同一时刻只会有1个线程可以修改AppendTrieDictionary。</p>
+<p>3 <strong>全局字典使用MR构建</strong>：</p>
+<p>虽然1个全局字典构建时只会加载AppendTrieDictionary的1个Slice，但是当Kylin JobServer上有数十个全局字典同时构建时，Kylin JobServer 会经常OOM， 为了解决这个问题，我们将全局字典的构建移到了MR中。 使用MR构建全局字典后，Kylin JobServer的内存使用量显著降低，调度的并发能力也提升1到2个数量级，也可以加速多列全局字典的构建。</p>
+<p>4 <strong>超大字典加载时的内存优化</strong>：</p>
+<p>全局字典的加载发生在&quot;Build Base Cuboid&quot;的Mapper这一步，前面提到，AppendTrieDictionary的加载是使用LoadingCache的softValues策略管理slice的换入换出。 所以当全局字典远大于的&quot;Build Base Cuboid&quot;的Mapper内存，且Mapper输入是无序的情况下，全局字典就会频繁换入换出。所以我们做了之前Case2的优化，让Hive数据可以按照某列排序，这样就可以保证全局字典有序按需加载。 显然，这个优化只能handle只有1列超高基数列的场景，无法handle有多个超高基数列的场景。</p>
+<p><strong>5 支持非全局的AppendTrieDictionary：</strong></p>
+<p>前面我们提到，全局字典最重要的意义是支持精确去重指标跨Segment上卷，但在某些应用场景下，用户的确不需要Segment上卷。 比如用户只需要按天进行去重，或者Cube本身就是不分区的（每次全量构建）。 针对这一点，我们新增了一种SegmentAppendTrieDictBuilder(前面提到的Segment Dictionary )，底层的数据结构依然还是AppendTrieDictionary，只是每次构建时Working目录不是Copy最新的Version目录，而是从空Working目录开始构建，同时字典的元数据也需要重新初始化。由于SegmentAppendTrieDictBuilder是segment粒度的，也不需要分布式锁，所以可以并发构建。使用SegmentAppendTrieDictBuilder后构建和加载时的内存问题也基本不会再有。使用方式可以参考优化部分的case4。 </p>
+<h3 id="总结">总结</h3>
+<p>虽然Kylin的精确去重在性能和稳定性方面相比最初已经有了显著的提升，已经在企业级的生产环境中广泛使用，但是依然存在以下痛点：</p>
+<ol>
+<li>需要用户了解相关配置进行优化；</li>
+<li>查询时超高基数列的Bitmap使用内存过多；</li>
+<li>构建时无法很好地处理多个超高基数列的情况；</li>
+<li>全局字典的构建会越来越慢。</li>
+</ol>
+<p>所以在新的一年，我们会对Kylin的精确去重指标进行继续优化并探索新的方案，比如：有没有可能移除全局字典，RoaringBitmap的计算移到堆外，RoaringBitmap的分布式化等。大家有好的想法也欢迎随时交流。</p>
+<p>我也相信，Kylin的精确去重会越来越易用，越高效，越稳定。</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5a51ffa660fc31097f724c7b
+                 data-title=Apache Kylin 精确去重和全局字典权威指南
+                 data-url=kylin-distinct-count-global-dict>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>
