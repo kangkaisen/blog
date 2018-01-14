@@ -1,0 +1,173 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Baidu Palo在Mac上搭建代码阅读环境</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Baidu Palo在Mac上搭建代码阅读环境</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2018-01-14</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#使用clion搭建palo-be-c代码阅读环境">使用Clion搭建Palo BE C++代码阅读环境</a></li>
+<li><a href="#使用idea搭建palo-fe-java代码阅读环境">使用IDEA搭建Palo FE Java代码阅读环境</a></li>
+<li><a href="#总结">总结</a></li>
+</ul>
+<!-- toc stop -->
+<p>Palo是百度开源的一个OLAP系统，FE是用Java开发，用古老的ant进行编译；BE是用C++开发，用CMake编译。本文主要讲述如何在Mac上构建Palo的代码阅读环境。本文的面向读者主要是Java开发者。（我工作后一直不屑于写这种和环境相关的文章，因为没啥内涵，不过考虑到本文有可能会节省一些对Palo感兴趣的Java开发者搞环境的时间，所以就写了）</p>
+<h3 id="使用clion搭建palo-be-c-代码阅读环境">使用Clion搭建Palo BE C++代码阅读环境</h3>
+<p>1 下线Clion， 直接从官网下载即可。</p>
+<p>2 最好安装下Xcode，在mac上即使我们不使用Xcode开发，安装Xcode后可以免去一些开发环境上的麻烦。</p>
+<p>3 使用Homebrew依次安装<code>gcc@4.9 ant cmake byacc flex automake libtool binutils-devel bison thrift openssl</code>，其中bison安装完成后需要执行<code>brew link bison --force</code>，openssl安装完成后需要执行<code>ln -s /usr/local/Cellar/openssl/1.0.2n/include/openssl /usr/local/include/openssl</code></p>
+<p>4 修改be/CMakeLists.txt，删除以下代码，因为palo默认只支持ubuntu，centos，fedora。</p>
+<pre><code>-string(TOLOWER ${LINUX_VERSION} LINUX_VERSION_LOWER)
+-message(STATUS &quot;${LINUX_VERSION_LOWER}&quot;)
+-
+-if(DEFINED ENV{CLANG_BASE_FLAGS})
+-    set(CLANG_BASE_FLAGS
+-        $ENV{CLANG_BASE_FLAGS})
+-elseif(${LINUX_VERSION_LOWER} MATCHES &quot;ubuntu&quot;)
+-    set(CLANG_BASE_FLAGS
+-        &quot;-I/usr/include/c++/5/&quot;
+-        &quot;-I/usr/include/x86_64-linux-gnu/c++/5/&quot;)
+-elseif(${LINUX_VERSION_LOWER} MATCHES &quot;centos&quot;)
+-    set(CLANG_BASE_FLAGS
+-        &quot;-I/usr/include/c++/4.8.5/&quot;
+-        &quot;-I/usr/include/c++/4.8.5/x86_64-redhat-linux/&quot;)
+-elseif(${LINUX_VERSION_LOWER} MATCHES &quot;fedora&quot;)
+-    set(CLANG_BASE_FLAGS
+-        &quot;-I/usr/include/c++/7/&quot;
+-        &quot;-I/usr/include/c++/7/x86_64-redhat-linux/&quot;)
+-else()
+-    message(FATAL_ERROR &quot;Currently not support system ${LINUX_VERSION}&quot;)
+-endif()
+</code></pre><p>5 修改 thirdparty/build-thirdparty.sh</p>
+<ul>
+<li>修改openssl 编译的目标系统，build_openssl()函数里将 linux-x86_64改为darwin64-x86_64-cc</li>
+<li>build_thrift() 函数里删除 --with-openssl=$TP_INSTALL_DIR</li>
+<li>整个文件中所有的mkdir build -p 改为 mkdir -p build</li>
+<li>整个文件中所有的rm xxx -rf 改为 rm -rf xxx</li>
+<li>整个文件中所有的cp xxx -r 改为cp -r xxx</li>
+<li>build_llvm() 函数里的-DLLVM_TARGETS_TO_BUILD值改为&quot;host;AMDGPU&quot;</li>
+</ul>
+<p>6 thirdparty/vars.sh 中将glog的版本从0.3.3改为0.3.4，因为0.3.3在mac编译有bug，0.3.4修复了，报错信息为<code>fatal error: &#39;ext/slist&#39; file not found</code>。</p>
+<p>7 thirdparty/vars.sh中将curl的版本从7.54.0改为7.56.0，7.54.0版本编译时会有问题，报错信息类似<code>configure: error: Could not find 10.5 to 10.12 SDK.</code></p>
+<p>8 编译遇到 <code>src/thrift/transport/TSSLSocket.cpp:33:10: fatal error: &#39;openssl/err.h&#39; file not found</code> 类似错误时，先确保已安装openssl，然后执行<code>ln -s /usr/local/Cellar/openssl/1.0.2n/include/openssl /usr/local/include/openssl</code> 即可。</p>
+<p>9 编译遇到 <code>configure: error: C compiler cannot create executables</code> 时，执行xcode-select --install即可。</p>
+<p>10 编译遇到 <code>Bison version 2.5 or higher must be installed on the system!</code> 时，执行<code>brew install bison;brew link bison --force</code> 即可。</p>
+<p>11 编译遇到 <code>The source directory &quot;/home/adam&quot; does not appear to contain CMakeLists.txt</code>， 参考第5条调整mkdir，rm， cp命令参数顺序即可。</p>
+<p>12 参考<a href="https://github.com/baidu/palo/wiki/Palo-Install">https://github.com/baidu/palo/wiki/Palo-Install</a> Palo编译文档在palo的代码目录依次执行</p>
+<pre><code>sh thirdparty/download-thirdparty.sh
+sh thirdparty/build-thirdparty.sh
+sh build.sh
+</code></pre><p>13 用Clion打开palo的BE项目，右击CMakeLists.txt，执行Reload Cmake Project。</p>
+<p>如下图，当你的代码文件都变成亮色，可以查看子类，就说明你的BE代码阅读环境已经搭建完成。</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/i58hlt2zo88r6dhbuay1iag2/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-01-14%20%E4%B8%8B%E5%8D%882.38.38.png" alt="屏幕快照 2018-01-14 下午2.38.38.png-447.5kB"></p>
+<h3 id="使用idea搭建palo-fe-java代码阅读环境">使用IDEA搭建Palo FE Java代码阅读环境</h3>
+<p>1 直接将FE代码用IDEA打开。</p>
+<p>2 将thirdparty下的java-libraries.tar.gz解压，并添加到FE的classpath中。</p>
+<p>3 到gensrc目录下执行make命令，会生成thrift，SqlParser相关的java代码，将生成的代码也加入到FE的classpath中。</p>
+<p>按道理到此FE的Java项目就可以编译，测试了，但是我在跑测试时发现生成的SqlParser.java文件有些问题，不能测试。不过我暂时还不会进行Palo的开发，这个问题并不着急解决，现在阅读代码已经是足够了。</p>
+<h3 id="总结">总结</h3>
+<ol>
+<li>一件事只要确定原理上可行，符合科学，有逻辑，那么不管在实际实现中遇到什么问题，我们总是可以解决或者找到替代方案，我们一定要有坚定的信心走下去。</li>
+<li>我们要克服对未知领域的恐惧，要能够将自己熟悉领域的方法论，经验迁移到未知领域。当我们尝试未知领域时，肯定会遇到各种各样的问题，但是只要我们冷静下来，仔细分析，会发现在未知领域遇到的各种问题几乎都可以在已知的熟悉领域找到类似或者相关的解决方案。</li>
+<li>李笑来有个观点：<strong>所谓的执行力就是 是否能够在做得不够好的时候持续去做</strong>。我挺认同这个观点，我大学时C，C++都学过，不过写的代码都是算法类的，没有编译过大型C++项目。我一开始在Mac上编译Palo的时候，各种莫名其妙的错误一大堆，我就不想搞了，觉得把精力浪费在这种事情上真没啥意义。不过后来在调研Palo的具体原理时，必须要看代码，但是没有代码跳转看代码会很痛苦，所以我就觉得编译这件事情是有必要的，而且在Mac系统上编译C++原理上肯定是可行的，所以我就决定一定要解这个问题，然后就遇神杀神，遇佛杀佛。当我解决后，发现这个问题其实并不复杂，实际上挺简单的，但是一开始由于存在对于未知的恐惧，我就没有一口气走下去。</li>
+</ol>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5a5b0a1c314ee333830785e3
+                 data-title=Baidu Palo在Mac上搭建代码阅读环境
+                 data-url=baidu-palo-code-reading>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>
