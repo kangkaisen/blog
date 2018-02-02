@@ -123,6 +123,10 @@ WHERE dt between &#39;20170125&#39; and &#39;20170224&#39;
 <p>A：不需要，全局字典的作用是在构建时对非Int类型的精确去重指标进行编码，在Cube构建时会更新全局字典，然后在&quot;Build Base Cuboid&quot; 加载全局字典进行编码。</p>
 <hr/>
 
+<p>Q: 全局字典在Cube Merge时会进行重新构建吗？</p>
+<p>A：不会，全局字典不会参与Cube Merge。</p>
+<hr/>
+
 <p>Q: Kylin的维度列可以使用全局字典吗？</p>
 <p>A：不可以，因为全局字典仅支持根据Value查询Id，不可以根据Id反向查找Value。</p>
 <hr/>
