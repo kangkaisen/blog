@@ -115,7 +115,7 @@
 <h2 id="hbase是什么">HBase是什么</h2>
 <p>HBase构建在 HDFS 之上的分布式列式键值存储系统。
 HBase内部管理的文件全部存储在HDFS中。</p>
-<p>![Hadoop.jpg-39.3kB][1]</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/ugr0hwsqgaclgnfe2s1d3dmf/Hadoop.jpg" alt="Hadoop.jpg-39.3kB"></p>
 <h2 id="hbase-vs-hdfs">HBase VS HDFS</h2>
 <p>HDFS适合批处理场景</p>
 <ul>
@@ -124,7 +124,7 @@ HBase内部管理的文件全部存储在HDFS中。</p>
 <li>不支持数据更新</li>
 </ul>
 <h2 id="hbase-vs-rdbms">HBase VS RDBMS</h2>
-<p>![hbase-rdbms.jpg-25.5kB][2]</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/93peeksrzhxkx47hahapmdud/hbase-rdbms.jpg" alt="hbase-rdbms.jpg-25.5kB"></p>
 <p>范式化和反范式化
 事务(单行：多行ACID)
 索引(RowKey: 健全索引)</p>
@@ -149,7 +149,7 @@ HBase内部管理的文件全部存储在HDFS中。</p>
 <li>数据类型一致，数据特征相似，更利于压缩</li>
 <li>大量降低系统I/O</li>
 </ul>
-<p>![20141115094556515.png-50.3kB][3]</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/x6spo5o0pmzi0aym77ji9xpz/20141115094556515.png" alt="20141115094556515.png-50.3kB"></p>
 <h2 id="hbase-特性">Hbase 特性</h2>
 <ul>
 <li>容量巨大
@@ -177,7 +177,7 @@ HBase内部管理的文件全部存储在HDFS中。</p>
 <li>TTL</li>
 </ul>
 <h2 id="hbase架构">Hbase架构</h2>
-<p>![52297ef305db9.jpg-500.2kB][4]</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/exsyp3fd4i88ak5oc4roy39y/52297ef305db9.jpg" alt="52297ef305db9.jpg-500.2kB"></p>
 <h3 id="client">Client</h3>
 <ul>
 <li>包含访问 HBase 的接口，并维护 cache 来加快对 HBase 的访问</li>
@@ -206,7 +206,7 @@ HBase内部管理的文件全部存储在HDFS中。</p>
 <li>Region server 负责切分在运行过程中变得过大的 region </li>
 <li>Region Server 提供了行锁</li>
 </ul>
-<p>![21103732-a31b01647de0446a90ca4138d4d22eea.png-134.8kB][5]</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/924eoexb0yzz37x19pgn2g82/21103732-a31b01647de0446a90ca4138d4d22eea.png" alt="21103732-a31b01647de0446a90ca4138d4d22eea.png-134.8kB"></p>
 <p>HRegionServer:HRegion:HStore = Column Family
 HStore:</p>
 <ul>
@@ -220,8 +220,8 @@ HStore:</p>
 <p><strong>每个 update（或者说edit）都会
 被写到 log ，当通知客户端成功后， rs 把数据再加载到内存中。</strong></p>
 <h2 id="hbase数据模型">HBase数据模型</h2>
-<p>![t01486bbafeff6db16e.png-26.9kB][6]</p>
-<p>![shell.png-265.5kB][7]</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/56vybkidvuqalsz29beu2qtv/t01486bbafeff6db16e.png" alt="t01486bbafeff6db16e.png-26.9kB"></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/urctb6it36hwhattch4ef5zf/shell.png" alt="shell.png-265.5kB"></p>
 <h3 id="row-key">Row Key</h3>
 <p>行键，Table的主键，Table中的记录按照Row Key排序。类型为Byte array </p>
 <ul>
@@ -255,7 +255,7 @@ K: 4/cf:city/1446016565367/Put/vlen=4/mvcc=0 V: xian
 K: 5/cf:city/1446016578471/Put/vlen=3/mvcc=0 V: xan
 K: 6/cf:age/1446016593194/Put/vlen=2/mvcc=0 V: 24
 K: 7/cf:name/1446016604500/Put/vlen=8/mvcc=0 V: xiaoming
-</code></pre><p>![此处输入图片的描述][8]</p>
+</code></pre><p><img src="http://static.zybuluo.com/kangkaisen/hsuuist3o9wwxm83b16i9adm/keyvalue.png" alt="此处输入图片的描述"></p>
 <h3 id="hfile格式">HFile格式</h3>
 <pre><code>{HBASE_HOME}/bin/hbase hfile -m -f /hbase/data/default/kks1/68639b7c80a31bf91448d26bb7af17b7/cf/74e43a51ebd14007870ac58658330aeb
 </code></pre><pre><code>Block index size as per heapsize: 392
@@ -306,23 +306,23 @@ Bloom filter:
     Comparator: RawBytesComparator
 Delete Family Bloom filter:
     Not present
-</code></pre><p>![HFilev1.png-66.6kB][9]</p>
-<p>![a112.png-80.5kB][10]</p>
+</code></pre><p><img src="http://static.zybuluo.com/kangkaisen/1khawpaz6sh6n5w0uuxqv25o/HFilev1.png" alt="HFilev1.png-66.6kB"></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/zbwuzcyu7r3nrdd0f92sh397/a112.png" alt="a112.png-80.5kB"></p>
 <p>物理上，表是按列族分开存储的，每个 Column Family 存储在 HDFS 上的一个单独文件中(因此最好将具有共同I/O特性的列放在一个 Column Family中)</p>
 <p>HBase 为每个值维护了多级索引，即： <strong>RowKey, column family, column name, timestamp</strong></p>
 <p><strong>Table 中的所有行都按照 RowKey 的字典序排列</strong></p>
 <p>Table 在行的方向上分割为多个Region
-![hbase 表结构.jpg-135.3kB][11]</p>
+<img src="http://static.zybuluo.com/kangkaisen/i0jumi9wzxgfacxbuz4s0kxc/hbase%20%E8%A1%A8%E7%BB%93%E6%9E%84.jpg" alt="hbase 表结构.jpg-135.3kB"></p>
 <p>Region 按大小分割的，每个表开始只有一个 region ，随着数据增多， region 不断增大，当增大到一个阀值的时候，region就会等分会两个新的region，之后会有越来越多的region</p>
 <p><strong>Region 是 HBase 中分布式存储和负载均衡的最小单元</strong>,Region 实际上是rowkey 排序后的按规则分割的连续的存储空间,不同Region分布到不同RegionServer上</p>
-<p>![17345043259.jpg-28kB][12]</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/itdy5pd97plbpm8lja9cxu37/17345043259.jpg" alt="17345043259.jpg-28kB"></p>
 <p><strong>Region 虽然是分布式存储的最小单元，但并不是存储的最小单元。</strong> </p>
 <ol>
 <li>Region 由一个或者多个 Store 组成，每个 Store 保存一个columns family  </li>
 <li>每个 Strore 又由一个 MemStore 和 0 至多个 StoreFile 组成  </li>
 <li>MemStore 存储在内存中， StoreFile 存储在 HDFS 上。</li>
 </ol>
-<p>![21103732-a31b01647de0446a90ca4138d4d22eea.png-134.8kB][13]</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/924eoexb0yzz37x19pgn2g82/21103732-a31b01647de0446a90ca4138d4d22eea.png" alt="21103732-a31b01647de0446a90ca4138d4d22eea.png-134.8kB"></p>
 <h2 id="hbase-一致性模型">HBase 一致性模型</h2>
 <p>HBase 是强一致性的。</p>
 <ul>
@@ -407,7 +407,7 @@ FB Like按钮</li>
 所有的过滤器都在服务端生效,叫做谓词下推。
 数据仍然需要从硬盘读进RegionServer,过滤器在RegionServer里发挥作用
 过滤器也可以自定义</p>
-<p>![20130917172215593-43.4kB][14]</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/bs0brbz5yc3tlga2xajp2lit/20130917172215593" alt="20130917172215593-43.4kB"></p>
 <h3 id="计数器">计数器</h3>
 <p>如果没有计数器，用户需要针对一行加锁，读取一行的值，然后再加上特定的值，然后再写回并释放锁，尤其是当客户端进程崩溃之后，尚未释放的锁需要等待超时恢复，这样在一个高负载的系统中会引起灾难性后果。</p>
 <p>计数器就是读取并修改（Read and modify），保证一次客户端操作的原子性。</p>
@@ -427,7 +427,7 @@ FB Like按钮</li>
 </ul>
 <h2 id="hbase-核心概念">Hbase 核心概念</h2>
 <h3 id="lsm-树">LSM 树</h3>
-<p>![20130508094524405-27kB][15]</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/p4ma9y50swfn7tf77o9z3gyr/20130508094524405" alt="20130508094524405-27kB"></p>
 <p>RDBMS 通常是寻道型的
 LSM树 属于传输型的
 LSM树 会使用日志文件</p>
@@ -440,7 +440,7 @@ LSM树和B+树相比，LSM树牺牲了部分读性能，用来大幅提高写性
 <h3 id="split">split</h3>
 <p>当store的store file集合中总文件长度太大时(超过配置的阈值)，这个region会一分为二.</p>
 <p>父 region 下线，新分裂的俩个子 region 会被Master 分配到相应的 RegionServer.</p>
-<p>![Image_2_.png-13kB][16]</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/eu74lvjqovciqfhmfg55vuz1/Image_2_.png" alt="Image_2_.png-13kB"></p>
 <h3 id="compaction">compaction</h3>
 <p>minor compaction 将部分小文件合并成大文件
 majar compaction 
