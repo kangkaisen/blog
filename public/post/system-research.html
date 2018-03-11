@@ -1,0 +1,176 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|如何进行系统调研</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 如何进行系统调研</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2018-03-11</p>
+            <p>分类: <a href="../tag/方法论.html" target="_blank" >方法论</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#平台侧系统调研的原则">平台侧系统调研的原则</a></li>
+<li><a href="#平台侧系统调研的步骤">平台侧系统调研的步骤</a></li>
+<li><a href="#平台侧调研需要注意的问题">平台侧调研需要注意的问题</a></li>
+<li><a href="#如何进行用户侧系统调研">如何进行用户侧系统调研</a></li>
+<li><a href="#参考资料">参考资料</a></li>
+</ul>
+<!-- toc stop -->
+<p>我们公司内部进行系统选型或者方案设计的时候经常会进行系统调研，我认为系统调研一般分为两类：<strong>用户视角的系统调研</strong>（只需使用）和<strong>平台视角的系统调研</strong>（需要进行系统的维护和二次开发），下面我分别<strong>浅谈下</strong>如何进行用户视角的系统调研和平台视角的系统调研。</p>
+<p>（目前水平和视野有限， 有了新的理解后会不断更新）</p>
+<h3 id="平台侧系统调研的原则">平台侧系统调研的原则</h3>
+<p>个人认为我们平台侧进行系统调研时应该<strong>原理为主，测试为辅</strong>。（测试和原理一样都很重要，如同实验物理和理论物理一样，是相辅相成，不可分割的，但是在系统调研调研阶段我认为我们应该更侧重原理，<strong>调研时测试的目的应该是验证或纠正我们对系统原理的理解</strong>），理由如下：</p>
+<ol>
+<li><strong>系统是动态发展的，而且许多系统开发迭代速度很快，所以基于某个固定版本去测试意义不是很大。</strong>（比如TiDB1.1 某些场景下的OLAP查询相比1.0有几倍提升；比如Palo最新版相比我2月份测试时最多有6倍的性能提升；比如我们自己开发的Kylin精确去重查询，在多轮优化后，性能有数量级的提升）</li>
+<li><strong>测试环境的规模和测试场景有限，我们不可能测试出大规模集群下的性能瓶颈和扩展性问题，这只能依靠原理推导。</strong>（比如Kylin查询时加载字典导致的查询可用性下降在只有几个Cube时肯定不会暴露出来；比如Druid的Broker需要加载所有segment元数据的问题在小集群下也不会暴露；比如Clickhouse每次查询需要访问所有分区的缺陷在小规模测试也很难暴露出来）</li>
+<li><strong>只要我们理解了系统的架构，核心原理，我们就应该能够推测出其适用场景，固有缺陷，扩展性问题。</strong>  (比如香农定律就在理论上给出了信道编码的极限，后人只是在不断寻找无限逼近香农的理论边界，提出工程上可行的方案；比如从图灵机理论我们可以推测出目前人工智能的极限，人工智能只能解决世界上所有问题的极其微小的一部分，推理如下：</li>
+</ol>
+<blockquote>
+<p>1 世界上有很多问题，其中只有一部分是数学问题；</p>
+<p>2 在数学问题中，只有一小部分是有解的；</p>
+<p>3 在有解的数学问题中，只有一部分是理想状态的图灵机可以解决的；</p>
+<p>4 在后一类问题中，又只有一部分是今天实际的计算机可以解决的；</p>
+<p>5 而人工智能可以解决的问题，又只是计算机可以解决问题的一部分。</p>
+</blockquote>
+<h3 id="平台侧系统调研的步骤">平台侧系统调研的步骤</h3>
+<p>当我们确定调研的原则是原理为主，测试为辅后，可以按照以下步骤进行系统调研</p>
+<ul>
+<li>先通过系统官方文档，论文，公开资料，代码进行系统原理的调研，掌握系统的核心架构和原理；</li>
+<li>用该领域的标准测试集进行测试（比如OLAP领域的SSB和TPC-H测试）</li>
+</ul>
+<p>多数时候这两步已经足够，如果测试结果优秀，从原理上我们也判断该系统架构合理，可以满足我们需求，能够解决我们现有系统的不足和痛点，我们可以再进行第二次测试，第二次测试可以考虑以下几点：</p>
+<ul>
+<li>标准测试集没有cover的场景</li>
+<li>现有系统的痛点或者优势场景</li>
+<li>原理上推测出的调研系统可能的痛点或者优势场景</li>
+<li>原理上90%以上能够推测出结果的测试场景（无需测试）</li>
+</ul>
+<p><strong>经过第二次测试后，我们此时就应该判断我们是否需要上线该系统</strong>，具体可以从以下方面进行考虑：</p>
+<ul>
+<li>运维管理成本</li>
+<li>开发成本</li>
+<li>社区的活跃度</li>
+<li>业务需求的紧迫性</li>
+<li>该系统离我们理想系统的距离和改造的成本</li>
+<li>该系统在大规模集群下的可能瓶颈和问题</li>
+<li>该系统的固有缺陷以及避免改缺陷的成本</li>
+</ul>
+<p><strong>如果我们已经决定上线该系统，我们可以再进行复杂的，详细的测试，发现该系统使用，运维，功能上的更多细节问题</strong>。</p>
+<h3 id="平台侧调研需要注意的问题">平台侧调研需要注意的问题</h3>
+<ul>
+<li>如果调研的系统官方文档，论文，公开资料已经足够详细，我们就没有必要看代码；</li>
+<li>即使必须要看代码，也不能限于代码海洋中，纠结某些细节问题，因为调研时间有限，不可能搞清所有细节问题；</li>
+<li>看代码时，可以通过log，测试用例，debug 来加速我们对代码结构的整体理解和把握；</li>
+<li>看代码时，尽可能带着明确的问题和线索去看</li>
+<li>对于某些重要的技术细节，我们可以先掌握What和Why，对于How我们可以在业余时间或者真正需要使用到这种技术时再详细调研，因为某个技术细节不会影响我们对一个系统整体架构，核心原理和未来极限的理解</li>
+<li>调研新系统时应该和已知系统进行对比，思考为什么不同系统在解决相同或者类似问题时采用了不同方案，不同方案之间的权衡是什么</li>
+</ul>
+<h3 id="如何进行用户侧系统调研">如何进行用户侧系统调研</h3>
+<p>用户侧系统调研相比平台侧就会简单许多，我们不用考虑系统的维护和开发，我们也不用考虑系统都支持哪些场景。只要明确我们当前的需求场景目标系统能不能很好的Cover，一般而言我们可以从以下几点去考虑：</p>
+<ol>
+<li>目标系统在我们的需求场景下是否有成功案例</li>
+<li>是否足够易用</li>
+<li>性能和QPS是否能满足需求</li>
+<li>是否可以提供SLA保证</li>
+</ol>
+<p>一般而言，在公司内部，每个需求在平台侧都会有相应的一个或者几个系统，平台侧也会给出每个系统的适用场景和特点，所以用户侧的调研就会简单许多，调研的主要工作其实都是平台侧完成。</p>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="https://medium.com/@leventov/comparison-of-the-open-source-olap-systems-for-big-data-clickhouse-druid-and-pinot-8e042a5ed1c7">Comparison of the Open Source OLAP Systems for Big Data: ClickHouse, Druid and Pinot</a></p>
+<p>得到专栏《吴军的谷歌方法论》的《为什么计算机不是万能的》</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span onmouseover="this.style.color='rgb(236,96,0)';this.style.background='rgb(204,204,204)'"
+                          onMouseOut="this.style.color='#fff';this.style.background='rgb(236,96,0)'"
+                          style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 70px; color: #fff; font: 400 36px 'Palatino Linotype'; background: rgb(236,96,0)">赏</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <div id="alipay" style="display: inline-block">
+                        <img id="alipay_qr" src="../images/zhifu.jpg" alt="康凯森 支付"
+                             style="width: 200px; max-width: 100%; display: inline-block"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5aa52f6a927a15382db75515
+                 data-title=如何进行系统调研
+                 data-url=system-research>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+</body>
+</html>
