@@ -65,6 +65,8 @@
                 </div>
 
             </div>
+            <h3>评论</h3>
+            <div id="vcomment"></div>
         </div>
         <div class="col-md-1"></div>
     </div>
@@ -100,6 +102,18 @@
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
     })();
+</script>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+<script type="text/javascript">
+    window.valine = new Valine({
+        el: '#vcomment' ,
+        verify: true,
+        notify: false,
+        appId: 'BlLnB0re5OzQVzrgEplAxkyg-gzGzoHsz',
+        appKey: 'wUyxSV0U4Vi7oK1EHK6ipErv',
+        placeholder: '欢迎评论'
+    });
 </script>
 
 </body>
