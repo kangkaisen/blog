@@ -240,7 +240,7 @@ javax.security.sasl.SaslException: GSS initiate failed [Caused by GSSException: 
         at org.apache.kylin.source.hive.CLIHiveClient.getMetaStoreClient(CLIHiveClient.java:136)
         at org.apache.kylin.source.hive.CLIHiveClient.getHiveTableRows(CLIHiveClient.java:130)
 </code></pre><p>前一阵忙着晋升答辩，我就没有追，暂时加了个报警，收到报警后重启下服务（因为是Staging环境，而且我们有两台机器，用户主要使用的另一台机器，所以对用户影响不大）。前几天我就决定追一下，但是的确没什么好思路，我就决定先看JDK8的源码，先明确下这个异常的直接原因是什么。</p>
-<p>通过看JDK8的源码，首先明天这个异常的直接原因是获取的Ticket是NULL:</p>
+<p>通过看JDK8的源码，首先明确这个异常的直接原因是获取的Ticket是NULL:</p>
 <pre><code>        KerberosTicket tgt = getTgt(caller, name, initLifetime);
         if (tgt == null)
             throw new GSSException(GSSException.NO_CRED, -1,
