@@ -1,0 +1,363 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Apache Kylin VS Baidu Palo</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Apache Kylin VS Baidu Palo</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2018-04-17</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#1-系统架构">1 系统架构</a><ul>
+<li><a href="#11-what-is-kylin">1.1 What is Kylin</a></li>
+<li><a href="#12-what-is-palo">1.2 What is Palo</a></li>
+</ul>
+</li>
+<li><a href="#2-数据模型">2 数据模型</a><ul>
+<li><a href="#21-kylin的聚合模型">2.1 Kylin的聚合模型</a></li>
+<li><a href="#22-palo的聚合模型">2.2 Palo的聚合模型</a></li>
+<li><a href="#23-kylin-cuboid-vs-palo-rollup">2.3 Kylin Cuboid VS Palo RollUp</a></li>
+<li><a href="#24-palo的明细模型">2.4 Palo的明细模型</a></li>
+</ul>
+</li>
+<li><a href="#3-存储引擎">3 存储引擎</a></li>
+<li><a href="#4-数据导入">4 数据导入</a></li>
+<li><a href="#5-查询">5 查询</a></li>
+<li><a href="#6-精确去重">6 精确去重</a></li>
+<li><a href="#7-元数据">7 元数据</a></li>
+<li><a href="#8-高性能">8 高性能</a></li>
+<li><a href="#9-高可用">9 高可用</a></li>
+<li><a href="#10-可维护性">10 可维护性</a><ul>
+<li><a href="#101-部署">10.1 部署</a></li>
+<li><a href="#102-运维">10.2 运维</a></li>
+<li><a href="#103-客服">10.3 客服</a></li>
+</ul>
+</li>
+<li><a href="#11-易用性">11 易用性</a><ul>
+<li><a href="#111-查询接入">11.1 查询接入</a></li>
+<li><a href="#112-学习成本">11.2 学习成本</a></li>
+<li><a href="#113-schema-change">11.3 Schema Change</a></li>
+</ul>
+</li>
+<li><a href="#12-功能">12 功能</a></li>
+<li><a href="#13-社区和生态">13 社区和生态</a></li>
+<li><a href="#14-总结">14 总结</a></li>
+<li><a href="#15-参考资料">15 参考资料</a></li>
+</ul>
+<!-- toc stop -->
+<p>Apache Kylin和Baidu Palo都是优秀的开源OLAP系统，本文将全方位地对比Kylin和Palo。Kylin和Palo分别是MOALP和ROLAP的代表，对比这两个系统的目的不是为了说明哪个系统更好，<strong>只是为了明确每个系统的设计思想和架构原理，让大家可以根据自己的实际需求去选择合适的系统，也可以进一步去思考我们如何去设计出更优秀的OLAP系统</strong>。</p>
+<p>本文对Apache Kylin的理解基于近两年来在生产环境大规模地使用，运维和深度开发，我已向Kylin社区贡献了98次Commit，包含多项新功能和深度优化。</p>
+<p>本文对Baidu Palo的理解基于官方文档和论文的阅读，代码的粗浅阅读和较深入地测试。</p>
+<p><strong>注： 本文的对比基于Apache Kylin 2.0.0 和Baidu Palo 0.8.0。</strong></p>
+<h2 id="1-系统架构">1 系统架构</h2>
+<h3 id="11-what-is-kylin">1.1 What is Kylin</h3>
+<p>Kylin的核心思想是<strong>预计算</strong>，<strong>利用空间换时间来加速查询模式固定的OLAP查询</strong>。</p>
+<p>Kylin的理论基础是Cube理论，每一种维度组合称之为Cuboid，所有Cuboid的集合是Cube。 其中由所有维度组成的Cuboid称为Base Cuboid，图中(A,B,C,D)即为Base Cuboid，所有的Cuboid都可以基于Base Cuboid计算出来。 在查询时，Kylin会自动选择满足条件的最“小”Cuboid，比如下面的SQL就会对应Cuboid（A,B）:</p>
+<blockquote>
+<p>select xx from table where A=xx group by B</p>
+</blockquote>
+<p><img src="http://static.zybuluo.com/kangkaisen/v4fut6lpphlj8ofbv085mdst/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%886.00.24.png" alt="Kylin-cube"></p>
+<p>下图是Kylin数据流转的示意图，Kylin自身的组件只有两个：<strong>JobServer和QueryServer</strong>。 Kylin的JobServer主要负责将数据源（Hive,Kafka）的数据通过计算引擎（MapReduce，Spark）生成Cube存储到存储引擎（HBase）中；QueryServer主要负责SQL的解析，逻辑计划的生成和优化，向HBase的多个Region发起请求，并对多个Region的结果进行汇总，生成最终的结果集。
+<img src="http://static.zybuluo.com/kangkaisen/tdqnnux9um7vihjcti83o0sn/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202017-11-04%20%E4%B8%8B%E5%8D%882.05.57.png" alt="kylin-data"></p>
+<p>下图是Kylin可插拔的架构图, 在架构设计上，Kylin的<strong>数据源</strong>，构建Cube的<strong>计算引擎</strong>，<strong>存储引擎</strong>都是可插拔的。Kylin的核心就是这套可插拔架构，Cube数据模型和Cuboid的算法。</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/nl3jr2irb62stt7naentwk1g/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%886.29.42.png" alt="Kylin"></p>
+<h3 id="12-what-is-palo">1.2 What is Palo</h3>
+<p>Palo是一个基于MPP的OLAP系统，主要整合了<strong>Google Mesa</strong>（数据模型），<strong>Apache Impala</strong>（MPP Query Engine)和<strong>Apache ORCFile</strong> (存储格式，编码和压缩) 的技术。</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/km2dj2w80iiv9kpuqnrkpzec/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%886.43.15.png" alt="baidu-palo"></p>
+<p>Palo的系统架构如下，Palo主要分为FE和BE两个组件，FE主要负责查询的编译，分发和元数据管理（基于内存，类似HDFS NN）；BE主要负责查询的执行和存储系统。</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/btmsss3wmxf3b8xf9vqkuyc6/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%886.46.27.png" alt="baidu-palo"></p>
+<h2 id="2-数据模型">2 数据模型</h2>
+<h3 id="21-kylin的聚合模型">2.1 Kylin的聚合模型</h3>
+<p>Kylin将表中的列分为维度列和指标列。在数据导入和查询时相同维度列中的指标会按照对应的聚合函数(Sum, Count, Min, Max, 精确去重，近似去重，百分位数，TOPN)进行聚合。</p>
+<p>在存储到HBase时，<strong>Cuboid+维度 会作为HBase的Rowkey, 指标会作为HBase的Value</strong>，一般所有指标会在HBase的一个列族，每列对应一个指标，但对于较大的去重指标会单独拆分到第2个列族。</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/eo3l397u4n800lhxrao2hmcy/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%887.03.57.png" alt="Kylin-model"></p>
+<h3 id="22-palo的聚合模型">2.2 Palo的聚合模型</h3>
+<p>Palo的聚合模型借鉴自Mesa，但本质上和Kylin的聚合模型一样，只不过Palo中将维度称作Key，指标称作Value。</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/ia4fwu6uh9bmkujl7f9ugiki/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%887.21.25.png" alt="palo-data-model"></p>
+<p>Palo中比较独特的聚合函数是Replace函数，这个聚合函数能够<strong>保证相同Keys的记录只保留最新的Value</strong>，可以借助这个Replace函数来实现<strong>点更新</strong>。一般OLAP系统的数据都是只支持Append的，但是像电商中交易的退款，广告点击中的无效点击处理，都需要去更新之前写入的单条数据，在Kylin这种没有Relpace函数的系统中我们必须把包含对应更新记录的整个Segment数据全部重刷，但是有了Relpace函数，我们只需要再追加1条新的记录即可。 但是Palo中的Repalce函数有个缺点：<strong>无法支持预聚合</strong>，就是说只要你的SQL中包含了Repalce函数，即使有其他可以已经预聚合的Sum，Max指标，也必须现场计算。 </p>
+<p>为什么Palo可以支持点更新呢？</p>
+<p>Kylin中的Segment是不可变的，也就是说HFile一旦生成，就不再发生任何变化。但是Palo中的Segment文件和HBase一样，是可以进行Compaction的，具体可以参考<a href="https://blog.bcmeng.com/post/google-mesa.html#mesa%E6%95%B0%E6%8D%AE%E7%89%88%E6%9C%AC%E5%8C%96%E7%AE%A1%E7%90%86">Google Mesa 论文解读中的Mesa数据版本化管理</a></p>
+<p>Palo的聚合模型相比Kylin有个缺点：<strong>就是一个Column只能有一个预聚合函数，无法设置多个预聚合函数</strong>。 不过Palo可以现场计算其他的聚合函数。 Baidu Palo的开发者Review时提到，针对这个问题，Palo还有一种解法：由于<strong>Palo支持多表导入的原子更新</strong>，所以1个Column需要多个聚合函数时，可以在Palo中建多张表，同一份数据导入时，Palo可以同时原子更新多张Palo表，缺点是多张Palo表的查询路由需要应用层来完成。</p>
+<p>Palo中和Kylin的Cuboid等价的概念是RollUp表，<strong>Cuboid和RollUp表都可以认为是一种Materialized Views或者Index</strong>。 Palo的RollUp表和Kylin的Cuboid一样，<strong>在查询时不需要显示指定</strong>，系统内部会根据查询条件进行路由。 如下图所示：</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/5gnpkz5j27hmn9aep0dskwr5/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%887.26.07.png" alt="Palo Rollup"></p>
+<p>Palo中RollUp表的路由规则如下：</p>
+<ol>
+<li>选择包含所有查询列的RollUp表</li>
+<li>按照过滤和排序的Column筛选最符合的RollUp表</li>
+<li>按照Join的Column筛选最符合的RollUp表</li>
+<li>行数最小的</li>
+<li>列数最小的</li>
+</ol>
+<h3 id="23-kylin-cuboid-vs-palo-rollup">2.3 Kylin Cuboid VS Palo RollUp</h3>
+<p><img src="http://static.zybuluo.com/kangkaisen/kj1wsy9e2h6cfgnyhlkguhqp/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%887.37.48.png" alt="Kylin cuboid vs palo rollup"></p>
+<h3 id="24-palo的明细模型">2.4 Palo的明细模型</h3>
+<p>由于Palo的聚合模型存在下面的缺陷，Palo引入了明细模型。</p>
+<ul>
+<li>必须区分维度列和指标列</li>
+<li>维度列很多时，Sort的成本很高</li>
+<li>Count成本很高，需要读取所有维度列（可以参考Kylin的解决方法进行优化）</li>
+</ul>
+<p>Palo的明细模型不会有任何聚合，不区分维度列和指标列，但是在建表时需要指定Sort Columns，<strong>数据导入时会根据Sort Columns进行排序，查询时根据Sort Column过滤会比较高效</strong>。</p>
+<p>如下图所示，Sort Columns是Year和City。</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/z0mv4e70sxcl13bj7yqojcxj/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%887.33.43.png" alt="Kylin-detail-model"></p>
+<p>这里需要注意一点，<strong>Palo中一张表只能有一种数据模型</strong>，即要么是聚合模型，要么是明细模型，而且<strong>Roll Up表的数据模型必须和Base表一致</strong>，也就是说明细模型的Base 表不能有聚合模型的Roll Up表。</p>
+<h2 id="3-存储引擎">3 存储引擎</h2>
+<p><strong>Kylin存储引擎HBase：</strong></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/50es9v5brce06fmg5wjsfbyd/kylin-hbase.png" alt="kylin-hbase"></p>
+<p>如上图所示，在Kylin中1个Cube可以按照时间拆分为多个Segment,<strong>Segment是Kylin中数据导入和刷新的最小单位</strong>。Kylin中1个Segment对应HBase中一张Table。 HBase中的Table会按照Range分区拆分为多个Region,每个Region会按照大小拆分为多个HFile。</p>
+<p>关于HFile的原理网上讲述的文章已经很多了，我这里简单介绍下。首先HFile整体上可以分为元信息，Blcoks，Index3部分，Blcoks和Index都可以分为Data和Meta两部分。Block是数据读取的最小单位，Block有多个Key-Value组成，一个Key-Value代表HBase中的一行记录，Key-Value由Kylin-Len，Value-Len，Key-Bytes,Value-Bytes 4部分组成。更详细的信息大家可以参考下图(下图来源于互联网，具体出处不详）：</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/zbwuzcyu7r3nrdd0f92sh397/a112.png" alt="HBase-HFile"></p>
+<p><strong>Palo存储引擎：</strong></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/835xzofbkalhk599x50t14u7/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-15%20%E4%B8%8B%E5%8D%884.41.25.png" alt="Palo-Storage"></p>
+<p>如上图所示，Palo的Table支持二级分区，可以先按照日期列进行一级分区，再按照指定列Hash分桶。具体来说，1个Table可以按照日期列分为多个Partition， 每个Partition可以包含多个Tablet，<strong>Tablet是数据移动、复制等操作的最小物理存储单元</strong>，各个Tablet之间的数据没有交集，并且在物理上独立存储。Partition 可以视为逻辑上最小的管理单元，<strong>数据的导入与删除，仅能针对一个 Partition进行</strong>。1个Table中Tablet的数量= Partition num * Bucket num。Tablet会按照一定大小（256M）拆分为多个Segment文件，Segment是列存的，但是会按行（1024）拆分为多个Rowblock。</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/16vr54yd8dtgvx22ro7sokcp/palo%20file.png" alt="palo segment file"></p>
+<p>下面我们来看下Palo Segment文件的具体格式，Palo文件格式主要参考了Apache ORC。如上图所示，Palo文件主要由Meta和Data两部分组成，Meta主要包括文件本身的Header，Segment Meta，Column Meta，和每个Column 数据流的元数据，每部分的具体内容大家看图即可，比较详细。 Data部分主要包含每一列的Index和Data，这里的Index指每一列的Min,Max值和数据流Stream的Position；Data就是每一列具体的数据内容，Data根据不同的数据类型会用不同的Stream来存储，Present Stream代表每个Value是否是Null，Data Stream代表二进制数据流，Length Stream代表非定长数据类型的长度。 下图是String使用字典编码和直接存储的Stream例子。</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/0d7mqdqlv2vl08vda02z1bw1/Palo%20String.png" alt="Palo String encoding"></p>
+<p>下面我们来看下Palo的前缀索引：</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/ccp8olubspvsv4htful3zj95/Palo%20index.png" alt="Palo index"></p>
+<p>本质上，Palo 的数据存储是类似 SSTable（Sorted String Table）的数据结构。该结构是一种有序的数据结构，可以按照指定的列有序存储。在这种数据结构上，以排序列作为条件进行查找，会非常的高效。而前缀索引，即在排序的基础上，实现的一种根据给定前缀列，快速查询数据的索引方式。前缀索引文件的格式如上图所示，<strong>索引的Key是每个Rowblock第一行记录的Sort Key的前36个字节，Value是Rowblock在Segment文件的偏移量</strong>。</p>
+<p>有了前缀索引后，我们查询特定Key的过程就是两次二分查找：</p>
+<ol>
+<li>先加载Index文件，二分查找Index文件获取包含特定Key的Row blocks的Offest,然后从Sement Files中获取指定的Rowblock；</li>
+<li>在Rowblocks中二分查找特定的Key</li>
+</ol>
+<h2 id="4-数据导入">4 数据导入</h2>
+<p><strong>Kylin数据导入：</strong></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/31g0hzmzbxhlq1512lxg9i9l/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-16%20%E4%B8%8A%E5%8D%8811.02.23.png" alt="Kylin data loading"></p>
+<p>如上图，Kylin数据导入主要分为建Hive大宽表(这一步会处理Join)；维度列构建字典；逐层构建Cuboid；Cuboid转为HFile；Load HFile To HBase; 元数据更新这几步。</p>
+<p>其中Redistribute大宽表这一步的作用是为了将整个表的数据搞均匀，避免后续的步骤中有数据倾斜，Kylin有配置可以跳过这一步。</p>
+<p>其中Extract Distinct Columns这一步的作用是获取需要构建字典的维度列的Distinct值。假如一个ID维度列有1，2，1，2，2，1，1，2这8行，那么经过这一步后ID列的值就只有1，2两行，做这一步是为了下一步对维度列构建字典时更快速。</p>
+<p>其他几个步骤都比较好理解，我就不再赘述。更详细的信息可以参考 <a href="https://blog.bcmeng.com/post/kylin-cube.html">Apache Kylin Cube 构建原理</a></p>
+<p><strong>Palo数据导入：</strong>
+<img src="http://static.zybuluo.com/kangkaisen/h1bnoiadyofrjnq2or8uh8wh/palo%20data%20loading.png" alt="palo data loading"></p>
+<p>Palo 数据导入的两个核心阶段是ETL和LOADING, ETL阶段主要完成以下工作：</p>
+<ul>
+<li>数据类型和格式的校验</li>
+<li>根据Teblet拆分数据 </li>
+<li>按照Key列进行排序, 对Value进行聚合</li>
+</ul>
+<p>LOADING阶段主要完成以下工作：</p>
+<ul>
+<li>每个Tablet对应的BE拉取排序好的数据</li>
+<li>进行数据的格式转换，生成索引</li>
+</ul>
+<p>LOADING完成后会进行元数据的更新。</p>
+<h2 id="5-查询">5 查询</h2>
+<p><strong>Kylin查询：</strong></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/yi8gj0j729zsrmeeg407oazh/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-15%20%E4%B8%8B%E5%8D%886.12.24.png" alt="Kylin query"></p>
+<p>如上图，整个Kylin的查询过程比较简单，是个Scatter-Gather的模型。图中圆形框的内容发生在Kylin QueryServer端，方形框的内容发生在HBase端。Kylin QueryServer端收到SQL后，会先进行SQL的解析，然后生成和优化Plan，再根据Plan生成和编译代码，之后会根据Plan生成HBase的Scan请求，如果可能，HBase端除了Scan之外，还会进行过滤和聚合（基于HBase的Coprocessor实现），Kylin会将HBase端返回的结果进行合并，交给Calcite之前生成好的代码进行计算。</p>
+<p><strong>Palo查询：</strong></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/79z437wez74gf51x9ceec4ov/palo-impala.png" alt="palo-impala-query"></p>
+<p>Palo的查询引擎使用的是Impala，是MPP架构。 Palo的FE 主要负责SQL的解析，语法分析，查询计划的生成和优化。查询计划的生成主要分为两步：</p>
+<ol>
+<li>生成单节点查询计划 （上图左下角）</li>
+<li>将单节点的查询计划分布式化，生成PlanFragment（上图右半部分）</li>
+</ol>
+<p>第一步主要包括Plan Tree的生成，谓词下推， Table Partitions pruning，Column projections，Cost-based优化等；第二步 将单节点的查询计划分布式化，分布式化的目标是<strong>最小化数据移动和最大化本地Scan</strong>，分布式化的方法是增加ExchangeNode，执行计划树会以ExchangeNode为边界拆分为PlanFragment，1个PlanFragment封装了在一台机器上对同一数据集的部分PlanTree。如上图所示：各个Fragment的数据流转和最终的结果发送依赖：DataSink。 </p>
+<p>当FE生成好查询计划树后，BE对应的各种Plan Node（Scan, Join, Union, Aggregation, Sort等）执行自己负责的操作即可。</p>
+<h2 id="6-精确去重">6 精确去重</h2>
+<p><strong>Kylin的精确去重：</strong></p>
+<p>Kylin的精确去重是基于全局字典和RoaringBitmap实现的基于预计算的精确去重。具体可以参考 <a href="https://blog.bcmeng.com/post/kylin-distinct-count-global-dict.html">Apache Kylin 精确去重和全局字典权威指南</a></p>
+<p><strong>Palo的精确去重：</strong></p>
+<p>Palo的精确去重是现场精确去重，Palo计算精确去重时会拆分为两步：</p>
+<ol>
+<li>按照所有的group by 字段和精确去重的字段进行聚合</li>
+<li>按照所有的group by 字段进行聚合</li>
+</ol>
+<pre><code>SELECT a, COUNT(DISTINCT b, c), MIN(d), COUNT(*) FROM T GROUP BY a
+* - 1st phase grouping exprs: a, b, c
+* - 1st phase agg exprs: MIN(d), COUNT(*)
+* - 2nd phase grouping exprs: a
+* - 2nd phase agg exprs: COUNT(*), MIN(&lt;MIN(d) from 1st phase&gt;), SUM(&lt;COUNT(*) from 1st phase&gt;)
+</code></pre><p>下面是个简单的等价转换的例子：</p>
+<pre><code>select count(distinct lo_ordtotalprice) from ssb_sf20.v2_lineorder;
+
+select count(*) from (select count(*) from ssb_sf20.v2_lineorder group by lo_ordtotalprice) a;
+</code></pre><p>Palo现场精确去重计算性能和<strong>去重列的基数</strong>、<strong>去重指标个数</strong>、<strong>过滤后的数据大小</strong>成<strong>负相关</strong>；</p>
+<h2 id="7-元数据">7 元数据</h2>
+<p><strong>Kylin的元数据</strong> ：</p>
+<p>Kylin的元数据是利用HBase存储的，可以很好地横向扩展。Kylin每个具体的元数据都是一个Json文件，HBase的Rowkey是文件名，Value是Json文件的内容。Kylin的元数据表设置了IN_MEMORY =&gt; &#39;true&#39; 属性, 元数据表会常驻HBase RegionServer的内存，所以元数据的查询性能很好，一般在几ms到几十ms。</p>
+<p>Kylin元数据利用HBase存储的一个问题是，在Kylin可插拔架构下，即使我们实现了另一种存储引擎，我们也必须部署HBase来存储元数据，所以Kylin要真正做到存储引擎的可插拔，就必须实现一个独立的元数据存储。</p>
+<p><strong>Palo的元数据</strong>：</p>
+<p>Palo的元数据是基于内存的，这样做的好处是性能很好且不需要额外的系统依赖。 缺点是单机的内存是有限的，扩展能力受限，但是根据Palo开发者的反馈，由于Palo本身的元数据不多，所以元数据本身占用的内存不是很多，目前用大内存的物理机，应该可以支撑数百台机器的OLAP集群。 此外，OLAP系统和HDFS这种分布式存储系统不一样，我们部署多个集群的运维成本和1个集群区别不大。</p>
+<p>关于Palo元数据的具体原理大家可以参考Palo官方文档<a href="https://github.com/baidu/palo/wiki/Metadata-Design">Palo 元数据设计文档</a></p>
+<h2 id="8-高性能">8 高性能</h2>
+<p><strong>Why Kylin Query Fast：</strong></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/3ekcfow4xonod7y40nbje6pg/image.png" alt="Kylin query"></p>
+<p>Kylin查询快的核心原因就是预计算，如图(图片出处 <a href="https://www.slideshare.net/YangLi43/apache-kylin-20-from-classic-olap-to-realtime-data-warehouse">Apache kylin 2.0: from classic olap to real-time data warehouse</a>)<strong>，Kylin现场查询时不需要Join，也几乎不需要聚合，主要就是Scan + Filter</strong>。</p>
+<p><strong>Why Palo Query Fast：</strong></p>
+<ol>
+<li>In-Memory Metadata。 Palo的元数据就在内存中，元数据访问速度很快。</li>
+<li>聚合模型可以在数据导入时进行预聚合。</li>
+<li>和Kylin一样，也支持预计算的RollUp Table。</li>
+<li>MPP的查询引擎。</li>
+<li>向量化执行。相比Kylin中Calcite的代码生成，向量化执行在处理高并发的低延迟查询时性能更好，<strong>Kylin的代码生成本身可能会花费几十ms甚至几百ms</strong>。</li>
+<li>列式存储 + 前缀索引。</li>
+</ol>
+<h2 id="9-高可用">9 高可用</h2>
+<p><strong>Kylin高可用：</strong></p>
+<p><strong>Kylin JobServer的高可用</strong>： Kylin的JobServer是无状态的，一台JobServer挂掉后，其他JobServer会很快接管正在Running的Job。JobServer的高可用是基于Zookeeper实现的，具体可以参考<a href="https://blog.bcmeng.com/post/kylin-job.html">Apache Kylin Job 生成和调度详解</a>。</p>
+<p><strong>Kylin QueryServer的高可用</strong>：Kylin的QueryServer也是无状态的，其高可用一般通过Nginx这类的负载均衡组件来实现。 </p>
+<p><strong>Kylin Hadoop依赖的高可用</strong>： 要单纯保证Kylin自身组件的高可用并不困难，但是要保证Kylin整体数据导入和查询的高可用是<strong>十分困难的</strong>，因为必须同时保证HBase，Hive，Hive Metastore，Spark，Mapreduce，HDFS，Yarn，Zookeeper，Kerberos这些服务的高可用。</p>
+<p><strong>Palo高可用：</strong></p>
+<p><strong>Palo FE的高可用</strong>： Palo FE的高可用主要基于BerkeleyDB java version实现，BDB-JE实现了<strong>类Paxos一致性协议算法</strong>。</p>
+<p><strong>Palo BE的高可用：</strong> Palo会保证每个Tablet的多个副本分配到不同的BE上，所以一个BE down掉，不会影响查询的可用性。</p>
+<h2 id="10-可维护性">10 可维护性</h2>
+<h3 id="101-部署">10.1 部署</h3>
+<p><strong>Kylin部署</strong>：如果完全从零开始，你就需要部署1个Hadoop集群和HBase集群。 即使公司已经有了比较完整的Hadoop生态，在部署Kylin前，你也必须先部署Hadoop客户端，HBase客户端，Hive客户端，Spark客户端。</p>
+<p><strong>Palo部署</strong>： 直接启动FE和BE。</p>
+<h3 id="102-运维">10.2 运维</h3>
+<p><strong>Kylin运维：</strong> 运维Kylin对Admin有较高的要求，首先必须了解HBase，Hive，MapReduce，Spark，HDFS，Yarn的原理；其次对MapReduce Job和Spark Job的问题排查和调优经验要丰富；然后必须掌握对Cube复杂调优的方法；最后出现问题时排查的链路较长，复杂度较高。</p>
+<p><strong>Palo运维：</strong> Palo只需要理解和掌握系统本身即可。</p>
+<h3 id="103-客服">10.3 客服</h3>
+<p><strong>Kylin 客服：</strong> 需要向用户讲清Hadoop相关的一堆概念；需要教会用户Kylin Web的使用；需要教会用户如何进行Cube优化（没有统一，简洁的优化原则）；需要教会用户怎么查看MR和Spark日志；需要教会用户怎么查询；</p>
+<p><strong>Palo 客服：</strong> 需要教会用户聚合模型，明细模型，前缀索引，RollUp表这些概念。</p>
+<h2 id="11-易用性">11 易用性</h2>
+<h3 id="111-查询接入">11.1 查询接入</h3>
+<p><strong>Kylin查询接入</strong>：Kylin支持Htpp,JDBC,ODBC 3种查询方式。</p>
+<p><strong>Palo查询接入：</strong> Palo支持Mysql协议，现有的大量Mysql工具都可以直接使用，用户的学习和迁移成本较低。</p>
+<h3 id="112-学习成本">11.2 学习成本</h3>
+<p><strong>Kylin学习成本</strong>：用户要用好Kylin，需要理解以下概念：</p>
+<ul>
+<li>Cuboid</li>
+<li>聚集组</li>
+<li>强制维度</li>
+<li>联合维度</li>
+<li>层次维度</li>
+<li>衍生维度</li>
+<li>Extend Column</li>
+<li>HBase RowKey 顺序</li>
+</ul>
+<p>此外，前面提到过，用户还需要学会怎么看Mapreduce Job和Spark Job日志。</p>
+<p><strong>Palo学习成本</strong>：用户需要理解聚合模型，明细模型，前缀索引，RollUp表这些概念。</p>
+<h3 id="113-schema-change">11.3 Schema Change</h3>
+<p>Schema在线变更是一个十分重要的feature，因为在实际业务中，Schema的变更会十分频繁。</p>
+<p><strong>Kylin Schema Change</strong>： Kylin中用户对Cube Schema的任何改变，都需要在Staging环境重刷所有数据，然后切到Prod环境。<strong>整个过程周期很长，资源浪费比较严重</strong>。</p>
+<p><strong>Palo Schema Change</strong>：Palo支持Online Schema Change。</p>
+<p>所谓的Schema在线变更就是指<strong>Scheme的变更不会影响数据的正常导入和查询</strong>，Palo中的Schema在线变更有3种：</p>
+<ul>
+<li>direct schema change：就是重刷全量数据，成本最高，和kylin的做法类似。当修改列的类型，稀疏索引中加一列时需要按照这种方法进行。</li>
+<li>sorted schema change: 改变了列的排序方式，需对数据进行重新排序。例如删除排序列中的一列, 字段重排序。</li>
+<li>linked schema change: 无需转换数据，直接完成。对于历史数据不会重刷，新摄入的数据都按照新的Schema处理，对于旧数据，新加列的值直接用对应数据类型的默认值填充。例如加列操作。Druid也支持这种做法。</li>
+</ul>
+<h2 id="12-功能">12 功能</h2>
+<p><img src="http://static.zybuluo.com/kangkaisen/naxrxh1z16cb18w2g50uaees/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-17%20%E4%B8%8B%E5%8D%8811.38.26.png" alt="Apache kylin VS baidu palo"></p>
+<p>注： 关于Kylin的明细查询，Kylin本身只有聚合模型，但是也可以<strong>通过将所有列作为维度列，只构建Base Cuboid来实现明细查询</strong>， 缺点是效率比较低下。</p>
+<p>注： 虽然Palo可以同时支持高并发，低延迟的OLAP查询和高吞吐的Adhoc查询，但显然这两类查询会相互影响。所以Baidu在实际应用中也是用两个集群分别满足OLAP查询和Adhoc查询需求。</p>
+<h2 id="13-社区和生态">13 社区和生态</h2>
+<p>Palo社区刚刚起步，目前核心用户只有Baidu；Kylin的社区和生态已经比较成熟，<strong>Kylin是第一个完全由中国开发者贡献的Apache顶级开源项目</strong>，目前已经在多家大型公司的生产环境中使用。</p>
+<h2 id="14-总结">14 总结</h2>
+<p>本文从多方面对比了Apache Kylin和Baidu Palo，有理解错误的地方欢迎指正。本文更多的是对两个系统架构和原理的客观描述，主观判断较少。最近在调研了Palo，ClickHouse，TiDB之后，也一直在思考<strong>OLAP系统的发展趋势是怎样的</strong>，<strong>下一代更优秀的OLAP系统架构应该是怎样的</strong>，<strong>一个系统是否可以同时很好的支持OLTP和OLAP</strong>，这些问题想清楚后我会再写篇文章描述下，当然，大家有好的想法，也欢迎直接Comment。</p>
+<h2 id="15-参考资料">15 参考资料</h2>
+<p><a href="https://github.com/baidu/palo">1 Palo文档和源码</a></p>
+<p><a href="https://github.com/apache/kylin">2 Kylin源码</a></p>
+<p><a href="https://www.slideshare.net/YangLi43/apache-kylin-20-from-classic-olap-to-realtime-data-warehouse">3 Apache kylin 2.0: from classic olap to real-time data warehouse</a> 在Kylin高性能部分引用了第4页PPT的截图</p>
+<p><a href="https://myslide.cn/slides/6392">4 百度MPP数据仓库Palo开源架构解读与应用</a> 在Palo查询部分引用了第31页PPT的截图</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 58px; color: #fff; font-size:36px; font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Helvetica, STKaiti, SimSun, serif; background: rgb(236,96,0)">赞</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <p><img src="../images/weixin.jpeg" width="200" /></p>
+                    <p><img src="../images/zhifubao.jpeg" width="200" /></p>
+                </div>
+
+            </div>
+            <h3>评论</h3>
+            <div id="vcomment"></div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5ad60dfd204bdbac0bdcee0b
+                 data-title=Apache Kylin VS Baidu Palo
+                 data-url=apache-kylin-vs-baidu-palo>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+<script src="../js/av-min.js"></script>
+<script src='../js/Valine.min.js'></script>
+<script type="text/javascript">
+    window.valine = new Valine({
+        el: '#vcomment' ,
+        verify: true,
+        notify: true,
+        appId: 'BlLnB0re5OzQVzrgEplAxkyg-gzGzoHsz',
+        appKey: 'wUyxSV0U4Vi7oK1EHK6ipErv',
+        placeholder: '欢迎评论'
+    });
+</script>
+
+</body>
+</html>
