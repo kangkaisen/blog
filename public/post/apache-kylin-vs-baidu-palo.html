@@ -105,7 +105,7 @@
 <p>Palo是一个基于MPP的OLAP系统，主要整合了<strong>Google Mesa</strong>（数据模型），<strong>Apache Impala</strong>（MPP Query Engine)和<strong>Apache ORCFile</strong> (存储格式，编码和压缩) 的技术。</p>
 <p><img src="http://static.zybuluo.com/kangkaisen/km2dj2w80iiv9kpuqnrkpzec/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%886.43.15.png" alt="baidu-palo"></p>
 <p>Palo的系统架构如下，Palo主要分为FE和BE两个组件，FE主要负责查询的编译，分发和元数据管理（基于内存，类似HDFS NN）；BE主要负责查询的执行和存储系统。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/btmsss3wmxf3b8xf9vqkuyc6/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%886.46.27.png" alt="baidu-palo"></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/fr37ra96hr5yntvbld0bbizy/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.09.33.png" alt="baidu-palo"></p>
 <h2 id="2-数据模型">2 数据模型</h2>
 <h3 id="21-kylin的聚合模型">2.1 Kylin的聚合模型</h3>
 <p>Kylin将表中的列分为维度列和指标列。在数据导入和查询时相同维度列中的指标会按照对应的聚合函数(Sum, Count, Min, Max, 精确去重，近似去重，百分位数，TOPN)进行聚合。</p>
@@ -143,18 +143,18 @@
 <p>这里需要注意一点，<strong>Palo中一张表只能有一种数据模型</strong>，即要么是聚合模型，要么是明细模型，而且<strong>Roll Up表的数据模型必须和Base表一致</strong>，也就是说明细模型的Base 表不能有聚合模型的Roll Up表。</p>
 <h2 id="3-存储引擎">3 存储引擎</h2>
 <p><strong>Kylin存储引擎HBase：</strong></p>
-<p><img src="http://static.zybuluo.com/kangkaisen/50es9v5brce06fmg5wjsfbyd/kylin-hbase.png" alt="kylin-hbase"></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/4qh5yb2uyxathadmjpzo3qgz/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.16.16.png" alt="屏幕快照 2018-04-18 下午11.16.16.png-140.3kB"></p>
 <p>如上图所示，在Kylin中1个Cube可以按照时间拆分为多个Segment,<strong>Segment是Kylin中数据导入和刷新的最小单位</strong>。Kylin中1个Segment对应HBase中一张Table。 HBase中的Table会按照Range分区拆分为多个Region,每个Region会按照大小拆分为多个HFile。</p>
 <p>关于HFile的原理网上讲述的文章已经很多了，我这里简单介绍下。首先HFile整体上可以分为元信息，Blcoks，Index3部分，Blcoks和Index都可以分为Data和Meta两部分。Block是数据读取的最小单位，Block有多个Key-Value组成，一个Key-Value代表HBase中的一行记录，Key-Value由Kylin-Len，Value-Len，Key-Bytes,Value-Bytes 4部分组成。更详细的信息大家可以参考下图(下图来源于互联网，具体出处不详）：</p>
 <p><img src="http://static.zybuluo.com/kangkaisen/zbwuzcyu7r3nrdd0f92sh397/a112.png" alt="HBase-HFile"></p>
 <p><strong>Palo存储引擎：</strong></p>
-<p><img src="http://static.zybuluo.com/kangkaisen/835xzofbkalhk599x50t14u7/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-15%20%E4%B8%8B%E5%8D%884.41.25.png" alt="Palo-Storage"></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/3o3ree6nao9m8njpo9gbgphx/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.19.19.png" alt="屏幕快照 2018-04-18 下午11.19.19.png-125.8kB"></p>
 <p>如上图所示，Palo的Table支持二级分区，可以先按照日期列进行一级分区，再按照指定列Hash分桶。具体来说，1个Table可以按照日期列分为多个Partition， 每个Partition可以包含多个Tablet，<strong>Tablet是数据移动、复制等操作的最小物理存储单元</strong>，各个Tablet之间的数据没有交集，并且在物理上独立存储。Partition 可以视为逻辑上最小的管理单元，<strong>数据的导入与删除，仅能针对一个 Partition进行</strong>。1个Table中Tablet的数量= Partition num * Bucket num。Tablet会按照一定大小（256M）拆分为多个Segment文件，Segment是列存的，但是会按行（1024）拆分为多个Rowblock。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/16vr54yd8dtgvx22ro7sokcp/palo%20file.png" alt="palo segment file"></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/d727k37k30w9beq259zr1g89/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.26.13.png" alt="palo segment file"></p>
 <p>下面我们来看下Palo Segment文件的具体格式，Palo文件格式主要参考了Apache ORC。如上图所示，Palo文件主要由Meta和Data两部分组成，Meta主要包括文件本身的Header，Segment Meta，Column Meta，和每个Column 数据流的元数据，每部分的具体内容大家看图即可，比较详细。 Data部分主要包含每一列的Index和Data，这里的Index指每一列的Min,Max值和数据流Stream的Position；Data就是每一列具体的数据内容，Data根据不同的数据类型会用不同的Stream来存储，Present Stream代表每个Value是否是Null，Data Stream代表二进制数据流，Length Stream代表非定长数据类型的长度。 下图是String使用字典编码和直接存储的Stream例子。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/0d7mqdqlv2vl08vda02z1bw1/Palo%20String.png" alt="Palo String encoding"></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/0hfdk7masogmajyj1kh59rry/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.29.34.png" alt="Palo String encoding"></p>
 <p>下面我们来看下Palo的前缀索引：</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/ccp8olubspvsv4htful3zj95/Palo%20index.png" alt="Palo index"></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/kpjuv1cokgdipur7fjo1um5p/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.32.12.png" alt="Palo index"></p>
 <p>本质上，Palo 的数据存储是类似 SSTable（Sorted String Table）的数据结构。该结构是一种有序的数据结构，可以按照指定的列有序存储。在这种数据结构上，以排序列作为条件进行查找，会非常的高效。而前缀索引，即在排序的基础上，实现的一种根据给定前缀列，快速查询数据的索引方式。前缀索引文件的格式如上图所示，<strong>索引的Key是每个Rowblock第一行记录的Sort Key的前36个字节，Value是Rowblock在Segment文件的偏移量</strong>。</p>
 <p>有了前缀索引后，我们查询特定Key的过程就是两次二分查找：</p>
 <ol>
@@ -162,14 +162,14 @@
 <li>在Rowblocks中二分查找特定的Key</li>
 </ol>
 <h2 id="4-数据导入">4 数据导入</h2>
-<p><strong>Kylin数据导入：</strong></p>
-<p><img src="http://static.zybuluo.com/kangkaisen/31g0hzmzbxhlq1512lxg9i9l/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-16%20%E4%B8%8A%E5%8D%8811.02.23.png" alt="Kylin data loading"></p>
+<p><strong>Kylin数据导入：</strong>
+<img src="http://static.zybuluo.com/kangkaisen/ucj7msy47m6o7ygte5k37sa5/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.33.26.png" alt="Kylin data loading"></p>
 <p>如上图，Kylin数据导入主要分为建Hive大宽表(这一步会处理Join)；维度列构建字典；逐层构建Cuboid；Cuboid转为HFile；Load HFile To HBase; 元数据更新这几步。</p>
 <p>其中Redistribute大宽表这一步的作用是为了将整个表的数据搞均匀，避免后续的步骤中有数据倾斜，Kylin有配置可以跳过这一步。</p>
 <p>其中Extract Distinct Columns这一步的作用是获取需要构建字典的维度列的Distinct值。假如一个ID维度列有1，2，1，2，2，1，1，2这8行，那么经过这一步后ID列的值就只有1，2两行，做这一步是为了下一步对维度列构建字典时更快速。</p>
 <p>其他几个步骤都比较好理解，我就不再赘述。更详细的信息可以参考 <a href="https://blog.bcmeng.com/post/kylin-cube.html">Apache Kylin Cube 构建原理</a></p>
 <p><strong>Palo数据导入：</strong>
-<img src="http://static.zybuluo.com/kangkaisen/h1bnoiadyofrjnq2or8uh8wh/palo%20data%20loading.png" alt="palo data loading"></p>
+<img src="http://static.zybuluo.com/kangkaisen/iaztr5b7lfu7oj7ohmyjae49/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.29.48.png" alt="palo data loading"></p>
 <p>Palo 数据导入的两个核心阶段是ETL和LOADING, ETL阶段主要完成以下工作：</p>
 <ul>
 <li>数据类型和格式的校验</li>
@@ -184,7 +184,7 @@
 <p>LOADING完成后会进行元数据的更新。</p>
 <h2 id="5-查询">5 查询</h2>
 <p><strong>Kylin查询：</strong></p>
-<p><img src="http://static.zybuluo.com/kangkaisen/yi8gj0j729zsrmeeg407oazh/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-15%20%E4%B8%8B%E5%8D%886.12.24.png" alt="Kylin query"></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/cl8yx0hla4twg7soh48b7my4/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.34.52.png" alt="Kylin query"></p>
 <p>如上图，整个Kylin的查询过程比较简单，是个Scatter-Gather的模型。图中圆形框的内容发生在Kylin QueryServer端，方形框的内容发生在HBase端。Kylin QueryServer端收到SQL后，会先进行SQL的解析，然后生成和优化Plan，再根据Plan生成和编译代码，之后会根据Plan生成HBase的Scan请求，如果可能，HBase端除了Scan之外，还会进行过滤和聚合（基于HBase的Coprocessor实现），Kylin会将HBase端返回的结果进行合并，交给Calcite之前生成好的代码进行计算。</p>
 <p><strong>Palo查询：</strong></p>
 <p><img src="http://static.zybuluo.com/kangkaisen/79z437wez74gf51x9ceec4ov/palo-impala.png" alt="palo-impala-query"></p>
