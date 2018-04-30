@@ -1,0 +1,287 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|畅想TiDB应用场景和HTAP演进之路</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 畅想TiDB应用场景和HTAP演进之路</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2018-04-30</p>
+            <p>分类: <a href="../tag/数据库.html" target="_blank" >数据库</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#1-why-tidb">1 Why TiDB</a></li>
+<li><a href="#2-what-tidb">2 What TiDB</a></li>
+<li><a href="#3-tidb的理论背书">3 TiDB的理论背书</a></li>
+<li><a href="#4-tidb的应用场景">4 TiDB的应用场景</a><ul>
+<li><a href="#41-replace-mysql">4.1 Replace Mysql</a></li>
+<li><a href="#42-replace-hbase">4.2 Replace HBase</a></li>
+<li><a href="#43-tidb-for-olap">4.3 TiDB for OLAP</a></li>
+<li><a href="#44-tidb-for-实时数仓">4.4 TiDB for 实时数仓</a></li>
+<li><a href="#45-data-ecosystem-based-on-tidb-in-the-future">4.5 Data Ecosystem Based On TiDB (In the future)</a></li>
+</ul>
+</li>
+<li><a href="#5-tidb-htap-演进之路">5 TiDB HTAP 演进之路</a><ul>
+<li><a href="#51-行存的优缺点和适用场景">5.1 行存的优缺点和适用场景</a></li>
+<li><a href="#52-列存的优缺点和适用场景">5.2 列存的优缺点和适用场景</a></li>
+<li><a href="#53-tidb-htap-演进之路行列转换">5.3 TiDB HTAP 演进之路——行列转换</a></li>
+<li><a href="#54-tidb-htap-演进之路行列混存-spanner">5.4 TiDB HTAP 演进之路——行列混存 Spanner</a></li>
+<li><a href="#55-tidb-htap-演进之路行列混存-peloton">5.5 TiDB HTAP 演进之路——行列混存 Peloton</a></li>
+<li><a href="#56-tidb-htap-演进之路tidb-on-clickhouse">5.6 TiDB HTAP 演进之路——TiDB On ClickHouse</a></li>
+</ul>
+</li>
+<li><a href="#6-总结">6 总结</a></li>
+<li><a href="#7-参考资料">7 参考资料</a></li>
+</ul>
+<!-- toc stop -->
+<p>前一阵阅读了TiDB官方的文档和使用案例，对TiDB的架构原理，使用场景有了一定了解，本文深度畅想(胡思乱想)下TiDB未来可能的应用场景和HTAP的演进之路。在畅想TiDB的应用场景之前，我们先了解下TiDB诞生的背景和TiDB是什么，要解决什么问题。</p>
+<h2 id="1-why-tidb">1 Why TiDB</h2>
+<p><img src="http://static.zybuluo.com/kangkaisen/13dey9t60v0grel87rc5dwmm/db.png" alt="db.png-83.1kB"></p>
+<p>如上图，从1970s年代开始，出现了以Mysql,PostgreSQL为代表的RDBMS， 并在相当长的时间内占据主导地位，但是随着21世纪互联网的快速发展和业务数据的飞速增长，传统数据库<strong>缺乏Scalability</strong>的缺陷暴露出来，于是出现了以HBase,Redis,MongoDB为代表的NoSQL数据库，NoSQL数据库拥有很好的<strong>Scalability和Availability</strong>，但是<strong>缺乏SQL和ACID Transaction</strong>。因此，我们需要一个新一代数据库，能够同时拥有RDBMS和NoSQL数据库的优点。</p>
+<h2 id="2-what-tidb">2 What TiDB</h2>
+<p><img src="http://static.zybuluo.com/kangkaisen/yk399iuxidznnnqljbt268rv/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-30%20%E4%B8%8B%E5%8D%883.31.07.png" alt="What TiDB"></p>
+<p>TiDB是一款HTAP数据库（同时支持OLTP和OLAP查询），同时具备了RDBMS和NoSQL数据库的优点，具有以下特点：</p>
+<ul>
+<li>优秀的横向扩展能力</li>
+<li>高可用</li>
+<li>强一致性</li>
+<li>支持ACID事务</li>
+<li>支持SQL，兼容Mysql协议和绝大多数Mysql语法</li>
+<li>Cloud-Native</li>
+<li>支持多数据中心</li>
+</ul>
+<p><img src="http://static.zybuluo.com/kangkaisen/btvx0ohkl4e8qok31ot3ksw3/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-30%20%E4%B8%8B%E5%8D%883.34.03.png" alt="TiDB Architecture"></p>
+<p>TiDB的架构图如上图所示，TiDB的组件共有3个：<strong>TiKV Server，TiDB Server，Placement Driver</strong>。 每个组件的主要职责如下：</p>
+<p><strong>1 TiKV Server</strong></p>
+<p>如下图，TiKV Server 负责存储数据，TiKV 是一个支持事务的分布式Key-Value存储引擎，<strong>如果不考虑Region复制，一致性，和事务的话，TiKV其实和HBase很像，底层数据结构都是LSM-Tree, Region都是Range分区, Region都是计算和负载均衡的基本单位。</strong></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/yjogax58rcmhfwc4r12vh1qb/TiKV.png" alt="TiKV.png-345.6kB"></p>
+<p><strong>2 TiDB Server</strong></p>
+<p>如下图，TiDB Server 负责接收 SQL 请求，生成SQL的逻辑计划和物理计划，并通过 PD 找到存储计算所需数据的 TiKV 地址，将SQL转换为TiKV的KV操作，与 TiKV 交互获取数据，最终返回结果。 </p>
+<p>TiDB Server 是无状态的，其本身并不存储数据，只负责计算，可以无限水平扩展。 TiDB Server 类似Kylin中的QueryServer。</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/m3ja3yymaw6druygt9ipdxb9/TiDB.png" alt="TiDB.png-353kB"></p>
+<p><strong>3 Placement Driver</strong></p>
+<p>Placement Driver 主要有以下职责：</p>
+<ol>
+<li>集群的元信息 （某个 Key 存储在哪个 TiKV 节点）</li>
+<li>TiKV 集群进行调度和负载均衡</li>
+<li>分配全局唯一且递增的事务 ID</li>
+</ol>
+<h2 id="3-tidb的理论背书">3 TiDB的理论背书</h2>
+<ul>
+<li><strong>Google Spanner</strong>: 最主要的特性就是支持跨行事务和在分布式场景上实现 Serializable 的事务隔离级别.  TIKV主要参考此篇论文实现。</li>
+<li><strong>F1: A Distributed SQL Database That Scales</strong>: 基于Google Spanner实现的NewSQL数据库， F1论述了Spanner上层的分布式SQL层怎么实现，分布式的Plan怎么生成和优化，TIDB主要参考此篇论文实现。</li>
+<li><strong>Raft</strong>: TiKV 使用 Raft 协议做复制，保持数据的一致性和容灾。</li>
+<li><strong>Online, Asynchronous Schema Change in F1</strong>：TiDB的在线Schema变更主要参考此篇论文实现。</li>
+<li><strong>Google Percolator</strong>: 经过优化的 2PC 实现，依赖一个单点的授时服务 TSO 来实现单调递增的事务编号生成，提供 SI 的隔离级别. TIKV的事务主要参考此篇论文实现。</li>
+</ul>
+<h2 id="4-tidb的应用场景">4 TiDB的应用场景</h2>
+<h3 id="41-replace-mysql">4.1 Replace Mysql</h3>
+<p><img src="http://static.zybuluo.com/kangkaisen/sqtp4b1dfxo0pan6ure0n6mw/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-30%20%E4%B8%8B%E5%8D%883.51.31.png" alt="TiDB replace Mysql"></p>
+<p>相比Mysql，TiDB 可以做到横向扩展，高可用。 此外，由于TiDB兼容Mysql协议和绝大多数Mysql语法，在大多数情况下，用户无需修改一行代码就可以从Mysql无缝迁移到TiDB。这也是目前TiDB在业界最广泛的应用场景。 下图是几个业界的典型应用：</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/epvpny7bqg8tbth3kyqjheh8/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-30%20%E4%B8%8B%E5%8D%883.56.32.png" alt="TiDB replace Mysql"></p>
+<h3 id="42-replace-hbase">4.2 Replace HBase</h3>
+<p><img src="http://static.zybuluo.com/kangkaisen/22kve88ie91lye38ogmk7otp/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-30%20%E4%B8%8B%E5%8D%883.59.16.png" alt="TiDB replace HBase"></p>
+<p>相比HBase, TiDB 可以很好地支持SQL， 支持事务，支持二级索引，没有Java GC的痛点（TiKV是由Rust开发，Rust可以完全手动控制内存，无GC）。所以我认为TiDB可以代替掉HBase。 下图是几个业界的典型应用：</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/p97ar4qsxyfjuoli9f58ktza/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-30%20%E4%B8%8B%E5%8D%884.04.17.png" alt="TiDB replace HBase"></p>
+<h3 id="43-tidb-for-olap">4.3 TiDB for OLAP</h3>
+<p>TiDB的设计目标是同时很好的支持OLTP和OLAP，但是从公开的测试结果来看，<strong>TiDB的OLAP性能一般，不如现在专门的OLAP系统</strong>（Kylin， Druid，Palo，ClickHouse等），在业界实践中，大多数公司都会引入TiSpark来解决OLAP问题。</p>
+<p>从OLAP视角来看，TiDB的优点如下：</p>
+<ul>
+<li>兼容Mysql协议和语法</li>
+<li>实时和离线数据导入</li>
+<li>支持聚合，明细，点更新</li>
+<li>在线Schema变更</li>
+<li>易运维</li>
+<li>Both OLAP And OLTP</li>
+</ul>
+<p>从OLAP视角来看，TiDB的缺点如下：</p>
+<ul>
+<li>无列式存储</li>
+<li>无预计算手段</li>
+<li>无向量化执行</li>
+</ul>
+<h3 id="44-tidb-for-实时数仓">4.4 TiDB for 实时数仓</h3>
+<p><img src="http://static.zybuluo.com/kangkaisen/ykohdaqk7np1aegdylivf4k3/TiDB%20realtime%20data%20warehosue.png" alt="TiDB realtime data warehouse"></p>
+<p>上图是易果集团实时数仓的架构图，上游OLTP的数据和其他的实时数据可以实时写入TiDB，下游OLAP的业务可以通过 TiDB或者TiSpark实时进行分析， 并且可以通过TiSpark将实时和离线整合起来。</p>
+<h3 id="45-data-ecosystem-based-on-tidb-in-the-future-">4.5 Data Ecosystem Based On TiDB (In the future)</h3>
+<p>以下的畅想(胡思乱想) 需要TiDB未来能做到以下两点：</p>
+<ol>
+<li>高效的OLAP查询</li>
+<li>高效的批量写入</li>
+</ol>
+<p><img src="http://static.zybuluo.com/kangkaisen/ggpu6t889vhzdgjo5e2pv8yh/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-30%20%E4%B8%8B%E5%8D%886.02.52.png" alt="Data Ecosystem Based On TiDB"></p>
+<p>上图的含义如下：</p>
+<ol>
+<li>最上游让Mysql和TiDB支撑在线OLTP和部分在线OLAP业务。</li>
+<li>通过实时的Binlog同步将数据同步到下游，下游可以是基于TiDB的数仓，也可以是Kafka，还可以是其他系统，比如数据实时同步到ES做全文检索。</li>
+<li>Kafka的数据可以被任意下游消费，一种数据流是经过Flink等实时计算引擎进行ETL处理后，导入TiDB进行OLAP查询。</li>
+<li>基于TiDB的数仓可以提供历史数据的Ad-hoc查询，也可以通过Spark进行ETL，ML，Ad-hoc查询。</li>
+<li>所有结构化数据的查询都可以交给TiDB，非结构化数据的处理和查询交给Spark。</li>
+</ol>
+<p>上图基于TiDB的Data Ecosystem相比于现在基于Hadoop的Data Ecosystem具有以下优点：</p>
+<ol>
+<li><strong>减少数据冗余，节省存储成本</strong>：现在有些数据可能在Mysql, Hive, OLAP系统中都有1份，其原因就是Mysql和Hive的查询效率低下，而在TiDB中，我们有可能只需要一份数据，如果TiDB能同时很好的支持OLTP和OLAP。</li>
+<li><strong>更精简的ETL流程</strong>：由于TiDB拥有OLTP和OLAP能力，现在许多以聚合，过滤为主的ETL就不需要做了。</li>
+<li><strong>更少的系统维护，更低的运维成本</strong>：如果我们基于TiDB构建数据仓库且TiDB能同时很好的支持OLTP和OLAP，那么Mysql,Hive,HBase,Presto,Kylin,Druid等系统理论上都可以被TiDB替换掉，并且可以实现结构化数据查询的接口大一统。</li>
+<li><strong>更高的开发效率</strong>：如果TiDB能同时很好的支持OLTP和OLAP，那么实现OALP需求，用户的开发成本就会低很多，甚至无需开发。</li>
+<li><strong>更低的学习成本</strong>：TiDB只要用户懂SQL就可以轻松的用起来，但是目前的Hadoop生态系统繁杂，概念众多，用户的学习成本和上手成本都较高。</li>
+</ol>
+<h2 id="5-tidb-htap-演进之路">5 TiDB HTAP 演进之路</h2>
+<p>那么我们可以通过哪些方法来加强TiDB的OLAP能力，使其成为一个真正的HTAP数据库呢？在介绍HTAP的演进之路前，我们先简介下行存和列存的优缺点和适用场景。</p>
+<h3 id="51-行存的优缺点和适用场景">5.1 行存的优缺点和适用场景</h3>
+<p><img src="http://static.zybuluo.com/kangkaisen/mb734poudqs2yangznn3xd6x/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-30%20%E4%B8%8B%E5%8D%884.21.55.png" alt="行存的优缺点和适用场景"></p>
+<p>上图是个行存的示意图，就是数据按行组织，查询时按行读取。行存在学术论文中一般简称为NSM（N-ary Storage Mode）。</p>
+<p>行存的优点如下：</p>
+<ul>
+<li>适合快速的点插入，点更新和点删除</li>
+<li>对于需要访问全部列的查询十分友好</li>
+</ul>
+<p>行存的缺点如下：</p>
+<ul>
+<li>对需要读取大量数据并访问部分列的场景不友好</li>
+</ul>
+<p>所以行存适用于OLTP场景。</p>
+<h3 id="52-列存的优缺点和适用场景">5.2 列存的优缺点和适用场景</h3>
+<p><img src="http://static.zybuluo.com/kangkaisen/szh3jebuhv0m9qxvzw7k7hcx/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-30%20%E4%B8%8B%E5%8D%884.33.50.png" alt="列存的优缺点和适用场景"></p>
+<p>上图是个列存的示意图，就是数据按列组织，每列的数据连续存放在一起，查询时按列读取。 列存在学术论文中一般简称为DSM(Decomposition Storage Model)。</p>
+<p>列存的优点如下：</p>
+<ul>
+<li>只读取部分列时，可以减少IO</li>
+<li>更好的编码和压缩（由于每列的数据类型相同）</li>
+<li>更易于实现向量化执行</li>
+</ul>
+<p>列存的缺点如下：</p>
+<ul>
+<li>不适合随机的插入，删除，更新。（多列之间存在拆分和合并的开销）</li>
+</ul>
+<p>所以列存适用于OLAP场景。</p>
+<h3 id="53-tidb-htap-演进之路——行列转换">5.3 TiDB HTAP 演进之路——行列转换</h3>
+<p>现在我们已经知道了OLTP需要行存，OLAP需要列存，OLTP一般是查询较新的数据，OLAP一般是分析历史数据，所以要想同时很好地支持OLTP和OLAP，我们一个很自然的思路就是进行 行列转换，<strong>对于较新的数据使用行存，对于历史数据使用列存</strong>。 如下图所示：</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/97eabm3tf0revtr7x783ydaq/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-30%20%E4%B8%8B%E5%8D%884.44.02.png" alt="屏幕快照 2018-04-30 下午4.44.02.png-171.5kB"></p>
+<p>这种实现的难点就是如何确定一份数据什么时候由行存转为列存，此外，由于要支持点的更新和删除，必然要支持Compaction。Kudu, Druid采用了类型的思路。</p>
+<h3 id="54-tidb-htap-演进之路——行列混存-spanner">5.4 TiDB HTAP 演进之路——行列混存 Spanner</h3>
+<p>上面的行列转换，是要维护两套独立的存储格式，有没有可能只用一种存储格式呢？ 答案是可能的，就是行列混存。</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/o310n7dw62mmx7fxuhu3vlou/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-30%20%E4%B8%8B%E5%8D%885.01.25.png" alt="行列混存 Spanner"></p>
+<p>上图是Spanner采用的行列混存方案，具体来说，就是将一个Page拆成多个Mini Page， 一列对应一个Mini Page，第一列放在第一个Mini Page，第二列放在第二个Mini Page，以此类推。在每个Page 的开头，会存放每个Mini Page的Offset。 好处是：当要依据某一列进行 Scan的时候，我们可以方便的在Mini Page里面顺序扫描，充分利用 Cache；而对于需要访问多列得到最终tuple的场景，我们也仅仅需要在同一个Page里面的Mini page之间读取相关的数据。</p>
+<p>更多信息可以参考 <a href="https://pingcap.com/blog-cn/pax/">PAX：一个 Cache 友好高效的行列混存方案</a></p>
+<h3 id="55-tidb-htap-演进之路——行列混存-peloton">5.5 TiDB HTAP 演进之路——行列混存 Peloton</h3>
+<p>CMU的开源数据库Peloton中采用了另一种行列混存思路，如下图所示：</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/qr8moykvuvulecxqvz6w62yf/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-30%20%E4%B8%8B%E5%8D%885.08.11.png" alt="行列混存 Peloton"></p>
+<p><strong>Peloton项目基于Tile来实现行列混存,  Tile之间是列存，Tile内部是行存</strong>。一个Table有多个Tile Group组成， 一个Tile Group可以包含多个Tile。热数据可以存放到OLTP友好的Tile Group中，也就是一个Tile Group里面只有一个Tile，当数据变冷之后，可以将Tile Group 转成对OLAP友好的布局，也就是Tile Grou里面可能有几个Tile了。当Tile Group里面每个Tile都只有一个Column的时候，就变成完全的列存了。 有没有感到Tile的概念和HBase的Column Family很像。</p>
+<p>更多信息可以参考 <a href="https://pingcap.com/blog-cn/tile-row-store/">基于 Tile 连接 Row-Store 和 Column-Store</a></p>
+<h3 id="56-tidb-htap-演进之路——tidb-on-clickhouse">5.6 TiDB HTAP 演进之路——TiDB On ClickHouse</h3>
+<p>我们知道TiDB在OLAP场景下缺乏一个列式存储，而ClikcHouse是目前已知的单机性能最强大的开源OLAP数据库，但是其在分布式化上做的很差。So，<strong>Maybe 我们可以整合TiDB和ClickHouse，用ClickHouse填补TiDB在OLAP场景下的短板，用TiDB填补ClickHouse在分布式，运维性，易用性上的短板。</strong></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/sv1shqe7aau1q43c075tsz3p/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-30%20%E4%B8%8B%E5%8D%885.16.08.png" alt="TiDB On ClickHouse"></p>
+<p>简单调研TiDB和ClickHouse的接口后，我们会发现，理想是美好的，现实是残酷的，真要做TiDB On ClickHouse的话，TiDB和ClickHouse两边都需要做大量的改动。</p>
+<h2 id="6-总结">6 总结</h2>
+<p>本文简介了Why TiDB的What TiDB，没有讲How TiDB（对于实现细节感兴趣，可以阅读TiDB官方文档，论文和源码）， 主要畅想（胡思乱想）了下TiDB的应用场景和HTAP演进之路。 <strong>个人比较看好TiDB的未来，TiDB能否拥有更广阔前景的关键就是OLAP能力的强弱</strong>。</p>
+<h2 id="7-参考资料">7 参考资料</h2>
+<p><a href="https://pingcap.com/blog-cn/">1 TiDB官方文档和博客</a></p>
+<p><a href="https://15415.courses.cs.cmu.edu/fall2016/slides/25ColumnStores.pdf">2 CMU-15415-ColumnStore</a></p>
+<p><a href="https://pingcap.com/docs-cn/">3 TiDB用户案例</a></p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 58px; color: #fff; font-size:36px; font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Helvetica, STKaiti, SimSun, serif; background: rgb(236,96,0)">赞</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <p><img src="../images/weixin.jpeg" width="200" /></p>
+                    <p><img src="../images/zhifubao.jpeg" width="200" /></p>
+                </div>
+
+            </div>
+            <h3>评论</h3>
+            <div id="vcomment"></div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5ae6f2cb1f81958006b034a6
+                 data-title=畅想TiDB应用场景和HTAP演进之路
+                 data-url=tidb-application-htap>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+<script src="../js/av-min.js"></script>
+<script src='../js/Valine.min.js'></script>
+<script type="text/javascript">
+    window.valine = new Valine({
+        el: '#vcomment' ,
+        verify: true,
+        notify: true,
+        appId: 'BlLnB0re5OzQVzrgEplAxkyg-gzGzoHsz',
+        appKey: 'wUyxSV0U4Vi7oK1EHK6ipErv',
+        placeholder: '欢迎评论'
+    });
+</script>
+
+</body>
+</html>
