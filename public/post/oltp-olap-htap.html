@@ -79,7 +79,7 @@
 <p><img src="http://static.zybuluo.com/kangkaisen/ij2badyuu8qlwz7qx4cil533/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-05-27%20%E4%B8%8B%E5%8D%888.57.22.png" alt="星型模型"></p>
 <p>所谓的雪花模型，就是将维表进一步拆为为子维表。如下图所示，Year维表和Month维表就是从Date维表中进一步拆分出来的。</p>
 <p><img src="http://static.zybuluo.com/kangkaisen/qcfa8oqbo54s3seaifvq5qi0/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-05-27%20%E4%B8%8B%E5%8D%889.05.05.png" alt="屏幕快照 2018-05-27 下午9.05.05.png-121.3kB"></p>
-<p><strong>一般在公司业务实际中使用更多的是星型模型，因为星型模型更加简单。</strong></p>
+<p>星型模型和雪花模型名称的来源都是根据模型的样子命名的，星型模型是多个维表围着中间的事实表，比较像星星，雪花模型是看起来比较像雪花。<strong>一般在公司业务实际中使用更多的是星型模型，因为星型模型更加简单。</strong></p>
 <p>前面简介了下OLTP和OLAP的特点，上面的特点决定了OLTP和OLAP在存储模型，查询计划的生成和优化上都是有很大区别。在<a href="https://blog.bcmeng.com/post/tidb-application-htap.html#5-tidb-htap-%E6%BC%94%E8%BF%9B%E4%B9%8B%E8%B7%AF">畅想TiDB应用场景和HTAP演进之路</a> 一文中，我解释了为什么OLTP系统需要行存，而OLAP系统需要列存。 正因为OLTP和OLAP在技术实现上的区别较大，所以在较长时间内，现在的数据库要么只满足OLTP需求，要么只满足OLAP需求。 但是这样做有以下缺点：</p>
 <ol>
 <li>数据需要存储多份</li>
