@@ -1,0 +1,268 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|SnappyData 原理和架构: 一统Streaming Processing，OLTP和OLAP</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> SnappyData 原理和架构: 一统Streaming Processing，OLTP和OLAP</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2018-06-03</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#1-why-snappydata">1 Why SnappyData</a></li>
+<li><a href="#2-the-challenges-of-snappydata-goal">2 The Challenges Of SnappyData Goal</a></li>
+<li><a href="#3-what-snappydata">3 What SnappyData</a></li>
+<li><a href="#4-the-challenges-of-marrying-spark-gemfire">4 The Challenges of Marrying Spark &amp; GemFire</a></li>
+<li><a href="#5-how-snappydata">5 How SnappyData</a></li>
+<li><a href="#6-snappydata-architecture">6 SnappyData Architecture</a></li>
+<li><a href="#7-why-snappydata-is-fast">7 Why SnappyData is Fast</a></li>
+<li><a href="#8-snappydata-deploy-modes">8 SnappyData Deploy Modes</a></li>
+<li><a href="#9-pros-and-cons-of-snappydata">9 Pros And Cons Of SnappyData</a></li>
+<li><a href="#10-what-can-we-learn-from-snappydata">10 What Can We Learn From SnappyData</a></li>
+<li><a href="#11-conclusion">11 Conclusion</a></li>
+<li><a href="#12-references">12 References</a></li>
+</ul>
+<!-- toc stop -->
+<p>注：本文对SnappyData的描述仅基于对SnappyData论文和官方文档的阅读。</p>
+<h3 id="1-why-snappydata">1 Why SnappyData</h3>
+<p>SnappyData诞生的背景是当时没有一个单一系统可以同时满足Streaming Processing + OLTP + OLAP这3个需求。</p>
+<p>当时的常见解决方案如下：</p>
+<ol>
+<li>SQL On Hadoop（Hive, Impala/Kudu and Spark SQL等）</li>
+<li>HTAP系统（MemSQL，TiDB，Spanner等） </li>
+<li>SQL On Streaming</li>
+<li>Lambda架构</li>
+</ol>
+<p>这些解决方案的问题如下：</p>
+<p>SQL ON Hadoop（Hive, Impala/Kudu and Spark SQL）主要面向离线的OLAP分析，具有以下缺点：</p>
+<ul>
+<li>不支持实时</li>
+<li>不支持事务</li>
+<li>不支持高效的点查</li>
+<li>不支持高并发</li>
+</ul>
+<p>HTAP系统可以同时支持OLTP和OLAP，但是需要依赖外部系统（Storm, Kafka, Confluent）进行Stream Processing；</p>
+<p>SQL On Streaming系统无法高效处理复杂的OLAP查询，也无法高效Join实时和历史数据。</p>
+<p>Lambda架构虽然可以满足Streaming Processing + OLTP + OLAP这3个需求，但是有以下缺点：</p>
+<ul>
+<li>Increased complexity and total cost of ownership：用户的学习成本高昂：用户需要熟悉多个系统的原理，概念，API，模型；用户的开发成本较高，开发效率较低；平台维护多个系统的成本高昂</li>
+<li>Wasted resources：数据需要存储多份，数据同步有延迟，数据流较长，数据格式需要多次转换，资源浪费较严重</li>
+<li>Consistency challenges: 多个系统间数据的一致性难以保证。</li>
+</ul>
+<p>由于现有解决方案的诸多问题，SnappyData团队决定打造一个能够同时满足Streaming Processing + OLTP + OLAP的单一系统，并希望这个系统相比于现有解决方案能有更好的性能，更少的资源和更低的复杂性。</p>
+<h3 id="2-the-challenges-of-snappydata-goal">2 The Challenges Of SnappyData Goal</h3>
+<ol>
+<li>Streaming Processing,OLTP,OLAP需要不同的数据结构和查询处理方式：比如Streaming Processing一般需要基于Sketches和Window的数据结构，OLTP需要行存，OLAP需要列存；Streaming Processing一般是delta/incremental的查询处理，OLTP一般是点查，点更新，OLAP一般是大量的Scan，Aggregation和Join。</li>
+<li>Streaming Processing,OLTP,OLAP这3种不同的Workload如何进行合理的调度和资源分配：Streaming Processing Job一般是常驻的，OLAP查询一般耗时在秒级，OLTP耗时一般在毫秒级。</li>
+</ol>
+<h3 id="3-what-snappydata">3 What SnappyData</h3>
+<p>SnappyData是一个基于Spark+GemFire（开源版本是Geode）实现的，可以同时满足Streaming Processing + OLTP + OLAP需求的分布式内存数据库。具有以下特点：</p>
+<ol>
+<li>同时支持Streaming Processing + OLTP + OLAP</li>
+<li>基于内存</li>
+<li>支持标准SQL，同时支持JDBC，ODBC，Spark API访问</li>
+<li>支持分布式事务</li>
+<li>比Spark快20x(官方号称)</li>
+<li>100% Compatible With Apache Spark：可以使用Spark SQL，Spark API，Spark ML访问; 支持Spark的所有Data Sources； 支持结构化数据和半结构化数据</li>
+</ol>
+<p>下图是SnappyData的一种组件图，灰色部分是Spark本身的模块。</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/59z6984y120cssmvn1ro22s1/snappydata-components.png" alt="snappydata-components.png-81.2kB"></p>
+<p><img src="http://www.snappydata.io/assets/images/productPage/subpages/architecture.png" alt="SnappyData"></p>
+<h3 id="4-the-challenges-of-marrying-spark-amp-gemfire">4 The Challenges of Marrying Spark &amp; GemFire</h3>
+<p>Spark是一个高效的分布式计算引擎，GemFire是一个低延迟，高可用，支持事务，面向行存，分布式的Key-Value内存数据库。Spark的设计目标是高吞吐，GemFire的设计目标是低延迟。要将Spark和GemFire整合来同时满足Streaming Processing + OLTP + OLAP的需求 显然会有不少挑战：</p>
+<ol>
+<li>需要改变Spark Executors的生命周期，使得Executors的JVM是常驻的，并和Applications解耦；其次需要使用静态的资源分配策略使得同一份资源可以被多个Applications并发使用。</li>
+<li>如何区分一个查询是OLTP还是OLAP</li>
+<li>Spark Driver是单点</li>
+<li>扩展Spark支持基于GemFire可变的并发数据结构的点查询，点更新和点删除</li>
+<li>扩展GemFire的分布式锁服务以便在Spark中可以修改这些可变的数据结构。</li>
+<li>需要100%兼容Spark代码。</li>
+</ol>
+<h3 id="5-how-snappydata">5 How SnappyData</h3>
+<p>将GemFire整合进Spark，GemFire让SnappyData可以实现低延迟，细粒度，高并发的OLTP操作。</p>
+<ul>
+<li>SnappyData中的Streaming Processing是通过Spark Streaming实现的</li>
+<li>SnappyData中的OLTP功能是通过GemFire实现的</li>
+<li>SnappyData中的OLAP功能是通过Spark + Column Store实现的</li>
+</ul>
+<h4 id="snappydata的存储">SnappyData的存储</h4>
+<p>SnappyData同时支持行存和列存。列存是基于Spark RDD的实现衍生而来，行存是基于GemFire实现；一个表是使用行存还是列存需要在建表时指定；行存可以同时支持分区表和复制表（会复制到所有节点上，适合OLAP星型模型中的小维表），列存只支持基于Hash的分区表；行存支持索引，基于索引的Keys可以实现快速的读写，列存不支持索引，是按照连续的Blocks组织，支持dictionary，run-length 和bit 3种编码方式；行存支持“read committed” and “repeatable read”的事务隔离级别，列存支持快照级别的事务隔离。</p>
+<p>我们知道，行存实现点更新十分简单，但是列存如何实现高效的点更新呢？</p>
+<p>和LSM的思想类似，列存表的点更新会先写入一个delta row buffer的数据结构， delta row buffer是一个合并队列，合并的含义是同一条记录的所有更新操作只会保留最终状态， delta row buffer使用Copy on Write的方式支持并发更新， 超过一定行数或大小时会转为列存。所以在查询列存表时需要Merge列存和delta row buffer的结果。</p>
+<h4 id="snappydata的查询接口">SnappyData的查询接口</h4>
+<p>SnappyData同时支持标准SQL（扩展自Saprk的SparkSQL dialect）和Saprk API.</p>
+<h4 id="snappydata的stream-processing">SnappyData的Stream Processing</h4>
+<p>SnappyData的Stream Processing主要是通过Spark Streaming来实现的，不过SnappyData优化了Stream Processing的OLAP查询能力，比如columnar formats, approximate query processing, and co-partitioning（后面会讲到）。</p>
+<h4 id="snappydata的查询路由和调度">SnappyData的查询路由和调度</h4>
+<p>SnappyData将OLAP查询交给Spark，将OLTP查询交给GemFire。SnappyData一般将OLTP请求视为低延迟请求，将OLAP请求视为高延迟请求，低延迟的OLTP请求会绕过Saprk的调度直接操作数据，OLAP请求会交给Saprk的公平调度器调度执行。 当然，一个查询也可以显式的标注优先级。</p>
+<h4 id="snappydata的高可用">SnappyData的高可用</h4>
+<p>Spark Driver通过主备的方式实现高可用。</p>
+<p>SnappyData的失败探测依赖依赖UDP neighbor ping和 TCP ack timeout。</p>
+<p>SnappyData将细粒度的事务更新的Recovery交给GemFire，将Batched and streaming micro-batch的操作交给了Spark。Saprk的Recovery依赖RDD的lineage；GemFire的Recovery依赖replication。</p>
+<p>###6 SnappyData Architecture
+<img src="http://static.zybuluo.com/kangkaisen/52orda5r97jyry82w8q8jqlp/snappydata_Architecture.png" alt="snappydata_Architecture.png-311.1kB"></p>
+<p>如上图所示，SnappyData的节点分为三类：</p>
+<ul>
+<li>Locator： 负责服务发现。</li>
+<li>Lead Node： Spark的Driver，负责将OLAP类型的查询分发给Executor，接收Saprk API的请求。 Lead Node借助Spark JobServer来管理Saprk Job和查询。</li>
+<li>Data Servers： 管理数据，内嵌Spark executor。接收JDBC和ODBC的查询请求，并解析SQL，如果是点查询，点更新之类的OLTP请求，就直接执行，如果是需要Scan, Aggregate,Join的OLAP请求，就转发给Lead Node。</li>
+</ul>
+<h3 id="7-why-snappydata-is-fast">7 Why SnappyData is Fast</h3>
+<p>SnappyData 主要通过以下手段来加速查询：</p>
+<ul>
+<li><p>Data Colocation：核心思想是实现本地Join，Join时避免Shuffle。具体有两种手段：</p>
+<ul>
+<li>Co-partitioning with shared keys： 几张Join的表基于Join的key提前预分区，从而实现每个Partition的Local Join，适合多张大表的Join。</li>
+<li>星型模型中维表通常比较小，且更新频率较低，所以可以将维表设置为replicated tables，保证每个节点上都有维表，从而避免broadcast join，实现Local Join。</li>
+</ul>
+</li>
+<li><p>Code Generation： 借助了Spark Tungsten的Code generation</p>
+</li>
+<li>列存使用了Spark原生的Column Format，所以避免了序列化和反序列化的开销。</li>
+<li>数据都是在内存中。</li>
+<li>Long Running Executors: 提交一个Job不需要启动新的Executor。</li>
+<li>Data is stored in a Spark native column format so even when data has to arrive to Spark compute nodes it incurs little to no overhead associated with serialization</li>
+</ul>
+<h3 id="8-snappydata-deploy-modes">8 SnappyData Deploy Modes</h3>
+<p>SnappyData 有3种部署模式：
+1 <strong>Local 模式</strong>： Client Application, Executors和Data Store 都运行在一个JVM中，主要用来开发测试，如下图所示：</p>
+<p><img src="https://snappydatainc.github.io/snappydata/Images/SnappyLocalMode.png" alt="SnappyLocalMode"></p>
+<p>2 <strong>Embedded SnappyData Store 模式</strong>：Spark Executors和Data Store 都运行在一个JVM中，如下图所示：</p>
+<p><img src="https://snappydatainc.github.io/snappydata/Images/SnappyEmbeddedMode.png" alt="SnappyEmbeddedMode"></p>
+<p>3 <strong>SnappyData Smart Connector 模式</strong>： Spark Executors运行在独立的JVM中，把SnappyData当做Spark的一个普通的Data Source。 这就像Spark applications中访问Cassandra, Redis和HBase等外部Store一样。 如下图所示：</p>
+<p><img src="https://snappydatainc.github.io/snappydata/Images/SnappyConnectorMode.png" alt="SnappyConnectorMode"></p>
+<h3 id="9-pros-and-cons-of-snappydata">9 Pros And Cons Of SnappyData</h3>
+<p>优点：</p>
+<ol>
+<li>一个系统同时满足了Streaming Processing + OLTP + OLAP这3个需求，开篇提到的Lambda架构的缺点SnappyData基本都解决了。</li>
+<li>完全基于Saprk生态，对Spark生态和开发者十分友好。</li>
+</ol>
+<p>缺点：</p>
+<ol>
+<li>Spark和GemFire两个项目都十分复杂，要维护开发SnappyData，则必须要十分熟悉Spark和GemFire。</li>
+<li>SnappyData未来的瓶颈会受到Spark和GemFire的限制，日常开发中也需要考虑到Spark和GemFire的兼容性，Spark和GemFire的稳定性也会影响SnappyData的稳定性。</li>
+<li>列存没有索引。</li>
+<li>应该会有OOM和GC问题。</li>
+<li>不是真正的HTAP系统，一份数据无法同时高效的支持OLTP和OLAP查询，因为SnappyData中一份数据要么是行存，要么是列存。</li>
+</ol>
+<h3 id="10-what-can-we-learn-from-snappydata">10 What Can We Learn From SnappyData</h3>
+<ol>
+<li>踩在巨人的肩膀上前行，通过借力Apache Spark和GemFire两大项目的力量，大幅缩短工期，快速实现了复杂度极高的目标。</li>
+<li>论证了如何通过巧妙地糅合行存和列存来同时满足OLTP和OLAP需求。</li>
+<li>论证了将Spark扩展为一个DataBase的可行性。</li>
+<li>论证了Co-locality的可行性和必要性。</li>
+</ol>
+<h3 id="11-conclusion">11 Conclusion</h3>
+<p>SnappyData的设计目标是1个系统同时满足Streaming Processing + OLTP + OLAP，但是从我目前的视野和认知来看，Streaming Processing 似乎并不属于DataBase的职责，DataBase只要做好数据的存储和查询（OLTP + OLAP）就可以了，关键是目前业界还没有1个开源的DataBase能够同时做好OLTP + OLAP的查询。 至于HTAP的DataBase怎么实现，我个人不倾向这种基于通用计算引擎Spark改造的思路，更倾向于一个专门的查询引擎+存储引擎（行列混存）的思路。</p>
+<h3 id="12-references">12 References</h3>
+<ol>
+<li>SnappyData 论文</li>
+<li><a href="https://snappydatainc.github.io/snappydata/">SnappyData 官方文档</a></li>
+</ol>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 58px; color: #fff; font-size:36px; font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Helvetica, STKaiti, SimSun, serif; background: rgb(236,96,0)">赞</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <p><img src="../images/weixin.jpeg" width="200" /></p>
+                    <p><img src="../images/zhifubao.jpeg" width="200" /></p>
+                </div>
+
+            </div>
+            <h3>评论</h3>
+            <div id="vcomment"></div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5b13ff32b537dcb157ade382
+                 data-title=SnappyData 原理和架构: 一统Streaming Processing，OLTP和OLAP
+                 data-url=snappydata>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+<script src="../js/av-min.js"></script>
+<script src='../js/Valine.min.js'></script>
+<script type="text/javascript">
+    window.valine = new Valine({
+        el: '#vcomment' ,
+        verify: true,
+        notify: true,
+        appId: 'BlLnB0re5OzQVzrgEplAxkyg-gzGzoHsz',
+        appKey: 'wUyxSV0U4Vi7oK1EHK6ipErv',
+        placeholder: '欢迎评论'
+    });
+</script>
+
+</body>
+</html>
