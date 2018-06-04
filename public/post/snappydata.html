@@ -54,7 +54,7 @@
 <li><a href="#4-the-challenges-of-marrying-spark-gemfire">4 The Challenges of Marrying Spark &amp; GemFire</a></li>
 <li><a href="#5-how-snappydata">5 How SnappyData</a></li>
 <li><a href="#6-snappydata-architecture">6 SnappyData Architecture</a></li>
-<li><a href="#7-why-snappydata-is-fast">7 Why SnappyData is Fast</a></li>
+<li><a href="#7-why-snappydata-is-20x-faster-than-spark">7 Why SnappyData is 20X Faster Than Spark</a></li>
 <li><a href="#8-snappydata-deploy-modes">8 SnappyData Deploy Modes</a></li>
 <li><a href="#9-pros-and-cons-of-snappydata">9 Pros And Cons Of SnappyData</a></li>
 <li><a href="#10-what-can-we-learn-from-snappydata">10 What Can We Learn From SnappyData</a></li>
@@ -148,7 +148,7 @@
 <li>Lead Node： Spark的Driver，负责将OLAP类型的查询分发给Executor，接收Saprk API的请求。 Lead Node借助Spark JobServer来管理Saprk Job和查询。</li>
 <li>Data Servers： 管理数据，内嵌Spark executor。接收JDBC和ODBC的查询请求，并解析SQL，如果是点查询，点更新之类的OLTP请求，就直接执行，如果是需要Scan, Aggregate,Join的OLAP请求，就转发给Lead Node。</li>
 </ul>
-<h3 id="7-why-snappydata-is-fast">7 Why SnappyData is Fast</h3>
+<h3 id="7-why-snappydata-is-20x-faster-than-spark">7 Why SnappyData is 20X Faster Than Spark</h3>
 <p>SnappyData 主要通过以下手段来加速OLAP查询：</p>
 <ul>
 <li><p>Data Colocate：核心思想是Join时避免Shuffle。具体有两种手段：</p>
@@ -160,6 +160,7 @@
 <li><p>Code Generation： 借助了Spark Tungsten的Code generation</p>
 </li>
 <li>列存使用了Spark原生的Column Format，所以避免了序列化和反序列化的开销。</li>
+<li>Spark Executors和Data Store 都运行在一个JVM中: 没有数据Copy开销。</li>
 <li>数据都是在内存中。</li>
 <li>Long Running Executors: 提交一个Job不需要启动新的Executor。</li>
 </ul>
