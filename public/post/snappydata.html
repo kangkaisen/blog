@@ -127,19 +127,21 @@
 <h4 id="snappydata的存储">SnappyData的存储</h4>
 <p>SnappyData同时支持行存和列存。列存是基于Spark RDD的实现衍生而来，行存是基于GemFire实现；一个表是使用行存还是列存需要在建表时指定；行存可以同时支持分区表和复制表（会复制到所有节点上，适合OLAP星型模型中的小维表），列存只支持基于Hash的分区表；行存支持索引，基于索引的Keys可以实现快速的读写，列存不支持索引，是按照连续的Blocks组织，支持dictionary，run-length 和bit 3种编码方式；行存支持“read committed” and “repeatable read”级别的事务隔离，列存支持快照级别的事务隔离。</p>
 <p>我们知道，行存实现点更新十分简单，但是列存如何实现高效的点更新呢？</p>
-<p>和LSM的思想类似，列存表的点更新会先写入一个delta row buffer的数据结构， delta row buffer是一个合并队列，合并的含义是同一条记录的所有更新操作只会保留最终状态， delta row buffer使用Copy on Write的方式支持并发更新， 超过一定行数或大小时会转为列存。所以在查询列存表时需要Merge列存和delta row buffer的结果。</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/ucgtva7xv753kw4n1hcd6o9j/SnappyData-column-store.png" alt="SnappyData-column-store"></p>
+<p>如上图所示，和LSM的思想类似，列存表的点更新会先写入一个delta row buffer的数据结构， delta row buffer是一个合并队列，合并的含义是同一条记录的所有更新操作只会保留最终状态， delta row buffer使用Copy on Write的方式支持并发更新， 超过一定行数或大小时会转为列存。所以在查询列存表时需要Merge列存和delta row buffer的结果。</p>
 <h4 id="snappydata的查询接口">SnappyData的查询接口</h4>
 <p>SnappyData同时支持标准SQL（扩展自Saprk的SparkSQL dialect）和Saprk API.</p>
 <h4 id="snappydata的stream-processing">SnappyData的Stream Processing</h4>
 <p>SnappyData的Stream Processing主要是通过Spark Streaming来实现的，不过SnappyData优化了Stream Processing的OLAP查询能力，比如columnar formats, approximate query processing, and co-partitioning。</p>
 <h4 id="snappydata的查询路由和调度">SnappyData的查询路由和调度</h4>
-<p>SnappyData将OLAP查询交给Spark，将OLTP查询交给GemFire。SnappyData一般将OLTP请求视为低延迟请求，将OLAP请求视为高延迟请求，低延迟的OLTP请求会绕过Saprk的调度直接操作数据，OLAP请求会交给Saprk的公平调度器调度执行。 当然，一个查询也可以显式的标注优先级。</p>
+<p>SnappyData将OLAP查询交给Spark，将OLTP查询交给GemFire。SnappyData一般将OLTP请求视为低延迟请求，将OLAP请求视为高延迟请求，低延迟的OLTP请求会绕过Saprk的调度直接操作数据，OLAP请求会交给Saprk的公平调度器调度执行。 当然，一个查询也可以显式的标注优先级。 下图是个简单的示意图：</p>
+<p><img src="http://static.zybuluo.com/kangkaisen/22m1td3y6gc2nzjauxmpy7gs/SnappyData-query-route.png" alt="SnappyData-query-route"></p>
 <h4 id="snappydata的高可用">SnappyData的高可用</h4>
 <p>Spark Driver通过主备的方式实现高可用。</p>
 <p>SnappyData的失败探测依赖依赖UDP neighbor ping和 TCP ack timeout。</p>
 <p>SnappyData将细粒度的事务更新的Recovery交给GemFire，将Batched and streaming micro-batch的操作交给了Spark。Saprk的Recovery依赖RDD的lineage；GemFire的Recovery依赖replication。</p>
-<p>###6 SnappyData Architecture
-<img src="http://static.zybuluo.com/kangkaisen/52orda5r97jyry82w8q8jqlp/snappydata_Architecture.png" alt="snappydata_Architecture.png-311.1kB"></p>
+<h3 id="6-snappydata-architecture">6 SnappyData Architecture</h3>
+<p><img src="http://static.zybuluo.com/kangkaisen/52orda5r97jyry82w8q8jqlp/snappydata_Architecture.png" alt="snappydata_Architecture.png-311.1kB"></p>
 <p>如上图所示，SnappyData的节点分为三类：</p>
 <ul>
 <li>Locator： 服务发现。</li>
