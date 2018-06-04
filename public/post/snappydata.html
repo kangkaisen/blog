@@ -73,7 +73,7 @@
 <li>Lambda架构</li>
 </ol>
 <p>这些解决方案的问题如下：</p>
-<p>SQL ON Hadoop（Hive, Impala/Kudu and Spark SQL）主要面向离线的OLAP分析，具有以下缺点：</p>
+<p>SQL ON Hadoop（Hive, Impala/Kudu and Spark SQL）主要面向离线的OLAP分析，具有以下问题：</p>
 <ul>
 <li>不支持实时</li>
 <li>不支持事务</li>
@@ -82,9 +82,10 @@
 </ul>
 <p>HTAP系统可以同时支持OLTP和OLAP，但是需要依赖外部系统（Storm, Kafka, Confluent）进行Stream Processing；</p>
 <p>SQL On Streaming系统无法高效处理复杂的OLAP查询，也无法高效Join实时和历史数据。</p>
-<p>Lambda架构虽然可以满足Streaming Processing + OLTP + OLAP这3个需求，但是有以下缺点：</p>
+<p><img src="https://user-gold-cdn.xitu.io/2018/5/29/163ab44095f9dba4?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="Lambda架构"></p>
+<p>上图是Lambda架构的一个示意，Lambda架构虽然可以满足Streaming Processing + OLTP + OLAP这3个需求，但是有以下缺点：</p>
 <ul>
-<li>Increased complexity and total cost of ownership：用户的学习成本高昂：用户需要熟悉多个系统的原理，概念，API，模型；用户的开发成本较高，开发效率较低；平台维护多个系统的成本高昂</li>
+<li>Increased complexity and total of ownership：用户的学习成本高昂：用户需要熟悉多个系统的原理，概念，API，模型；用户的开发成本较高，开发效率较低；平台维护多个系统的成本高昂</li>
 <li>Wasted resources：数据需要存储多份，数据同步有延迟，数据流较长，数据格式需要多次转换，资源浪费较严重</li>
 <li>Consistency challenges: 多个系统间数据的一致性难以保证。</li>
 </ul>
@@ -102,18 +103,17 @@
 <li>支持标准SQL，同时支持JDBC，ODBC，Spark API访问</li>
 <li>支持分布式事务</li>
 <li>比Spark快20x(官方号称)</li>
-<li>100% Compatible With Apache Spark：可以使用Spark SQL，Spark API，Spark ML访问; 支持Spark的所有Data Sources； 支持结构化数据和半结构化数据</li>
+<li>100% Compatible With Apache Spark：可以使用Spark SQL，Spark API，Spark ML访问; 支持Spark的所有Data Sources；支持结构化数据和半结构化数据</li>
 </ol>
-<p>下图是SnappyData的一种组件图，灰色部分是Spark本身的模块。</p>
+<p>下图是SnappyData的组件图，灰色部分是Spark本身的模块。</p>
 <p><img src="http://static.zybuluo.com/kangkaisen/59z6984y120cssmvn1ro22s1/snappydata-components.png" alt="snappydata-components.png-81.2kB"></p>
-<p><img src="http://www.snappydata.io/assets/images/productPage/subpages/architecture.png" alt="SnappyData"></p>
 <h3 id="4-the-challenges-of-marrying-spark-amp-gemfire">4 The Challenges of Marrying Spark &amp; GemFire</h3>
-<p>Spark是一个高效的分布式计算引擎，GemFire是一个低延迟，高可用，支持事务，面向行存，分布式的Key-Value内存数据库。Spark的设计目标是高吞吐，GemFire的设计目标是低延迟。要将Spark和GemFire整合来同时满足Streaming Processing + OLTP + OLAP的需求 显然会有不少挑战：</p>
+<p>Spark是一个高效的分布式计算引擎，GemFire是一个低延迟，高可用，支持事务，面向行存，分布式的Key-Value内存数据库。Spark的设计目标是高吞吐，GemFire的设计目标是低延迟。要将Spark和GemFire整合来同时满足Streaming Processing + OLTP + OLAP的需求，显然会有不少挑战：</p>
 <ol>
 <li>需要改变Spark Executors的生命周期，使得Executors的JVM是常驻的，并和Applications解耦；其次需要使用静态的资源分配策略使得同一份资源可以被多个Applications并发使用。</li>
-<li>如何区分一个查询是OLTP还是OLAP</li>
-<li>Spark Driver是单点</li>
-<li>扩展Spark支持基于GemFire可变的并发数据结构的点查询，点更新和点删除</li>
+<li>如何区分一个查询是OLTP还是OLAP。</li>
+<li>Spark Driver是单点。</li>
+<li>扩展Spark支持基于GemFire可变的并发数据结构的点查询，点更新和点删除。</li>
 <li>扩展GemFire的分布式锁服务以便在Spark中可以修改这些可变的数据结构。</li>
 <li>需要100%兼容Spark代码。</li>
 </ol>
@@ -125,13 +125,13 @@
 <li>SnappyData中的OLAP功能是通过Spark + Column Store实现的</li>
 </ul>
 <h4 id="snappydata的存储">SnappyData的存储</h4>
-<p>SnappyData同时支持行存和列存。列存是基于Spark RDD的实现衍生而来，行存是基于GemFire实现；一个表是使用行存还是列存需要在建表时指定；行存可以同时支持分区表和复制表（会复制到所有节点上，适合OLAP星型模型中的小维表），列存只支持基于Hash的分区表；行存支持索引，基于索引的Keys可以实现快速的读写，列存不支持索引，是按照连续的Blocks组织，支持dictionary，run-length 和bit 3种编码方式；行存支持“read committed” and “repeatable read”的事务隔离级别，列存支持快照级别的事务隔离。</p>
+<p>SnappyData同时支持行存和列存。列存是基于Spark RDD的实现衍生而来，行存是基于GemFire实现；一个表是使用行存还是列存需要在建表时指定；行存可以同时支持分区表和复制表（会复制到所有节点上，适合OLAP星型模型中的小维表），列存只支持基于Hash的分区表；行存支持索引，基于索引的Keys可以实现快速的读写，列存不支持索引，是按照连续的Blocks组织，支持dictionary，run-length 和bit 3种编码方式；行存支持“read committed” and “repeatable read”级别的事务隔离，列存支持快照级别的事务隔离。</p>
 <p>我们知道，行存实现点更新十分简单，但是列存如何实现高效的点更新呢？</p>
 <p>和LSM的思想类似，列存表的点更新会先写入一个delta row buffer的数据结构， delta row buffer是一个合并队列，合并的含义是同一条记录的所有更新操作只会保留最终状态， delta row buffer使用Copy on Write的方式支持并发更新， 超过一定行数或大小时会转为列存。所以在查询列存表时需要Merge列存和delta row buffer的结果。</p>
 <h4 id="snappydata的查询接口">SnappyData的查询接口</h4>
 <p>SnappyData同时支持标准SQL（扩展自Saprk的SparkSQL dialect）和Saprk API.</p>
 <h4 id="snappydata的stream-processing">SnappyData的Stream Processing</h4>
-<p>SnappyData的Stream Processing主要是通过Spark Streaming来实现的，不过SnappyData优化了Stream Processing的OLAP查询能力，比如columnar formats, approximate query processing, and co-partitioning（后面会讲到）。</p>
+<p>SnappyData的Stream Processing主要是通过Spark Streaming来实现的，不过SnappyData优化了Stream Processing的OLAP查询能力，比如columnar formats, approximate query processing, and co-partitioning。</p>
 <h4 id="snappydata的查询路由和调度">SnappyData的查询路由和调度</h4>
 <p>SnappyData将OLAP查询交给Spark，将OLTP查询交给GemFire。SnappyData一般将OLTP请求视为低延迟请求，将OLAP请求视为高延迟请求，低延迟的OLTP请求会绕过Saprk的调度直接操作数据，OLAP请求会交给Saprk的公平调度器调度执行。 当然，一个查询也可以显式的标注优先级。</p>
 <h4 id="snappydata的高可用">SnappyData的高可用</h4>
@@ -142,17 +142,17 @@
 <img src="http://static.zybuluo.com/kangkaisen/52orda5r97jyry82w8q8jqlp/snappydata_Architecture.png" alt="snappydata_Architecture.png-311.1kB"></p>
 <p>如上图所示，SnappyData的节点分为三类：</p>
 <ul>
-<li>Locator： 负责服务发现。</li>
+<li>Locator： 服务发现。</li>
 <li>Lead Node： Spark的Driver，负责将OLAP类型的查询分发给Executor，接收Saprk API的请求。 Lead Node借助Spark JobServer来管理Saprk Job和查询。</li>
 <li>Data Servers： 管理数据，内嵌Spark executor。接收JDBC和ODBC的查询请求，并解析SQL，如果是点查询，点更新之类的OLTP请求，就直接执行，如果是需要Scan, Aggregate,Join的OLAP请求，就转发给Lead Node。</li>
 </ul>
 <h3 id="7-why-snappydata-is-fast">7 Why SnappyData is Fast</h3>
-<p>SnappyData 主要通过以下手段来加速查询：</p>
+<p>SnappyData 主要通过以下手段来加速OLAP查询：</p>
 <ul>
-<li><p>Data Colocation：核心思想是实现本地Join，Join时避免Shuffle。具体有两种手段：</p>
+<li><p>Data Colocate：核心思想是Join时避免Shuffle。具体有两种手段：</p>
 <ul>
-<li>Co-partitioning with shared keys： 几张Join的表基于Join的key提前预分区，从而实现每个Partition的Local Join，适合多张大表的Join。</li>
-<li>星型模型中维表通常比较小，且更新频率较低，所以可以将维表设置为replicated tables，保证每个节点上都有维表，从而避免broadcast join，实现Local Join。</li>
+<li>Partition To Partition Join：Co-partitioning with shared keys，几张Join的表基于Join的key提前预分区，从而实现每个Partition的Local Join，适合多张大表的Join。</li>
+<li>Local Join：星型模型中维表通常比较小，且更新频率较低，所以可以将维表设置为Replicated Tables，保证每个节点上都有维表，从而避免Broadcast Join，实现Local Join。</li>
 </ul>
 </li>
 <li><p>Code Generation： 借助了Spark Tungsten的Code generation</p>
@@ -160,7 +160,6 @@
 <li>列存使用了Spark原生的Column Format，所以避免了序列化和反序列化的开销。</li>
 <li>数据都是在内存中。</li>
 <li>Long Running Executors: 提交一个Job不需要启动新的Executor。</li>
-<li>Data is stored in a Spark native column format so even when data has to arrive to Spark compute nodes it incurs little to no overhead associated with serialization</li>
 </ul>
 <h3 id="8-snappydata-deploy-modes">8 SnappyData Deploy Modes</h3>
 <p>SnappyData 有3种部署模式：
@@ -179,7 +178,7 @@
 <p>缺点：</p>
 <ol>
 <li>Spark和GemFire两个项目都十分复杂，要维护开发SnappyData，则必须要十分熟悉Spark和GemFire。</li>
-<li>SnappyData未来的瓶颈会受到Spark和GemFire的限制，日常开发中也需要考虑到Spark和GemFire的兼容性，Spark和GemFire的稳定性也会影响SnappyData的稳定性。</li>
+<li>SnappyData未来的瓶颈或许会受到Spark和GemFire的限制，日常开发中也需要考虑到Spark和GemFire的兼容性，Spark和GemFire的稳定性也会影响SnappyData的稳定性。</li>
 <li>列存没有索引。</li>
 <li>应该会有OOM和GC问题。</li>
 <li>不是真正的HTAP系统，一份数据无法同时高效的支持OLTP和OLAP查询，因为SnappyData中一份数据要么是行存，要么是列存。</li>
@@ -187,12 +186,12 @@
 <h3 id="10-what-can-we-learn-from-snappydata">10 What Can We Learn From SnappyData</h3>
 <ol>
 <li>踩在巨人的肩膀上前行，通过借力Apache Spark和GemFire两大项目的力量，大幅缩短工期，快速实现了复杂度极高的目标。</li>
-<li>论证了如何通过巧妙地糅合行存和列存来同时满足OLTP和OLAP需求。</li>
-<li>论证了将Spark扩展为一个DataBase的可行性。</li>
-<li>论证了Co-locality的可行性和必要性。</li>
+<li>论证了如何通过巧妙地统一行存和列存来同时满足OLTP和OLAP需求。</li>
+<li>展示了如何将Spark扩展为一个DataBase。</li>
+<li>论证了Data Colocate的可行性和必要性。</li>
 </ol>
 <h3 id="11-conclusion">11 Conclusion</h3>
-<p>SnappyData的设计目标是1个系统同时满足Streaming Processing + OLTP + OLAP，但是从我目前的视野和认知来看，Streaming Processing 似乎并不属于DataBase的职责，DataBase只要做好数据的存储和查询（OLTP + OLAP）就可以了，关键是目前业界还没有1个开源的DataBase能够同时做好OLTP + OLAP的查询。 至于HTAP的DataBase怎么实现，我个人不倾向这种基于通用计算引擎Spark改造的思路，更倾向于一个专门的查询引擎+存储引擎（行列混存）的思路。</p>
+<p>SnappyData的设计目标是1个系统同时满足Streaming Processing + OLTP + OLAP，但是从我目前的视野和认知来看，Streaming Processing 似乎并不属于DataBase的职责，DataBase只要做好数据的存储和查询（OLTP + OLAP）, 能够同时很好的支持实时和离线数据的摄入就可以了。 目前整个业界还没有1个开源的DataBase能够同时做好OLTP + OLAP的查询。 至于HTAP的DataBase怎么实现，我个人不倾向这种基于通用计算引擎Spark改造的思路，更倾向于一个针对OLTP+OLAP优化的查询引擎+针对DB优化的存储引擎（行列混存）的思路。</p>
 <h3 id="12-references">12 References</h3>
 <ol>
 <li>SnappyData 论文</li>
