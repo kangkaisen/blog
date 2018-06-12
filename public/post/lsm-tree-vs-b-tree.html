@@ -91,9 +91,9 @@ bash-3.2$ cat database
 <p>为了能够快速找到特定Key对应的Value， 我们需要引入一个数据结构：Index。 <strong>所谓Index，就是我们在数据库中增加额外的元数据，然后Index像路标一样可以快速知道我们需要访问数据的位置和偏移量。</strong> Index类似汉语字典中的索引和一般书籍中的目录。如果我们需要按照不同的方式访问相同的数据，我们有可能需要多种不同的索引，比如按照Key查询和按照Value查询，我们会分别需要针对Key的索引和针对Value的索引。</p>
 <p>Index是基于原始数据衍生的<strong>附加的数据结构</strong>，增加索引必然意味着降低数据写入速度，增大存储空间，所以Index是<strong>以数据写入时的处理成本和存储的空间成本来换取查询的加速</strong>。这也是数据库设计的一个trade-off，不同索引的查询加速比，写入时的处理成本，存储的空间成本往往是不同的，所以在设计数据库时选择何种索引是一个很重要的点。</p>
 <h3 id="3-hash-index">3 Hash Index</h3>
-<p>下面就让我们用Index加速之前最简单的Key-Value DB。之前我们db_get方法查询特定Key必须全表Scan的原因，是因为我们不知道特定Key在文件中的Offest，假如我们知道了每个Key的Offest，我们就可以直接Seek到Key对应的Offest，直接读取Key对应的Value。而Key到Offest的映射我们自然会想起到我们熟悉的数据结构HashMap，我们可以在内存中维护一个HashMap，HashMap的Key就是Key-Value DB的每一条记录的Key，HashMap的Value就是每一条记录在文件中的Offest。 </p>
+<p>下面就让我们用Index加速之前最简单的Key-Value DB。之前我们db_get方法查询特定Key必须全表Scan的原因，是因为我们不知道特定Key在文件中的Offset，假如我们知道了每个Key的Offset，我们就可以直接Seek到Key对应的Offset，直接读取Key对应的Value。而Key到Offset的映射我们自然会想起到我们熟悉的数据结构HashMap，我们可以在内存中维护一个HashMap，HashMap的Key就是Key-Value DB的每一条记录的Key，HashMap的Value就是每一条记录在文件中的Offset。 </p>
 <p><img src="http://static.zybuluo.com/kangkaisen/z23dumh7qlxg2ltuop2fp0a3/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-05-01%20%E4%B8%8B%E5%8D%885.56.01.png" alt="屏幕快照 2018-05-01 下午5.56.01.png-298kB"></p>
-<p>有了HashMap后，我们每次写数据后就必须要更新HashMap，查询数据时先从HashMap获取特定Key的Offest，再直接Seek到文件对应Offest的位置，读取数据。 事实上Bitcask（Riak的默认存储引擎）就是这样做的。</p>
+<p>有了HashMap后，我们每次写数据后就必须要更新HashMap，查询数据时先从HashMap获取特定Key的Offset，再直接Seek到文件对应Offset的位置，读取数据。 事实上Bitcask（Riak的默认存储引擎）就是这样做的。</p>
 <p>不过显然Hash Index有两个缺陷：</p>
 <ol>
 <li>内存的大小必须可以放下Hash Table</li>
