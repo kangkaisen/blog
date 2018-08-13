@@ -1,0 +1,259 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Kylin Meetup分享：基于Druid的Kylin存储引擎实践</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Kylin Meetup分享：基于Druid的Kylin存储引擎实践</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2018-08-11</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#分享正文">分享正文</a><ul>
+<li><a href="#kylin-on-hbase-问题">Kylin On HBase 问题</a></li>
+<li><a href="#kylin-新存储引擎探索之路">Kylin 新存储引擎探索之路</a></li>
+<li><a href="#kylin-on-druid">Kylin On Druid</a></li>
+</ul>
+</li>
+<li><a href="#faq">FAQ</a><ul>
+<li><a href="#q1-为什么不直接用druid代替kylin">Q1 为什么不直接用Druid代替Kylin?</a></li>
+<li><a href="#q2-为什么没有选择kylin-on-kudu">Q2 为什么没有选择Kylin On Kudu?</a></li>
+<li><a href="#q3-为什么没有选择去优化改进hbase">Q3 为什么没有选择去优化改进HBase？</a></li>
+<li><a href="#q4-druid和kylin的应用场景">Q4 Druid和Kylin的应用场景？</a></li>
+<li><a href="#关于carbondata-的-datamap特性">关于CarbonData 的 DataMap特性</a></li>
+</ul>
+</li>
+</ul>
+<!-- toc stop -->
+<h2 id="分享正文">分享正文</h2>
+<p>本文的内容是我在8月11日Kylin Meetup上的演讲稿，一段对应PPT一页，大家可以和PPT对应着看。</p>
+<p>基于Druid的Kylin存储引擎实践PDF下载： <a href="https://blog.bcmeng.com/pdf/kangkaisen-kylin-on-druid.pdf">https://blog.bcmeng.com/pdf/kangkaisen-kylin-on-druid.pdf</a></p>
+<p>大家好，我是来自美团点评的康凯森，今天给大家分享《基于Druid的Kylin存储引擎实践》。</p>
+<h3 id="kylin-on-hbase-问题">Kylin On HBase 问题</h3>
+<p>本次分享的内容主要分为3部分，首先我会介绍下Kylin On HBase的问题，也就是我们为什么要为Kylin实现一个新的存储引擎，其次我会介绍下我们新存储引擎探索的过程，这部分会解释我们为什么选择了Druid作为Kylin的存储引擎，最后我会介绍下Kylin On Druid的整体架构,核心原理和Kylin On Druid的成果，下面的分享中Kylin On Druid有时会简称为KOD。</p>
+<p>进入正式主题前，我先介绍下Kylin在美团点评的现状。<strong>目前我们线上Cube数有近1000个，Cube单副本存储近1PB；每天查询量380多万次，查询的TP50时延在200ms左右，TP90时延在1.2s左右。目前Kylin已经覆盖了美团点评所有主要业务线。</strong></p>
+<p>随着Kylin在我司的大规模使用和我们对Kylin的深入优化改进，我们发现了Kylin本身的一些痛点和问题，其中之一便是Kylin On HBase的性能问题。如图：我们用同一SQL在同一集群查询同一Cube，前后性能相差上千倍。 两次查询的唯一不同点就是Kylin维度在HBase的RowKey中位置不同， 耗时90ms的查询中维度dt和poi_id在前两位，耗时100多s的查询中维度dt和poi_id在后两位。</p>
+<p>下面我们来看下Kylin On HBase中前后缀过滤性能相差巨大的原因：如图所示：Kylin中会将Cuboid+所有维度拼接成HBase的Rowkey，Kylin默认会将所有普通指标拼接成HBase一个Column Family中同一列的Value。HBase只有单一Rowkey索引，所以只有查询能够匹配Rowkey的前缀时，查询会十分高效，反之，查询性能会比较低下，甚至会出现全表Scan。此外，即使只需要查询一个指标，Kylin在HBase侧也需要Scan所有指标列，相比列存性能也会有较大差距。 总的来说，HBase在Kylin的查询场景下Scan和Flilter效率较低下。</p>
+<p>对于Kylin On HBase Scan和Filter效率低下的问题，我们比较自然会想到的解法是：<strong>用列存加速Scan，用索引来加速Filter</strong>。</p>
+<p>这里我简单介绍下列存的优点，主要包含以下3点：</p>
+<ol>
+<li>因为只需要读取必需访问的列，所以列存有高效的IO  </li>
+<li>因为每列数据的类型一致，格式一致，所以列存可以进行高效的编码和压缩 </li>
+<li>列存更容易实现向量化执行，而向量化执行相比传统的火山模型，函数调用次数更少，对CPU Cache和SIMD更加友好。 总的来说，列存相比HBase的KV模型更适合Kylin的查询场景。</li>
+</ol>
+<p>所以，要解决Kylin On HBase Scan和Filter效率低下的问题, 我们就需要为Kylin增加一个列存，有高效索引的存储引擎。</p>
+<h3 id="kylin-新存储引擎探索之路">Kylin 新存储引擎探索之路</h3>
+<p>在我们为Kylin新增一个存储引擎之前，我们自然就需要先了解Kylin的存储引擎组成。主要有5部分：存储格式，Cache，计算，调度和元数据。 计算指数据的Scan,过滤，聚合等，调度指文件增删，复制和负载均衡等，这里的元数据指的是存储引擎本身的元数据。其中存储格式对查询性能影响很大，也是HBase在Kylin查询场景下的痛点，所以我们决定首先去寻找或改造一个适合Kylin的存储格式。</p>
+<p>当时我们主要有两个思路，<strong>一种思路是基于Spark + 存储格式进行演进</strong>： 就是找到一个优秀的存储格式后，和Spark进行集成。大概思路是将文件Cache到本地，用Spark来实现计算和查询的调度，整个方案大体上就可以Run起来。大家对这种思路感兴趣的话，可以参考TiDB的TiSpark项目，以及Snappydata这个系统。</p>
+<p>第二种思路就是<strong>找到或自研一个优秀的存储格式后，再参考HBase， Druid等系统，逐步完善成一个完整的存储引擎</strong>。</p>
+<p>所以，无论哪一种思路，我们都需要首先找到或者自研一个优秀的适合Kylin的存储格式。</p>
+<p>我们在调研存储格式时<strong>主要考虑Scan和Filter性能，导入性能，压缩率，集成难度这4点因素</strong>，其中重点关注Scan和Filter性能。</p>
+<p>我们首先对Parquet进行了调研。因为Parquet是当前Hadoop生态列式文件的标准，在Hadoop生态中广泛使用。一个Parquet文件先按行逻辑上水平拆分成row groups，row groups内是列存，每一列是一个Column chunks，Column chunks进一步拆分成Page， Page是数据访问的最小单位。Parquet 可以通过min,max索引和字典实现row groups粒度的过滤，但是<strong>没有Page粒度的索引</strong>。</p>
+<p>我们在17年5月份的时候进行了Kylin On Parquet POC。 这里是POC的结果。POC的结果也符合我们的理论预期：由于Parquet是列存，所以在Scan部分列时性能优于HBase，但由于存在Tuple重组，也就是列转行的开销，Scan性能会随着访问列的个数增加而降低，Scan全部列时性能不如HBase。 Filter方面，Parquet在前缀和后缀过滤上性能没有差别，但是由于当时的Parquet没有Page粒度的细粒度索引，所以前缀过滤性能明显比HBase差。</p>
+<p>由于Parquet过滤性能不足，所以我们就Pass了Kylin On Parquet的方案。 Parquet之后，我们又调研了当时新起的华为开源的存储格式CarbonData。和Parquet类似，CarbonData首先将数据水平切分成若干个Blocklet，Blocklet内部按列存储，每列的数据叫做一个Column Chunk。和Parquet不同的是，CarbonData拥有丰富的索引：MDK索引；Min，Max索引；倒排索引。MDK索引是多维度索引，类似Kylin中的维度索引，整个文件会按照多个维度列进行排序，这样对MDK列中的维度进行前缀过滤就会很高效。</p>
+<p>CarbonData的列存+丰富索引的设计的确是我们所期望的，不过CarbonData和Spark耦合较深，且当时的CarbonData没有OutputFormat，也不是很成熟，所以我们也Pass了Kylin On CarbonData的方案。</p>
+<p>Parquet，CarbonData之后。 我们差不多同时进行了Kylin On Lucene POC 和 Kylin On Druid POC。我们先来看下Lucene， Lucene大家应该都很熟悉，是一个被广泛使用的全文搜索库，其存储格式是基于MMAP，支持倒排索引的列存。</p>
+<p>这是Kylin On Lucene POC的结果，POC的结果和我们对倒排索引的理论认知符合：由于<strong>倒排索引是用额外的构建成本和存储成本换取查询时高效的过滤性能</strong>，所以Lucene的构建性能只有HBase的1/3，存储是HBase的4倍，但是过滤性能明显优于HBase。</p>
+<p>下面我们来看下Druid的存储格式。和Lucene类似，Druid的存储格式也是基于MMAP，支持倒排索引的列存，区别是<strong>Druid的倒排索引是基于Bitmap的，Lucene的倒排索引是基于倒排表的</strong>。Druid的存储格式比较简单，就是直接按列依次存储，其中的M1,M2是指标列，D1,D2指维度列.除了数据文件之外，还会有一个meta文件记录每一列的offset。我们要读取Druid文件时，就将Druid文件MMap到内存，直接根据offset读取指定偏移量的数据。</p>
+<p>图中上半部分是Druid Bitmap 倒排索引的实现原理：我们有维度列D2, 共4行数据，包含meituan,dianping两个值，Druid会首先对维度列进行字典编码，图中meituan编码为0，dianping编码为1，然后Druid会基于维度值和字典构建基于Bitmap的倒排索引，倒排索引的Key是编码后的ID，Value是Bitmap，Bitmap的哪个bit位是1，就表示该值出现在哪些行。 下半部分是Druid String 维度存储的具体内容：包括列的元数据，维度字典，维度编码后的ID和倒排索引。</p>
+<p>图中是Kylin On Druid POC的结果，我们可以看到Druid的过滤性能明显优于HBase，Scan性能和Parquet类似，在部分列时也明显优于HBase。 构建和存储的话，和Lucene类似，会比HBase差一点。</p>
+<p>在我们对Parquet，CarbonData，Lucene，Druid的存储格式和POC情况有了基本了解之后，我们来看下为什么我们当时做出了Kylin On Druid的方案：</p>
+<ul>
+<li>Parquet的索引粒度较粗，过滤性能不足；</li>
+<li>CarbonData与Spark 耦合较深，集成难度较大；</li>
+<li>Lucene 和 Druid相比，存储膨胀率较高，还有比较重要的一点是，Druid不仅仅是一个存储格式，也可以作为Kylin完整的存储引擎。</li>
+</ul>
+<p>我们再来看下我们选择Kylin On Druid的原因：</p>
+<ul>
+<li><strong>首先是Druid Scan,Filter性能很好</strong></li>
+<li><strong>其次是Druid不仅仅是一个存储格式，而是可以作为一个完整的Kylin存储引擎</strong>， 比如Druid Historical节点负责Segment的Cache和 计算，Druid Coordinator节点负责Segment的增删，副本和负载均衡。这样我们就不需要基于存储格式再去演进出一个存储引擎，我们整个项目的工期会大幅缩短。</li>
+<li><strong>最后，Kylin和Druid本身就是我们维护的系统，项目即使失败，我们的付出也会有收获</strong>。</li>
+</ul>
+<h3 id="kylin-on-druid">Kylin On Druid</h3>
+<p>OK，前半部分主要介绍了Kylin On Druid的大背景，回答了Why Kylin On Druid。 下面我们来看下How Kylin On Druid。</p>
+<p>在介绍Kylin On Druid之前，我们先来看下Kylin的可插拔架构。Kylin的可插拔架构对数据源，计算引擎， 存储引擎都有抽象，理论这3个部分都是可以替换的。目前数据源已经支持Hive，Kafka；计算引擎支持Spark，MR； 但是存储引擎只有HBase。 <strong>所谓的Kylin On Druid就是在Kylin的可插拔架构中用Druid替换掉HBas</strong>e。</p>
+<p>图中是Kylin On Druid 简化后的架构图，分为数据导入和数据查询两条线。数据导入时，Kylin的JobServer会将Hive中的数据导入到Druid的Historical节点中；数据查询时，Kylin的Queryserver会通过Druid的Broker节点向Druid发起查询。</p>
+<p>下面我们来详细看下KOD数据导入和数据查询的过程，我们首先来看下数据导入过程： </p>
+<ol>
+<li>和HBase一样，首先需要计算出Cuboid</li>
+<li>生成Cuboid后，Kylin On HBase中是将Cuboid转为HBase的HFile，KOD中则是将Cuboid转为Druid Segment文件。</li>
+<li>向Druid的MetaData Store插入Segment元数据。下面的工作是Druid内部的流程:</li>
+<li>Coordinator定期从MetaData Store Pull Segment元数据，发现有新Segment生成时，就会通知Historical节点Load Segment</li>
+<li>Historical节点收到Load Segment通知后，就会去HDFS上下载Segment文件，然后MMap到内存，至此整个数据导入过程完成。</li>
+</ol>
+<p>KOD的数据查询过程，Kylin和Druid如何交互我们可以有两种方案。 <strong>一种是通过直接访问Broker的方式和Druid集成，一种是通过直接访问Druid Historical节点的方式和Druid集成</strong>。  第一种方式我们只需要将Kylin的SQL翻译成Druid的json，通过Http向Druid的Broker发起查询。 第二种方式我们就需要在kylin中实现Druid Broker的功能，好处是性能会比第一种好，因为少一层网络传输，坏处是Kylin和Druid的依赖冲突会更严重，实现较复杂。本着侵入性小和简单可用的原则，我们选择了第一种方案。</p>
+<p>在了解了KOD的架构和整个数据导入，数据查询过程后，我们再具体看下我们做了哪些方面的工作：</p>
+<ol>
+<li>Kylin和Druid的Schema映射</li>
+<li>Cube 构建侧适配</li>
+<li>Cube 查询侧适配</li>
+<li>运维工具适配</li>
+</ol>
+<p>其实这4方面的工作也是我们为Kylin增加一个存储引擎必须要做的工作。</p>
+<p>Kylin和Druid的Schema映射是这样的：Kylin的Cube对应Druid中的DataSource，Kylin的Segment对应Druid中的Segment，维度对维度，指标对指标，需要额外增加一个Cuboid维度列，Druid中没有的指标需要在Druid中进行扩展。</p>
+<p>我们目前在Druid中增加了Kylin的精确去重指标，Kylin的ExtendColumn指标和Decimal指标。无论是Druid还是Kylin，我们新增一种聚合指标所要做的事情都是类似的，区别只是具体的接口和实现方式不同。我们自定义一种聚合指标要做这些事情：</p>
+<ul>
+<li>定义指标的元数据：指标的名称参数，返回类型，核心数据结构；</li>
+<li>定义指标的聚合方式；</li>
+<li>定义指标序列化和反序列化的方式；</li>
+<li>注册指标，让系统发现新指标。</li>
+</ul>
+<p>Cube构建侧适配除了之前提到的将Cuboid 转为 Druid Segment和Load Segemnt这一步，KOD中为了支持Druid层的业务隔离，还增加了Update Druid Tier这一步，允许用户将不同的Cube存储到不同的Tier。在Druid Segment生成和Load这两步，都进行了一定的优化。 生成Druid Segment时，由于需要生成倒排索引，所以相比生成HBase的HFILE，就需要更多的内存，所以这一步进行了较多内存升的优化。 在Druid Load Segment这一步，初期发现多个Segment 并发导入时，Druid Load Segment会很慢。 经过排查发现，主要是Druid 0.10.0版本有bug，默认的并发度配置不生效，所以整个Load是串行，后来是通过升级到Druid 0.11，并将并发度设置为磁盘数的2倍解决的，因为Druid Load Segment的耗时99.9% 都是在从HDFS下载Segment上。</p>
+<p>在介绍KOD对Cube查询侧的适配之前，我们先简单看下Kylin的查询流程。Kylin的SQL解析，逻辑计划的生成和优化都是通过Calcite实现的，Kylin会根据Calcite生成的查询计划生成HBase的Scan请求，HBase端经过Scan，Filter,Agg后会一次性将结果返回给Kylin的QueryServer，QueryServer会将HBase返回的结果反序列化，对维度根据字典进行解码生成Obejct数组，再将Obejct数组转为Tuple，Tuple和Obejct数组的主要区别是Tuple有了类型信息，最后Tuple会交给Calcite的Enumerator进行最终计算。</p>
+<p>下面我们来看下KOD对Cube查询侧的适配，我们拿到Calcite生成的查询计划后，为了实现谓词下推，会首先将Kylin的Filter转为Druid的Filter；其次会进行分区裁剪，避免访问不必要的Druid Segment；然后会根据查询的Cube，维度，指标，Filter等生成Druid的查询Json，通过Http向Druid发起查询，Druid端经过Scan，Filter,Agg后会按照Http Chunk的方式Pipline地将查询结果返回给Kylin的QueryServer，下来的过程基本和HBase类似，需要注意的是，由于我们本身在Druid中存储的就是原始值，所以查询就不需要加载字典进行维度的解码。</p>
+<p>最后我们来看下运维工具适配方面的工作，主要包括：</p>
+<ul>
+<li>Cube迁移工具</li>
+<li>Storage Cleanup工具</li>
+<li>Cube Purge，Drop，Retention操作等。</li>
+</ul>
+<p>这里我就不展开了，因为主要是一些实现和细节上的问题。</p>
+<p>现在为止，我们已经清楚了KOD的整体架构和核心原理。 下面我们来看下，KOD的性能到底怎么样。 首先我们来看下SSB测试的结果，PPT中展示了我们测试的SQL样例和测试环境。 需要特别注意的是：<strong>我们在KOD和Kylin都只计算了Base Cuboid</strong>，因为如果KOD和Kylin都充分预计算，测试性能基本上没有意义，<strong>测试的目的就是为了对比KOD和Kylin的现场计算能力</strong>。</p>
+<p>这是KOD和Kylin只计算Base Cuboid时SSB测试的结果，图中纵轴是KOD相比Kylin的加速比，千万量级时KOD的加速比是49，亿级时KOD的加速比是130。 总的来说，<strong>KOD的现场计算能力相比Kylin有了两个数量级的提升</strong>。</p>
+<p>这张图展示的是我们KOD第一批Cube上线后，线上的真实数据。 我们可以看到，KOD相比Kylin在查询性能提升的同时，存储和计算资源也有了明显的下降。</p>
+<p>前面提到，KOD的现场计算能力相比Kylin有了两个数量级的提升，所以对于亿级及以下数据规模的数据，我们不需要再进行复杂的优化，只需要构建Base Cuboid就可以，用户的易用性有了显著提升。</p>
+<p>在介绍完KOD的架构，核心原理，性能后，我们再总结下KOD的特性：</p>
+<ul>
+<li>和Kylin完全兼容：SQL，Web 等</li>
+<li>分区预过滤</li>
+<li>查询时无需加载字典：相比Kylin On HBase 查询稳定性更高</li>
+<li>存储层支持业务隔离</li>
+<li>亿级及以下数据只需构建Base Cuboid</li>
+</ul>
+<p>最后，我们看下KOD的未来规划：</p>
+<p>1 更高效，更精简的Cube构建流程：由于Druid不依赖字典，所以KOD的Cube构建时，就不需要构建字典，和字典相关的好几步都可以省去</p>
+<p>2 优化高基数列点查询的场景：之前的POC也体现了这一点，这种场景是倒排索引不适合的场景，却是HBase的最佳场景。 解决思路：参考linkedin的Pinot对Druid进行优化，Druid中倒排索引作为可选项，添加轻量级的类似Palo，ClickHouse的前缀索引。</p>
+<p>3 支持在线Schema变更：目前Kylin的Schema变更也是用户使用上一大痛点，每次Schema变更都需要全量重刷数据。</p>
+<p>本次分享从Kylin On HBase 问题出发，解释了为什么我们给Kylin新增一种存储引擎，进而介绍了我们存储引擎探索的过程，最后介绍了Kylin On Druid的架构和原理。 </p>
+<p>最后，需要注意的一点是，<strong>最新版本的Parquet已经有了PageIndex，点查询的性能显著提高</strong>，所以Kylin On paquert 或许依然值得尝试。</p>
+<p>我的本次分享到此结束，谢谢大家。希望本次分享可以带给大家一点收获。</p>
+<h2 id="faq">FAQ</h2>
+<h3 id="q1-为什么不直接用druid代替kylin-">Q1 为什么不直接用Druid代替Kylin?</h3>
+<ol>
+<li>Kylin的预计算比Druid更加强大，Druid只能计算Base Cuboid</li>
+<li>Kylin支持基于预计算的精确计算，精确去重是我司强需求</li>
+<li>Kylin的SQL支持更加完善</li>
+<li>Kylin的离线导入更加完善</li>
+<li>Kylin对星型模型的查询支持更加友好</li>
+<li>Kylin支持Join</li>
+</ol>
+<p>总之，用Druid代替Kylin的工作量远远大于Kylin On Druid的工作量。</p>
+<h3 id="q2-为什么没有选择kylin-on-kudu-">Q2 为什么没有选择Kylin On Kudu?</h3>
+<ol>
+<li>Kudu 并没有倒排索引或者二级索引</li>
+<li>Kudu 是C++实现的，我们团队的技术栈主要是Java，我们的存储团队也没有引进Kudu</li>
+</ol>
+<h3 id="q3-为什么没有选择去优化改进hbase？">Q3 为什么没有选择去优化改进HBase？</h3>
+<p>因为要将HBase的Key-Value模型改成列存的话已经不仅仅是优化改进了，需要重新设计整个系统。 可以参考 <a href="https://kudu.apache.org/faq.html#why-build-a-new-storage-engine-why-not-just-improve-apache-hbase-to-increase-its-scan-speed">https://kudu.apache.org/faq.html#why-build-a-new-storage-engine-why-not-just-improve-apache-hbase-to-increase-its-scan-speed</a></p>
+<h3 id="q4-druid和kylin的应用场景？">Q4 Druid和Kylin的应用场景？</h3>
+<p>在我司，Kylin是主推的离线OLAP引擎，Druid是主推的实时OLAP引擎。</p>
+<h3 id="关于carbondata-的-datamap特性">关于CarbonData 的 DataMap特性</h3>
+<p>CarbonData在最近的版本实现了DataMap特性: <a href="https://carbondata.apache.org/datamap-developer-guide.html。">https://carbondata.apache.org/datamap-developer-guide.html。</a>
+DataMap的主要目的是一份存储支持多种查询场景，实现CarbonData设计之初的愿景；核心思想是一份数据，多种索引，不同场景下的查询用不同的索引进行加速，查询时可以自动路由到相应的索引。 目前已经实现了Pre-aggregate DataMap，Timeseries DataMap，Lucene DataMap，BloomFilter DataMap等，个人比较看好CarbonData这个特性。</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 58px; color: #fff; font-size:36px; font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Helvetica, STKaiti, SimSun, serif; background: rgb(236,96,0)">赞</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <p><img src="../images/weixin.jpeg" width="200" /></p>
+                    <p><img src="../images/zhifubao.jpeg" width="200" /></p>
+                </div>
+
+            </div>
+            <h3>评论</h3>
+            <div id="vcomment"></div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5b718a01b2badfeea1298495
+                 data-title=Kylin Meetup分享：基于Druid的Kylin存储引擎实践
+                 data-url=kylin-on-druid>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+<script src="../js/av-min.js"></script>
+<script src='../js/Valine.min.js'></script>
+<script type="text/javascript">
+    window.valine = new Valine({
+        el: '#vcomment' ,
+        verify: true,
+        notify: true,
+        appId: 'BlLnB0re5OzQVzrgEplAxkyg-gzGzoHsz',
+        appKey: 'wUyxSV0U4Vi7oK1EHK6ipErv',
+        placeholder: '欢迎评论'
+    });
+</script>
+
+</body>
+</html>
