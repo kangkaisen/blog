@@ -78,7 +78,7 @@
 </li>
 </ul>
 <!-- toc stop -->
-<p>本文的内容是我在8月11日Kylin Meetup上《基于Druid的Kylin存储引擎实践》的演讲稿.</p>
+<p>本文的内容是我在8月11日Kylin Meetup上《基于Druid的Kylin存储引擎实践》的演讲稿。</p>
 <p>《基于Druid的Kylin存储引擎实践》PDF下载： <a href="https://blog.bcmeng.com/pdf/kangkaisen-kylin-on-druid.pdf">https://blog.bcmeng.com/pdf/kangkaisen-kylin-on-druid.pdf</a></p>
 <p>本次分享的内容主要分为3部分，首先我会介绍下Kylin On HBase的问题，也就是我们为什么要为Kylin实现一个新的存储引擎，其次我会介绍下我们Kylin新存储引擎探索的过程，这部分会解释我们为什么选择了Druid作为Kylin的存储引擎，最后我会介绍下Kylin On Druid的整体架构,核心原理和Kylin On Druid的成果。 下面的分享中Kylin On Druid有时会简称为KOD。</p>
 <h2 id="kylin-在美团点评的服务现状">Kylin 在美团点评的服务现状</h2>
@@ -88,7 +88,7 @@
 <p><img src="http://static.zybuluo.com/kangkaisen/3vpnyeo9zzf9zfy5552ixrkv/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%881.58.59.png" alt="Kylin On HBase 问题"></p>
 <p>随着Kylin在我司的大规模使用和我们对Kylin的深入优化改进，我们发现了Kylin本身的一些痛点和问题，其中之一便是Kylin On HBase的性能问题。如图：我们用同一SQL在同一集群查询同一Cube，前后性能相差上千倍。 两次查询的唯一不同点就是Kylin维度在HBase的RowKey中位置不同， 耗时90ms的查询中维度dt和poi_id在RowKey前两位，耗时100多s的查询中维度dt和poi_id在RowKey后两位。</p>
 <p><img src="http://static.zybuluo.com/kangkaisen/475vez3okzj3yxjt3ztn9hwi/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.00.40.png" alt="Kylin On HBase 问题"></p>
-<p>下面我们来看下Kylin On HBase中前后缀过滤性能相差巨大的原因：如图所示：Kylin中会将Cuboid+所有维度拼接成HBase的Rowkey，Kylin默认会将所有普通指标拼接成HBase一个Column Family中同一列的Value。HBase只有单一Rowkey索引，所以只有查询能够匹配Rowkey的前缀时，查询性能会十分高效，反之，查询性能会比较低下，甚至会出现全表Scan。此外，即使只需要查询一个指标，Kylin在HBase侧也需要Scan所有指标列，相比列存性能也会有较大差距。 总的来说，HBase在Kylin的查询场景下Scan和Flilter效率较低下。</p>
+<p>下面我们来看下Kylin On HBase中前后缀过滤性能相差巨大的原因：如图所示：Kylin中会将Cuboid+所有维度拼接成HBase的Rowkey，Kylin默认会将所有普通指标拼接成HBase一个Column Family中同一列的Value。HBase只有单一Rowkey索引，所以只有查询能够匹配Rowkey的前缀时，查询性能会十分高效，反之，查询性能会比较低下，甚至会出现全表Scan。此外，即使只需要查询一个指标，Kylin在HBase侧也需要Scan所有指标列，相比列存性能也会有较大差距。 总的来说，HBase在Kylin的查询场景下Scan和Filter效率较低下。</p>
 <p>对于Kylin On HBase Scan和Filter效率低下的问题，我们比较自然会想到的解法是：<strong>用列存加速Scan，用索引来加速Filter</strong>。</p>
 <p>这里我简单介绍下列存的优点，主要包含以下3点：</p>
 <ol>
