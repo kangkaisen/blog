@@ -122,7 +122,7 @@
 <h3 id="kylin-on-druid-poc">Kylin On Druid POC</h3>
 <p><img src="http://static.zybuluo.com/kangkaisen/4hn0gpzvkoqc72xhnqnk6mks/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.14.35.png" alt="Druid Segment File Format"></p>
 <p>下面我们来看下Druid的存储格式。和Lucene类似，Druid的存储格式也是基于MMAP，支持倒排索引的列存，区别是<strong>Druid的倒排索引是基于Bitmap的，Lucene的倒排索引是基于倒排表的</strong>。Druid的存储格式比较简单，就是直接按列依次存储，其中的M1,M2是指标列，D1,D2指维度列.除了数据文件之外，还会有一个meta文件记录每一列的offset。我们要读取Druid文件时，就将Druid文件MMap到内存，直接根据offset读取指定偏移量的数据。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/bqngzgl4f2iy13d16s3j0hqt/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.14.45.png" alt="Druid Bitmap 倒排索引"></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/vwdakyt4yanpw0v4grnr77xp/image.png" alt="Druid Bitmap 倒排索引"></p>
 <p>图中上半部分是Druid Bitmap 倒排索引的实现原理：我们有维度列D2, 共4行数据，包含meituan,dianping两个值，Druid会首先对维度列进行字典编码，图中meituan编码为0，dianping编码为1，然后Druid会基于维度值和字典构建基于Bitmap的倒排索引，倒排索引的Key是编码后的ID，Value是Bitmap，Bitmap的哪个bit位是1，就表示该值出现在哪些行。 下半部分是Druid String 维度存储的具体内容：包括列的元数据，维度字典，维度编码后的ID和倒排索引。</p>
 <p>图中是Kylin On Druid POC的结果，我们可以看到Druid的过滤性能明显优于HBase，Scan性能和Parquet类似，在部分列时也明显优于HBase。 构建和存储的话，和Lucene类似，会比HBase差一点。</p>
 <h3 id="why-kylin-on-druid">Why Kylin On Druid</h3>

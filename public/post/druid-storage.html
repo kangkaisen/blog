@@ -151,7 +151,7 @@ Druid segment的存储格式如上图所示，包含3部分：</p>
 <h4 id="complex型指标">Complex型指标</h4>
 <p>Druid对于HyperUnique，Cardinality，Histogram，Sketch等复杂指标不会进行编码和压缩处理，每种复杂指标的Serde方式由每种指标自己的ComplexMetricSerde实现类实现。</p>
 <h3 id="string-维度的存储格式">String 维度的存储格式</h3>
-<p><img src="http://static.zybuluo.com/kangkaisen/3b4nbjn2q7d44vouetrjmyry/image.png" alt="image.png-81.2kB"></p>
+<p><img src="http://static.zybuluo.com/kangkaisen/j00ekooiry7382ty1sfp760w/image.png" alt="image.png-81.2kB"></p>
 <p>String维度的存储格式如上图所示，前面提到过，时间列，维度列，指标列由两部分组成：ColumnDescriptor和binary数据。 String维度的binary数据主要由3部分组成：dict，字典编码后的id数组，用于倒排索引的bitmap。</p>
 <p>以上图中的D2维度列为例，总共有4行，前3行的值是meituan，第4行的值是dianing。Druid中dict的实现十分简单，就是一个hashmap。图中dict的内容就是将meituan编码为0，dianping编码为1。 Id数组的内容就是用编码后的ID替换掉原始值，所以就是[1,1,1,0]。第3部分的倒排索引就是用bitmap表示某个值是否出现在某行中，如果出现了，bitmap对应的位置就会置为1，如图：meituan在前3行中都有出现，所以倒排索引1：[1,1,1,0]就表示meituan在前3行中出现。</p>
 <p>显然，倒排索引的大小是列的基数*总的行数，如果没有处理的话结果必然会很大。不过好在如果维度列如果基数很高的话，bitmap就会比较稀疏，而稀疏的bitmap可以进行高效的压缩。</p>
