@@ -281,7 +281,7 @@ select count(*) from (select count(*) from ssb_sf20.v2_lineorder group by lo_ord
 <li>linked schema change: 无需转换数据，直接完成。对于历史数据不会重刷，新摄入的数据都按照新的Schema处理，对于旧数据，新加列的值直接用对应数据类型的默认值填充。例如加列操作。Druid也支持这种做法。</li>
 </ul>
 <h2 id="12-功能">12 功能</h2>
-<p><img src="media/15545480639031/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202019-04-06%20%E4%B8%8B%E5%8D%887.21.49.png" alt="Apache Kylin VS Apache Doris"></p>
+<p><img src="media/15545480639031/kylin-doris.png" alt="Apache Kylin VS Apache Doris"></p>
 <p>注： 关于Kylin的明细查询，Kylin本身只有聚合模型，但是也可以<strong>通过将所有列作为维度列，只构建Base Cuboid来实现明细查询</strong>， 缺点是效率比较低下。</p>
 <p>注： 虽然Doirs理论上可以同时支持高并发，低延迟的OLAP查询和高吞吐的Adhoc查询，但显然这两类查询会相互影响。所以Baidu在实际应用中也是用两个集群分别满足OLAP查询和Adhoc查询需求。</p>
 <h2 id="13-社区和生态">13 社区和生态</h2>
