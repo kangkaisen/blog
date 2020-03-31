@@ -1,0 +1,301 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Apache Doris 查询原理</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Apache Doris 查询原理</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2020-03-31</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#doris-查询简介">Doris 查询简介</a></li>
+<li><a href="#doris-query-接收">Doris Query 接收</a></li>
+<li><a href="#doris-query-parse">Doris Query Parse</a></li>
+<li><a href="#doris-query-analyze">Doris Query Analyze</a></li>
+<li><a href="#doris-query-rewrite">Doris Query Rewrite</a></li>
+<li><a href="#doris-query-单机plan">Doris Query 单机Plan</a></li>
+<li><a href="#doris-query-分布式plan">Doris Query 分布式Plan</a></li>
+<li><a href="#doris-query-调度">Doris Query 调度</a></li>
+<li><a href="#doris-query-执行">Doris Query 执行</a></li>
+<li><a href="#总结">总结</a></li>
+</ul>
+<!-- toc stop -->
+<h3 id="doris-查询简介">Doris 查询简介</h3>
+<p>Doris 的查询和大多数数据库一样，需要经过 Parse,Analyze,Optimize,Plan, Schedule, Execute 等过程。 在 Doris 中，FE 负责查询的 Parse,Analyze,Optimize,Plan, Schedule，BE 负责查询的 Execute。Doris 查询的分布式执行是<a href="https://databases.looker.com/analytical">MPP</a> 架构，相比于 Kylin 和 Druid 的 <a href="https://www.quora.com/What-is-the-Scatter-Gather-pattern-for-Distributed-Computing">Scatter-Gather</a> 架构，可以很好地支持 Shuffle 操作，所以对大数据集的 Join 和聚合，处理效率会更高。 Doris 的单机查询执行模型是 Batch 模式的<a href="https://paperhub.s3.amazonaws.com/dace52a42c07f7f8348b08dc2b186061.pdf">Volcano</a> 模型，相比于 tuple one time 的 Volcano 模型，解释执行的开销更低，CPU 利用效率更高。</p>
+<h3 id="doris-query-接收">Doris Query 接收</h3>
+<p>Doris 兼容 Mysql 协议，用户可以通过 Mysql 客户端和绝大多数兼容 Mysql 协议的 BI 工具向 Doris 发送 查询。</p>
+<p>Doris 的 MysqlServer 接收用户的请求，每个请求都会封装成一个 ConnectContext, ConnectScheduler 会维护一个线程池，每个 ConnectContext 会在一个线程中由 ConnectProcessor 进程处理。 ConnectProcessor 负责查询的处理，审计和返回查询结果给客户端。</p>
+<h3 id="doris-query-parse">Doris Query Parse</h3>
+<p>ConnectProcessor 会首先进行查询 SQL 的 Parse。</p>
+<p>Doris 使用的 Parse 是 <a href="http://www2.cs.tum.edu/projects/cup/">Java CUP Parser</a>，语法规则 定义的文件在 <code>sql_parser.cup</code>。</p>
+<p>Query Parse 的输入是 SQL 的 String 字符串，Query Parse 的输出是 Abstract Syntax Tree，每个节点都是一个 ParseNode 。</p>
+<p>下面是 Doris 中 SqlParser 用法的示例，这个示例中 parse 的结果 StatementBase 就是一个 SelectStmt。</p>
+<pre><code>String originStmt = &quot;select lo_shipmode, sum(lo_revenue) from lineorder  group by lo_shipmode;&quot;;
+SqlScanner input = new SqlScanner(new StringReader(originStmt), ctx.getSessionVariable().getSqlMode());
+SqlParser parser = new SqlParser(input);
+StatementBase statementBase = SqlParserUtils.getFirstStmt(parser);
+</code></pre><p>一个 SelectStmt 由 SelectList, FromClause, wherePredicate, GroupByClause, havingPredicate, OrderByElement, LimitElement 组成，对应一个 SQL 的常见组成。</p>
+<h3 id="doris-query-analyze">Doris Query Analyze</h3>
+<p>ConnectProcessor 进行 SQL Parse 得到 AST 后，由 StmtExecutor 具体负责查询的执行。StmtExecutor 会首先对 AST 进行语法和语义分析。 大概会做下面的一些事情 (每个 ParseNode 的 analyze 方法的实现)：</p>
+<ul>
+<li>检查并绑定 Cluster, Database, Table, Column 等元信息</li>
+<li>SQL 的合法性检查：窗口函数不能 DISTINCT，HLL 和 Bitmap 列不能 sum, count, where 中不能有 grouping 操作等</li>
+<li>SQL 重写：比如将 select * 扩展成 select 所有列，count distinct 查询重写等</li>
+<li>Table 和 Column 的别名处理</li>
+<li>Tuple, Slot, 表达式分配唯一的 ID</li>
+<li>函数参数的合法性检测</li>
+<li>表达式替换</li>
+<li>类型检查，类型转换（BIGINT 和 DECIMAL 比较，BIGINT 类型需要 Cast 成 DECIMAL）</li>
+</ul>
+<p>下面是 Doris 中对 AST Analyze 的示例：</p>
+<pre><code>ConnectContext ctx = new ConnectContext(channel);
+Analyzer analyzer = new Analyzer(ctx.getCatalog(), ctx);
+statementBase.analyze(analyzer);
+</code></pre><h3 id="doris-query-rewrite">Doris Query Rewrite</h3>
+<p>StmtExecutor 在对 AST 进行语法和语义分析后，会让 ExprRewriter 根据 ExprRewriteRule 进行一次 Rewrite。目前 Doris 的重写规则比较简单，主要是进行了常量表达式的化简和谓词的简单处理。 常量表达式的化简是指 <code>1 + 1 + 1</code> 重写成 <code>3</code>，<code>1 &gt; 2</code> 重写成 Flase 等。</p>
+<p>如果重写后，有部分节点被成功改写，比如， 1 &gt; 2 被改写成 Flase，那么就会再触发一次语法和语义分析的过程。</p>
+<p>对于有子查询的 SQL，StmtRewriter 会进行重写，比如将 where in, where exists 重写成 semi join, where not in, where not exists 重写成 anti join。</p>
+<h3 id="doris-query-单机plan">Doris Query 单机Plan</h3>
+<p>AST 经过语法和语义分析后，会首先生成单机的执行 Plan。</p>
+<pre><code>Planner planner =  new Planner();
+planner.plan(parsedStmt, analyzer, tQueryOptions);
+</code></pre><p>单机 Plan 由 SingleNodePlanner 执行，输入是 AST，输出是单机物理执行 Plan, Plan 中每个节点是一个 PlanNode。</p>
+<p>SingleNodePlanner 核心任务就是根据 AST 生成 OlapScanNode, AggregationNode,
+HashJoinNode, SortNode, UnionNode 等。</p>
+<p>Doris 在生成单机 Plan 的时候主要进行了以下工作或优化：</p>
+<ul>
+<li>Slot 物化：指确定一个表达式对应的列需要 Scan 和计算，比如聚合节点的聚合函数表达式和 Group By 表达式需要进行物化</li>
+<li>投影下推：BE 在 Scan 时只会 Scan 必须读取的列</li>
+<li>谓词下推：在满足语义正确的前提下将过滤条件尽可能下推到 Scan 节点</li>
+<li>分区，分桶裁剪：比如建表时按照 UserId 分桶，每个分区 100 个分桶，那么当不包含 or 的 Filter 条件包含 UserId ==xxx 时，Doris 就只会将查询发送 100 个分桶中的一个发送给 BE，可以大大减少不必要的数据读取</li>
+<li>Join Reorder：对于 Inner Join, Doris 会根据行数调整表的顺序，将大表放在前面</li>
+<li>Sort + Limit 优化成 TopN</li>
+<li>MaterializedView 选择：会根据查询需要的列，过滤，排序和 Join 的列，行数，列数等因素选择最佳的 MaterializedView</li>
+</ul>
+<h3 id="doris-query-分布式plan">Doris Query 分布式Plan</h3>
+<p>有了单机的 Plan 之后，DistributedPlanner 就会根据单机的 PlanNode 树，生成 PlanFragment 树。分布式化的目标是最小化数据移动和最大化本地 Scan。</p>
+<p>前面示例 SQL <code>select lo_shipmode,sum(lo_revenue) from lineorder  group by lo_shipmode;</code> 生成的分布式 Plan 如下：</p>
+<pre><code>+---------------------------------------------------------------------------------+
+| PLAN FRAGMENT 0                                                                 
+|  OUTPUT EXPRS:&lt;slot 2&gt; | &lt;slot 3&gt;                                               
+|   PARTITION: UNPARTITIONED                                                      
+|   RESULT SINK                                                                   
+|   4:EXCHANGE                                                                    
+|      tuple ids: 1                                                               
+
+| PLAN FRAGMENT 1                                                                 
+|  OUTPUT EXPRS:                                                                  
+|   PARTITION: HASH_PARTITIONED: &lt;slot 2&gt;                                         
+|   STREAM DATA SINK                                                            
+|     EXCHANGE ID: 04                                                             
+|     UNPARTITIONED                                                               
+
+|   3:AGGREGATE (merge finalize)                                                  
+|   |  output: sum(&lt;slot 3&gt;)                                                      
+|   |  group by: &lt;slot 2&gt;                                                         
+|   |  tuple ids: 1                                                                                                                                    |
+|   2:EXCHANGE                                                                    
+|      tuple ids: 1                                                               |                                                                    
+| PLAN FRAGMENT 2                                                                 
+|  OUTPUT EXPRS:                                                                  
+|   PARTITION: RANDOM                                                             |                                                                            
+|   STREAM DATA SINK                                                              
+|     EXCHANGE ID: 02                                                             
+|     HASH_PARTITIONED: &lt;slot 2&gt;                                                  
+
+|   1:AGGREGATE (update serialize)                                                
+|   |  STREAMING                                                                  
+|   |  output: sum(`lo_revenue`)                                                  
+|   |  group by: `lo_shipmode`                                                    
+|   |  tuple ids: 1                                                               
+
+|   0:OlapScanNode                                                                
+|      TABLE: lineorder                                                           
+|      PREAGGREGATION: ON                                                         
+|      partitions=1/1                                                             
+|      rollup: lineorder                                                          
+|      tabletRatio=40/40                                                          
+|      cardinality=119994608                                                      
+|      avgRowSize=26.643219                                                       
+|      numNodes=1                                                                 
+|      tuple ids: 0                                                               |
++---------------------------------------------------------------------------------+
+</code></pre><p>1 个 PlanFragment 封装了在一台机器上对同一数据集的操作逻辑。</p>
+<p>每个 PlanFragment 包含至少一个 PlanNode，上面的 PLAN FRAGMENT 2 就包含了 OlapScanNode 和 AggregationNode。</p>
+<p>Plan 分布式化的方法是增加 ExchangeNode，执行计划树会以 ExchangeNode 为边界拆分为 PlanFragment。ExchangeNode 的作用是实现不同 BE 之间的数据交换，类型 Spark 和 MR 中的 Shuffle。</p>
+<p>各个 Fragment 的数据流转和最终的结果发送依赖：DataSink。比如 DataStreamSink 会将一个 Fragment 的数据发送到另一个 Fragment 的 ExchangeNode，ResultSink 会将查询的结果集发送到 FE。</p>
+<p>每个 PlanFragment 可以在每个 BE 节点生成 1 个或多个执行实例，不同执行实例处理不同的数据集，通过并发来提升查询性能。</p>
+<p>DistributedPlanner 中最主要的工作是决定 Join 的分布式执行策略：Shuffle Join，Broadcast Join，Colocate Join，和增加 Aggregation 的 Merge 阶段。</p>
+<p>决定 Join 的分布式执行策略的逻辑如下：</p>
+<ol>
+<li>如果两种表示 Colocate Join 表，且 Join 的 Key 和分桶的 Key 一致，且两张表没有正在数据 balance，就会执行 Colocate Join</li>
+<li>如果 Join 的右表比较少，集群节点数较少，计算出的 Broadcast Join 成本较低，就会选择 Broadcast Join，否则就会选择 Shuffle Join。</li>
+</ol>
+<h3 id="doris-query-调度">Doris Query 调度</h3>
+<p>在生成查询的分布式 Plan 之后，Coordinator 会负责 PlanFragment 的执行实例生成，PlanFragment 的调度，每个 BE 执行状态的管理，查询结果的接收。</p>
+<p>有了分布式 Plan 之后，我们需要解决下面的问题：</p>
+<ul>
+<li>哪个 BE 执行哪个 PlanFragment</li>
+<li>每个 Tablet 选择哪个副本去查询</li>
+<li>如何进行多实例并发</li>
+</ul>
+<p>前面提到，Doris 会先进行分区，分桶裁剪，得到需要访问的 Tablet 列表，然后对于每个 Tablet，Doris 会先选择版本匹配的，健康的，所在的 BE 状态正常的副本进行查询，然后在最终决定每个 Tablet 选择哪个副本查询的时候，是随机的方式，不过 Doris 会尽可能保证每个 BE 的请求均衡。假如我们有 10 个 BE，10 个 tablet，最终调度的结果理论上就是每个 BE 负责 1 个 tablet 的 Scan。具体逻辑在<code>computeScanRangeAssignmentByScheduler</code>。</p>
+<p>当包含 Scan 的 PlanFragment 由哪些 BE 节点执行确定后，其他的 PlanFragment 实例也会在 Scan 的 BE 节点上执行，不过具体选择哪个 BE 是随机选取的。</p>
+<p>当每个 PlanFragment 实例的 BE 节点确定后，每个 DataSink 的目标 BE 节点自然也就确定了。</p>
+<p>多实例并发执行的话，是数据并行的方式，假如我们有 10 个 tablet，并行度设置为 5 的话，那么 Scan 所在的 PlanFragment，每个 BE 上我们可以生成 5 个执行实例，每个执行实例会分别 Scan 2 个 tablet。</p>
+<p>当我们知道每个 PlanFragment 需要生成多少个执行实例，每个执行实例在哪个 BE 执行后，FE 就会将 PlanFragment 执行相关的参数通过 Thrift 的方式发送给 BE。</p>
+<h3 id="doris-query-执行">Doris Query 执行</h3>
+<p>Doris 的查询执行模式 Volcano 模式，不过做了 Batch 的优化，不同的 operator 之间以 RowBatch 的方式传输数据。</p>
+<p>BE 的 BackendService 会接收 FE 的 查询请求，让 FragmentMgr 进行处理。
+FragmentMgr::exec_plan_fragment 会启动一个线程由 PlanFragmentExecutor 具体执行一个 plan fragment。PlanFragmentExecutor 会根据 plan fragment 创建一个 ExecNode 树，FE 每个 PlanNode 都会对应 ExecNode 的一个子类。 </p>
+<p><code>PlanFragmentExecutor::get_next_internal</code> 会驱动整个 ExecNode 树的执行，会自顶向下调用每个 ExecNode 的 get_next 方法，最终数据会从 ScanNode 节点产生，向上层节点传递，每个节点都会按照自己的逻辑处理 RowBatch。 PlanFragmentExecutor 在拿到每个 RowBatch 后，如果是中间结果，就会将数据传输给其他 BE 节点，如果是最终结果，就会将数据传输给 FE 节点。</p>
+<p>下面我们看下一些重要的 ExecNode 的处理逻辑</p>
+<h4 id="olapscannode">OlapScanNode</h4>
+<p>OlapScanNode 在拿到 FE 的请求参数后，会首先将下推到 Scan 节点的谓词表达式转为存储层的数据结构 TCondition，然后为了提高 Scan 的并发，会将 Scan 的范围切分的更细，然每个 Scan 线程可以只 Scan 部分数据，Scan 范围切分完之后，就会通过线程池启动多个线程，让每个 OlapScanner 线程 Scan 特定部分的数据。</p>
+<p>一个 OlapScanner 会绑定一个 Tablet，OlapScanner 会根据 Scan 的 Tablet 和，Version，构造好 RowsetReader。RowsetReader 会逐行返回数据，每行数据是一个 RowCursor, OlapScanner 会先将 RowCursor 转为 Tuple， 因为在查询计算层，都是基于 Tuple 进行计算的，然后会用没有下推到存储层的 Filter, 对 Tuple 再进行一次过滤，最后会把 Tuple 加入 RowBatch 中，如果 RowBatch 满了，就会加入到 RowBatch 的 Queue 中，OlapScanNode 线程会不断从这个 Queue 中读取数据。</p>
+<p>OlapScanNode 针对大查询做了一个优化，因为 OlapScanner 的线程池是整个 BE 进程共享的，所以可能出现一个大查询占用了所有 OlapScanner 线程，导致小查询迟迟无法 Scan。 OlapScanNode 会根据 Scan Range 的个数，Scan 的数据量确定每个 Scan 的优先级，Scan Range 个数和 Scan 数据量越小，优先级越高，不过也会定期提高大查询的优先级，避免大查询完全饿死。</p>
+<h4 id="aggregationnode">AggregationNode</h4>
+<p>在 open 阶段，会消费子节点所有数据。 对于没有 group by 的聚合查询，AggregationNode::process_row_batch_no_grouping 会对每个 RowBatch 进行循环，对每个 Tuple 调用聚合函数。 如果是 Update 阶段，会调用每个聚合函数的 update function，如果 Merge 阶段，会调用每个聚合函数的 merge function。
+对于有 group by 的聚合查询，就需要使用到 HashTable, HashTable 的 key 是 group by，HashTable 的 Value 是聚合函数的状态值。处理过程就是对 group by 字段相同的聚合函数的状态值不断调用聚合函数进行更新。</p>
+<p>在 get_next 阶段，会遍历 HashTable，用 Tuple 填充 RowBatch，然后向上层返回。</p>
+<h4 id="partitionedaggregationnode">PartitionedAggregationNode</h4>
+<p>核心逻辑和 AggregationNode 相同，不过做了下面几点优化：</p>
+<ol>
+<li>使用了 PartitionedHashTable</li>
+<li>支持 Spill Disk</li>
+<li>支持 Prefetch</li>
+<li>支持 streaming preaggregation, 对于有 group by 的聚合查询，在 update 阶段，将聚合的过程从 open 阶段移到 get_next 阶段，每接受一批 RowBatch，就会进行聚合，并输出。</li>
+</ol>
+<h4 id="exchangenode">ExchangeNode</h4>
+<p>前面提到，Plan 分布式化的方法是增加 ExchangeNode，DataStreamSink 会将一个 Fragment 的数据发送到另一个 Fragment 的 ExchangeNode。</p>
+<p>具体来讲， PlanFragmentExecutor::get_next_internal 获取到一个 Rowbatch 的数据后，就会调用 DataStreamSender::send 发送数据，DataStreamSender 会为每个 BE 维护一个 Channel，每个 Channel 的数据满一个 RowBatch，就会通过 BRPC 发送到目标 BE 节点。</p>
+<p>如果 DataStreamSender 发送的数据是有序的，DataStreamRecvr 就需要为每个 Sender 维护一个单独的队列，最后再 merge，如果是无序的，DataStreamRecvr 只需要为所有 Sender 维护一个队列。</p>
+<p>每个 ExchangeNode 会持有一个 DataStreamSender，来获取其他 BE 节点发送来的数据。</p>
+<h4 id="hashjoinnode">HashJoinNode</h4>
+<p>HashJoin的核心步骤是两步，分为 Build 和 Probe 两个阶段。
+Build 阶段：根据 Inner 表的数据构造  hash table。
+Probe 阶段：对于 Outer 表的每一行数据， 先根据join key 查找 hash table，然后再根据Join 的其他谓词进行过滤，获取Join成功的行。</p>
+<p><img src="media/15843315981095/15856282661053.jpg" alt=""></p>
+<p>如何确定  Inner 表 和 Outer 表？</p>
+<ul>
+<li>Left Outer Join：左表是 Outer 表，右表是 Inner 表</li>
+<li>Right Outer Join：跟 Left Outer Join 相反，右表是 Outer 表，左表是 Inner 表</li>
+<li>Inner Join：优化器估算出的较大表是 Outer 表，较小的表是 Inner 表</li>
+<li>Semi Join、Anti Semi Join、Left Outer Semi Join 或 Anti Left Outer Semi Join：左表是 Outer 表，右表是 Inner 表。</li>
+</ul>
+<p>NULL 值的问题：因为NULL 和 NULL 不等，所以：</p>
+<ul>
+<li>在用 Inner 表建 NULL 值的时候会忽略掉 Join Key 中有 NULL 的数据</li>
+<li>当 Outer 表中某行数据的 Join Key 中有 NULL 值的时候我们不会去查哈希表</li>
+<li>对于LEFT_OUTER_JOIN， hash table 不需要存储 Null, 但是对于RIGHT_OUTER_JOIN，hash table 需要存储 Null。</li>
+</ul>
+<h3 id="总结">总结</h3>
+<p>本文介绍了 Doris 查询处理的整个流程。目前 Doris 的查询优化器和查询执行器都有很大的优化空间，我们在今年计划对查询优化器和查询执行器进行一次大的重构，预期会进一步提升 Doris 的查询性能。</p>
+
+            <hr/>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center">
+                <button id="rewardButton" , disable="enable" ,
+                        onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}"
+                        ,
+                        style="cursor: pointer; border: 0; outline: 0; border-radius: 100%; padding: 0; margin: 0; letter-spacing: normal; text-transform: none; text-indent: 0px; text-shadow: none">
+                    <span style="display: inline-block; width: 60px; height: 60px; border-radius: 100%; line-height: 58px; color: #fff; font-size:36px; font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Helvetica, STKaiti, SimSun, serif; background: rgb(236,96,0)">赞</span>
+                </button>
+                <div id="QR" style="display: none;">
+                    <p><img src="../images/weixin.jpeg" width="200" /></p>
+                    <p><img src="../images/zhifubao.jpeg" width="200" /></p>
+                </div>
+
+            </div>
+            <h3>评论</h3>
+            <div id="vcomment"></div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=5e82d7804f33b70c66c5fe7b
+                 data-title=Apache Doris 查询原理
+                 data-url=apache-doris-query>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+<script src="../js/av-min.js"></script>
+<script src='../js/Valine.min.js'></script>
+<script type="text/javascript">
+    window.valine = new Valine({
+        el: '#vcomment' ,
+        verify: true,
+        notify: true,
+        appId: 'BlLnB0re5OzQVzrgEplAxkyg-gzGzoHsz',
+        appKey: 'wUyxSV0U4Vi7oK1EHK6ipErv',
+        placeholder: '欢迎评论'
+    });
+</script>
+
+</body>
+</html>
