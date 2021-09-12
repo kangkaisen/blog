@@ -71,7 +71,7 @@
 <li><a href="#结语">结语</a></li>
 </ul>
 <!-- toc stop -->
-<p>2021年9月8日，我司鼎石科技开源了核心数据库产品 StarRocks：<a href="https://github.com/StarRocks/starrocks">https://github.com/StarRocks/starrocks</a>，StarRocks 基于 Apache Doris 开发，我们十分感谢 Apache Doris 社区贡献了这样一个优秀的OLAP数据库，也感谢所有向 Apache Doris 贡献过的同学，让我们可以站在巨人的肩膀上快速前进和迭代，不过 StarRocks 和 Apache Doris 已经有了很大的不同，我们新增和修改的代码行数达到了几十万行，我将分两篇文章对 StarRocks 的源码进行导读，这篇文章主要介绍 StarRocks 全新的 CBO 优化器和向量化执行器。</p>
+<p>2021年9月8日，我司鼎石科技开放了核心数据库产品 StarRocks 源码：<a href="https://github.com/StarRocks/starrocks">https://github.com/StarRocks/starrocks</a>，StarRocks 基于 Apache Doris 开发，我们十分感谢 Apache Doris 社区贡献了这样一个优秀的OLAP数据库，也感谢所有向 Apache Doris 贡献过的同学，让我们可以站在巨人的肩膀上快速前进和迭代，不过 StarRocks 和 Apache Doris 已经有了很大的不同，我们新增和修改的代码行数达到了几十万行，我将分两篇文章对 StarRocks 的源码进行导读，这篇文章主要介绍 StarRocks 全新的 CBO 优化器和向量化执行器。</p>
 <h2 id="starrocks-cbo-优化器">StarRocks CBO 优化器</h2>
 <p>如果一条SQL的执行是一场旅程，查询执行器就是你的交通工具，你的交通工具性能越好，在相同的路径下，旅程的耗时自然越短。但是从旅程的出发点到终点可能有成千上万条路径，有康庄大道，也有林荫小路，而查询优化器的作用就是选择出最短，最合适的道路。 <strong>一般 SQL 越复杂，数据量越大，查询优化器的意义就越大，因为不同执行方式的性能差别可能有成百上千倍</strong>。</p>
 <p>一条 SQL 查询时会依次需要经过查询解析器，分析器, 优化器，查询执行层和存储层。 查询优化器的输入是一颗逻辑的抽象语法树，输出是一颗“最优的” 物理执行计划。 查询越复杂，数据量越大，物理执行计划的好坏对查询性能影响越大，所以一款成熟的商业数据库都需要一个强大的，成熟的查询优化器。</p>
