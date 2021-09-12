@@ -1,0 +1,270 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|StarRocks 源码导读一</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> StarRocks 源码导读一</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2021-09-12</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#starrocks-cbo-优化器">StarRocks CBO 优化器</a><ul>
+<li><a href="#starrocks-analyzer">StarRocks Analyzer</a></li>
+<li><a href="#starrocks-relation-to-logical-plan">StarRocks Relation To Logical Plan</a></li>
+<li><a href="#starrocks-logical-plan-rewrite">StarRocks Logical Plan Rewrite</a></li>
+<li><a href="#starrocks-cost-based-optimize">StarRocks Cost Based Optimize</a></li>
+<li><a href="#starrocks-统计信息收集">StarRocks 统计信息收集</a></li>
+<li><a href="#starrocks-cost-估算">StarRocks Cost 估算</a></li>
+<li><a href="#starrocks-如何优化搜索耗时">StarRocks 如何优化搜索耗时</a></li>
+<li><a href="#starrocks-cbo-优化器理论和实践的差别">StarRocks CBO 优化器理论和实践的差别</a></li>
+</ul>
+</li>
+<li><a href="#starrocks-向量化执行器">StarRocks 向量化执行器</a><ul>
+<li><a href="#starrocks-算子向量化">StarRocks 算子向量化</a></li>
+<li><a href="#starrocks-表达式向量化">StarRocks 表达式向量化</a></li>
+<li><a href="#starrocks-存储层向量化">StarRocks 存储层向量化</a></li>
+<li><a href="#starrocks-simd-优化">StarRocks SIMD 优化</a></li>
+<li><a href="#starrocks-自适应优化">StarRocks 自适应优化</a></li>
+<li><a href="#starrocks-如何进行性能优化">StarRocks 如何进行性能优化</a></li>
+</ul>
+</li>
+<li><a href="#结语">结语</a></li>
+</ul>
+<!-- toc stop -->
+<p>2021年9月8日，我司鼎石科技开源了核心数据库产品 StarRocks：<a href="https://github.com/StarRocks/starrocks">https://github.com/StarRocks/starrocks</a>，StarRocks 基于 Apache Doris 开发，但是已经有了很大的不同，我们新增和修改的代码行数达到了几十万行，我将分两篇文章对 StarRocks 的源码进行导读，这篇文章主要介绍 StarRocks 全新的 CBO 优化器和向量化执行器。</p>
+<h2 id="starrocks-cbo-优化器">StarRocks CBO 优化器</h2>
+<p>如果一条SQL的执行是一场旅程，查询执行器就是你的交通工具，你的交通工具性能越好，在相同的路径下，旅程的耗时自然越短。但是从旅程的出发点到终点可能有成千上万条路径，有康庄大道，也有林荫小路，而查询优化器的作用就是选择出最短，最合适的道路。 <strong>一般 SQL 越复杂，数据量越大，查询优化器的意义就越大，因为不同执行方式的性能差别可能有成百上千倍</strong>。</p>
+<p>一条 SQL 查询时会依次需要经过查询解析器，分析器, 优化器，查询执行层和存储层。 查询优化器的输入是一颗逻辑的抽象语法树，输出是一颗“最优的” 物理执行计划。 查询越复杂，数据量越大，物理执行计划的好坏对查询性能影响越大，所以一款成熟的商业数据库都需要一个强大的，成熟的查询优化器。</p>
+<p>StarRocks 全新的 CBO 优化器主要基于 Cascades，Columbia，ORCA 论文实现，也参考了 ORCA，Presto，Calcite，CMU Noisepage，CockroachDB 等项目，核心优化流程基本和 Columbia 一致，在具体工程实践中，我们进行了很多优化与创新。</p>
+<p>整个 CBO 优化器的流程如下所示，SQL Parser 部分和 Apache Doris 相同，我们暂时还没有进行重写，我们的重写是从 Analyzer 部分开始，整个CBO 优化器的代码都位于 <a href="https://github.com/StarRocks/starrocks/tree/main/fe/fe-core/src/main/java/com/starrocks/sql">SQL 目录下</a></p>
+<p><img src="media/16314356882101/Screen%20Shot%202021-09-12%20at%205.25.28%20PM.png" alt="Screen Shot 2021-09-12 at 5.25.28 PM"></p>
+<p>如果你对 CBO 优化器感兴趣，推荐先阅读 <a href="https://15721.courses.cs.cmu.edu/spring2018/papers/15-optimizer1/xu-columbia-thesis1998.pdf">Columbia 论文</a>，这篇论文比较通俗易懂，论文中涉及的基本概念我在本文中就不再赘述。</p>
+<h3 id="starrocks-analyzer">StarRocks Analyzer</h3>
+<p>StarRocks Analyzer 代码在 <a href="https://github.com/StarRocks/starrocks/tree/main/fe/fe-core/src/main/java/com/starrocks/sql">Analyzer 目录下</a>，主要完成了 表名，列名的识别和解析(Binder)，SQL合法性检查，SQL重写，函数检查，别名处理。 核心类是 <a href="https://github.com/StarRocks/starrocks/blob/main/fe/fe-core/src/main/java/com/starrocks/sql/analyzer/QueryAnalyzer.java">QueryAnalyzer</a> 和  <a href="https://github.com/StarRocks/starrocks/blob/main/fe/fe-core/src/main/java/com/starrocks/sql/analyzer/ExpressionAnalyzer.java">ExpressionAnalyzer</a>, Analyzer的结果是一个有层级结构的 <a href="https://github.com/StarRocks/starrocks/blob/main/fe/fe-core/src/main/java/com/starrocks/sql/analyzer/relation/Relation.java">Relation</a>。</p>
+<h3 id="starrocks-relation-to-logical-plan">StarRocks Relation To Logical Plan</h3>
+<p>代码在 <a href="https://github.com/StarRocks/starrocks/tree/main/fe/fe-core/src/main/java/com/starrocks/sql/optimizer/transformer">transformer 目录下</a> 核心类是 RelationTransformer，QueryTransformer，SubqueryTransformer。</p>
+<h3 id="starrocks-logical-plan-rewrite">StarRocks Logical Plan Rewrite</h3>
+<p>主要完成了：</p>
+<ul>
+<li>各种表达式的重写和化简</li>
+<li>列裁剪</li>
+<li>谓词下推</li>
+<li>Limit 下推</li>
+<li>等价谓词推导（常量传播）</li>
+<li>Outer Join 转 Inner Join</li>
+<li>常量折叠</li>
+<li>公共表达式复用</li>
+<li>子查询重写</li>
+<li>Lateral Join 化简</li>
+<li>分区分桶裁剪</li>
+<li>Empty Node 优化</li>
+</ul>
+<p>Rewrite Task 的驱动在 <a href="https://github.com/StarRocks/starrocks/blob/main/fe/fe-core/src/main/java/com/starrocks/sql/optimizer/Optimizer.java">Optimizer类</a> ，各种 Rewrite的Rule在 <a href="https://github.com/StarRocks/starrocks/tree/main/fe/fe-core/src/main/java/com/starrocks/sql/optimizer/rewrite">rewrite 目录</a></p>
+<h3 id="starrocks-cost-based-optimize">StarRocks Cost Based Optimize</h3>
+<p>StarRocks 整个搜索框架如下图所示：</p>
+<p><img src="media/16314356882101/16314381732158.jpg" alt=""></p>
+<p>我们在 Logical Plan Rewrite 完成后，正式基于 Columbia 论文进行 CBO 优化，主要包括下面的优化：</p>
+<ul>
+<li>两阶段聚合优化</li>
+<li><strong>Join 左右表调整</strong>： StarRocks 是用永远用右表构建 Hash 表，所以右表应该是小表，StarRocks 可以基于 cost 自动调整左右表顺序，也会自动把 left join 转 right join。</li>
+<li><strong>Join 多表 Reorder</strong>：多表Join 如何选择出正确的Join 顺序，是优化器的核心，当Join表的数量小于等于5时，StarRocks 会基于Join 交换律和结合律进行 Join Reorder，大于5时，StarRocks 会基于贪心算法 和动态规划进行 Join Reorder。 </li>
+<li><strong>Join 分布式执行选择</strong>：StarRocks 支持地分布式Join 方式有Broadcast，Shuffle, 单边 Shuffle，Colocate，Replicated。StarRocks 会基于 Cost 估算 和 Property Enforce 机制选择出 “最佳” 的 Join 分布式执行方式</li>
+<li>Push Down Aggregate to Join</li>
+<li>物化视图选择与重写</li>
+</ul>
+<p>CBO 优化的 几个核心数据结构是 Memo， Group, GroupExpression, OptExpression, 位于 <a href="https://github.com/StarRocks/starrocks/tree/main/fe/fe-core/src/main/java/com/starrocks/sql/optimizer">optimizer 目录下</a>， 搜索框架位于 <a href="https://github.com/StarRocks/starrocks/tree/main/fe/fe-core/src/main/java/com/starrocks/sql/optimizer/task">task 目录下</a> 包括 OptimizeGroupTask，OptimizeExpressionTask， ApplyRuleTask，DeriveStatsTask，EnforcerAndCostTask，其中最核心和最复杂的是 EnforcerAndCostTask，Transformation 和 Implementation 的各种 Rule 位于 <a href="https://github.com/StarRocks/starrocks/tree/main/fe/fe-core/src/main/java/com/starrocks/sql/optimizer/rule">rule 目录下</a>，你可以在 <a href="https://github.com/StarRocks/starrocks/tree/main/fe/fe-core/src/main/java/com/starrocks/sql/optimizer/rule">RuleSet 类</a> 中找到所有的Rule。</p>
+<p>在 CBO 优化中，Logic Plan 会先转成 Memo的数据结构，(Logic Plan 到 Memo 的映射如下图所示)，然后会基于 Transform Rule 扩展搜索空间，基于 Implement Rule 将 Logical Group Expression 转换成 Physical Group Expression，基于统计信息和 Cost 估计从 Memo 中选择一组 Cost 最低的 Physical Group Expressions，最后将选择的 Physical Group Expressions 转成 Physical Plan tree.</p>
+<p><img src="media/16314356882101/Screen%20Shot%202021-09-12%20at%206.21.52%20PM.png" alt="Screen Shot 2021-09-12 at 6.21.52 PM"></p>
+<h3 id="starrocks-统计信息收集">StarRocks 统计信息收集</h3>
+<p>Cost 估算的基础是统计信息估算，统计信息估算的基础是统计信息收集。 StarRocks 目前支持表级别和列级别的统计信息，支持自动收集和手动收集两种方式，无论自动还是手动，都支持全量收集和抽样收集两种方式。</p>
+<p>StarRocks 统计信息收集内容和收集框架如下图所示。</p>
+<p><img src="media/16314356882101/Screen%20Shot%202021-09-12%20at%206.23.19%20PM.png" alt="Screen Shot 2021-09-12 at 6.23.19 PM"></p>
+<p>StarRocks 统计信息收集的代码位于 <a href="https://github.com/StarRocks/starrocks/tree/main/fe/fe-core/src/main/java/com/starrocks/statistic">statistic</a></p>
+<p><strong>抽样统计信息收集的难点在于如何根据抽样得到的统计值估算出整体数据的统计值，一旦选择抽样收集的方式，误差就很难避免。</strong></p>
+<h3 id="starrocks-cost-估算">StarRocks Cost 估算</h3>
+<p>统计信息估算和 Cost 估算是整个 CBO 优化器最关键的部分之一，其中每一个公式和系数的改动，都会对最终的 Plan 产生很大的影响，这一块也是业界一直在研究的热点，统计信息估算和 Cost 估算的难点体现在下面几个方面：</p>
+<ol>
+<li>数据分布不是完全均匀的</li>
+<li>多列之间的数据特征不是完全独立的</li>
+<li>一些函数和复杂表达式的选择率无法较好地估计</li>
+<li>基于多个维表的谓词去估算事实表的基数时，很难估算准</li>
+<li>基数估计的误差会被层层放大</li>
+</ol>
+<p>统计信息估算和 Cost 估算 的代码 位于 <a href="https://github.com/StarRocks/starrocks/tree/main/fe/fe-core/src/main/java/com/starrocks/sql/optimizer/statistics">statistic 目录</a> 和 <a href="https://github.com/StarRocks/starrocks/tree/main/fe/fe-core/src/main/java/com/starrocks/sql/optimizer/cost">cost 目录</a> 下</p>
+<h3 id="starrocks-如何优化搜索耗时">StarRocks 如何优化搜索耗时</h3>
+<ol>
+<li><strong>提前 Rewrite (预处理)</strong>：在进入优化阶段之前，对表达式 进行 Rewrite， 对整个Plan 进行 肯定会变优的Rewrite，降低优化时的搜索空间大小</li>
+<li><strong>Multi-Stage Optimization</strong>：分多个Stage 进行优化，每个Stage 只应用部分Rule，越复杂的Rule 应用地越靠后</li>
+<li><strong>按需 Explore group</strong>：Logical transformation 和 Physical implementation 不会分两阶段执行，对于一个 Group，不必生成完所有的逻辑表达式。通过transformation rule  生成的逻辑表达式 会立即被 implemented 成物理表达式并计算 cost。这种实现方式可以基于 Cost 进行快速裁剪，避免枚举低效的 Plan。 例如，我们计算 <code>((A join B join C) join D)</code> 的 cost， 如果 先 <code>((A join B join C)</code> ， 再 join  D 的 cost 已经大于了 <code>((A join B) join (C join D))</code> 的cost， 我们就可以进行快速裁剪，避免对 <code>(A join B join C)</code> 进行 join order 的枚举。 </li>
+<li><strong>Upper bounds Pruning</strong>: 如果当前 Group 的 lower bound 大于当前 context的 UpperBound，我们就没有必要继续enumerated 当前 Group 的 input groups</li>
+<li><strong>记忆化</strong>: 利用 Bitmap 去重，保证一个Group 不会用同一个Rule重复优化</li>
+<li><strong>Group 支持删除（替换</strong>）: 如果经过 Transform  Rule 后生成的新Group Expression 一定比旧的好，我们可以把旧的Group Expression 从Group 删除，或者使用新的Group Expression  直接替换掉旧的 Group Expression，这样可以降低搜索空间的大小</li>
+<li><strong>Multi Join Reorder</strong>： 多张表Join reorder 时，按照Multi-Join 或者N-Array join 一起处理，而不是一个一个处理</li>
+<li><strong>搜索终止条件</strong>：找到了低于 Cost threshold 的Plan；超时；转换规则已用尽</li>
+</ol>
+<h3 id="starrocks-cbo-优化器理论和实践的差别">StarRocks CBO 优化器理论和实践的差别</h3>
+<p>虽然几篇论文理论描述的都比较详细，但是我们在实践过滤中，好多关键点和论文并不相同，或者论文没有描述，下面简单罗列几点</p>
+<ol>
+<li>ExploreGroupTask 在论文的搜索流程中是存在的，但是我们没有用到</li>
+<li>如何正确和快速地 Merge 两个 Group</li>
+<li>Project 节点的处理：有了 Project 之后，Join的 Reorder 就会比较麻烦</li>
+<li>如何禁掉特定的Plan：由于查询调度和查询执行可能无法支持某些Plan，为了保证得到正确的结果，我们必须禁掉特定的Plan</li>
+<li>查询优化器需要和查询调度器紧密配合：在分布式环境下，StarRocks支持了 Broadcast，Shuffle, 单边 Shuffle，Colocate，Replicated 多种Join 分布式执行方式，对于上面多种分布式执行策略，查询调度也必须能够支持</li>
+<li>在分布式环境下，Enforce 出来的 Sort 节点可能既需要按照1阶段执行，也需要按照2阶段执行</li>
+<li>多个 Enforce 属性的处理</li>
+<li>Logical Plan 的 Rewrite 是基于 Memo 还是 Tree 实现</li>
+<li>Group 的统计信息推导进行一次是否足够</li>
+<li>。。。</li>
+</ol>
+<h2 id="starrocks-向量化执行器">StarRocks 向量化执行器</h2>
+<p>StarRocks 从零实现了向量化执行器，向量化执行主要分为算子的向量化和表达式的向量化执行，存储层的向量化。<strong>向量化执行的核心是批量按列执行</strong>， 批量执行，相比传统的按行执行，可以有更少的虚函数调用，更少的分支判断，按列执行，相比于按行执行，对CPU Cache 更友好，更易于SIMD优化。</p>
+<p>向量化的基数数据结构是 Column 和 Chunk，其代码位于 <a href="https://github.com/StarRocks/starrocks/tree/main/be/src/column">column 目录下</a></p>
+<p><img src="media/16314356882101/Screen%20Shot%202021-09-12%20at%206.55.33%20PM.png" alt="Screen Shot 2021-09-12 at 6.55.33 PM"></p>
+<h3 id="starrocks-算子向量化">StarRocks 算子向量化</h3>
+<p><img src="media/16314356882101/16314441806872.jpg" alt="-w562"></p>
+<p>算子向量化的核心思路主要是将之前 get_next 拉取一个 RowBatch 变成 拉取一个 Chunk, 算法中的按行处理 变成 按列处理。</p>
+<p>算子向量化的大部分代码位于：<a href="https://github.com/StarRocks/starrocks/tree/main/be/src/exec/vectorized">exec / vectorized 目录下</a></p>
+<p>算子向量化的难点在于 多列聚合的向量化，多列 Join的向量化，多列 Sort的向量化，Shuffle的向量化，内存申请释放上的优化。</p>
+<h3 id="starrocks-表达式向量化">StarRocks 表达式向量化</h3>
+<p><img src="media/16314356882101/16314464443798.jpg" alt="-w1134"></p>
+<p>表达式向量化的核心思路主要是将之前的表达式按行处理变成按列处理，上图是一个加法向量化的示意图。</p>
+<p>标量函数和表达式的向量化代码位于 <a href="https://github.com/StarRocks/starrocks/tree/main/be/src/exprs/vectorized">exprs / vectorized 目录下</a></p>
+<p>聚合函数表达式向量化的代码位于 <a href="https://github.com/StarRocks/starrocks/tree/main/be/src/exprs/agg">exprs / agg 目录下</a></p>
+<p>窗口函数向量化的代码位于 <a href="https://github.com/StarRocks/starrocks/blob/main/be/src/exprs/agg/window.h">window.h</a></p>
+<p>Table Function 向量化的代码位于 <a href="https://github.com/StarRocks/starrocks/tree/main/be/src/exprs/table_function">exprs / table_function 目录下</a></p>
+<p>表达式向量化的难点在于如何处理编译器自动进行SIMD 指令优化，以及如何显式进行 SIMD 指令优化。</p>
+<h3 id="starrocks-存储层向量化">StarRocks 存储层向量化</h3>
+<p>存储层向量化主要包括：</p>
+<ul>
+<li>存储层按照每一列的Page 读取数据后，直接瓶装成 Chunk 数据结构</li>
+<li>向量化过滤</li>
+<li>聚合模型的向量化聚合</li>
+</ul>
+<p>存储层向量化的代码主要位于 <a href="https://github.com/StarRocks/starrocks/tree/main/be/src/storage/vectorized">storage/vectorized 目录</a> 和 <a href="https://github.com/StarRocks/starrocks/tree/main/be/src/storage/rowset/vectorized">storage/rowset/vectorized 目录</a> 下，查询时涉及的核心类是 <a href="https://github.com/StarRocks/starrocks/blob/main/be/src/storage/rowset/vectorized/segment_iterator.cpp">segment_iterator</a></p>
+<p>存储层进行了自适应延迟物化，自适应聚合，Operations On Encoded Data的优化。</p>
+<p>延迟物化的示意图如下：
+<img src="media/16314356882101/Screen%20Shot%202021-09-12%20at%207.50.55%20PM.png" alt="Screen Shot 2021-09-12 at 7.50.55 PM"></p>
+<p>Operations On Encoded Data的示意图如下：
+<img src="media/16314356882101/Screen%20Shot%202021-09-12%20at%207.51.20%20PM.png" alt="Screen Shot 2021-09-12 at 7.51.20 PM"></p>
+<h3 id="starrocks-simd-优化">StarRocks SIMD 优化</h3>
+<p>我们在实现向量化执行器过程中，会尽量想办法触发编译器的自动 SIMD 优化，不能自动触发的，会尝试进行手动 SIMD 优化。 手动 SIMD 优化的代码直接全局搜索 SSE 和 AV2 就可以看到。</p>
+<p>下图中列出了我们部分进行手动 SIMD 优化的操作：</p>
+<p><img src="media/16314356882101/Screen%20Shot%202021-09-12%20at%207.55.43%20PM.png" alt="Screen Shot 2021-09-12 at 7.55.43 PM"></p>
+<h3 id="starrocks-自适应优化">StarRocks 自适应优化</h3>
+<p>我们知道，不同的数据分布或者数据特点往往需要不同的算法或者数据结构进行处理，所以在 StarRocks 向量化引擎中，我们进行比较多的自适应优化。</p>
+<p>除了上面提到的存储层的自适应预聚合，自适应延迟物化。我们在下面几处也实现了自适应优化：</p>
+<ul>
+<li>Runtime Filter 过滤： 有过滤度时再进行过滤，没有过滤度时就不再进行过滤</li>
+<li>聚合 Hash Map的使用： 低基数时直接使用phmap::flat_hash_map, 高基数时使用 phmap::parallel_flat_hash_map</li>
+<li>两阶段 Streaming 聚合时：有聚合效果是进 Hash 表，没有聚合效果时直接发送数据</li>
+<li>多个 Filter 过滤时何时进行 Chunk 重整</li>
+</ul>
+<h3 id="starrocks-如何进行性能优化">StarRocks 如何进行性能优化</h3>
+<p>和 CBO 优化器不同，大家可以看到向量化执行本身框架上的风险不大，所以不同系统向量化执行器的最终效果如何，其实就是看细节上的性能优化。</p>
+<p>StarRocks 的性能优化主要从 5 个方面进行：</p>
+<ol>
+<li><strong>算法和数据结构的选择</strong>：算法和数据结构是最基础的，但有些情况下的选择和优化却并没有那么简单。 比如：进行 Int 类型去重时，我们应该选择Bitmap 还是 HashSet, 其实是不一定的，因为两者都有明显优势的场景</li>
+<li><strong>自适应</strong>： 在进行性能优化时，如果我们知道的上下文足够多，我们就可以进行更多针对性的优化，但是有些上下文可能只有在运行时我们才能知道，所以此时我们就需要进行自适应策略</li>
+<li><strong>SIMD 指令优化</strong>： 在按列处理的前提下，尽可能自动或者手动进行SIMD 指令优化</li>
+<li><strong>C++ Low Level 优化</strong>： 比如 Copy To Move，不同API的选择，编译期运算，memcpy, memcmp, 异步，锁等。 有些规则可能大家都知道，但是实际实现时就可能忽略或者没有意识到，比如 大对象的 Move，很多时候一个细节的不注意，就变成了 Copy</li>
+<li><strong>CPU Cache 优化</strong>：当我们 CPU 指令的个数和效率已经优化到最佳的时候，我们就需要优化 CPU Cache 了。 包括 内存对齐，Padding,时间和空间局部性优化，Prefetching，Cache Blocking，更紧凑的内存布局，Cache Line Conflict， Code Cache 优化。</li>
+</ol>
+<p><strong>关于后面4点，我之后会写文章详细说明和解释</strong>。</p>
+<h2 id="结语">结语</h2>
+<p>本文主要进行了 StarRocks CBO 优化器和向量化执行器两个模块的源码导读，下一篇文章会进行 Pipeline 并行执行引擎，Update 存储引擎，导入和 Compaction 向量化，Hive 外表，Global Runtime filter, Lateral Join, Fast Decimal, Array 类型 等模块或者功能的源码导读。</p>
+<p>如果你对数据库研发，测试，解决方案，DBA，销售感兴趣，欢迎将你的简历发送到 kangkaisen@starrcoks.com。</p>
+
+            <hr/>
+            <h3>评论</h3>
+            <div id="vcomment"></div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=613dfb1fe2da18f32c6a4c9a
+                 data-title=StarRocks 源码导读一
+                 data-url=starrocks-source-code-1>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+<script src="../js/av-min.js"></script>
+<script src='../js/Valine.min.js'></script>
+<script type="text/javascript">
+    window.valine = new Valine({
+        el: '#vcomment' ,
+        verify: true,
+        notify: true,
+        appId: 'BlLnB0re5OzQVzrgEplAxkyg-gzGzoHsz',
+        appKey: 'wUyxSV0U4Vi7oK1EHK6ipErv',
+        placeholder: '欢迎评论'
+    });
+</script>
+
+</body>
+</html>
