@@ -96,30 +96,30 @@
 <blockquote>
 <p>select xx from table where A=xx group by B</p>
 </blockquote>
-<p><img src="http://static.zybuluo.com/kangkaisen/v4fut6lpphlj8ofbv085mdst/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%886.00.24.png" alt="Kylin-cube"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-14%2520%25E4%25B8%258B%25E5%258D%25886.00.24.png" alt="Kylin-cube"></p>
 <p>下图是Kylin数据流转的示意图，Kylin自身的组件只有两个：<strong>JobServer和QueryServer</strong>。 Kylin的JobServer主要负责将数据源（Hive,Kafka）的数据通过计算引擎（MapReduce，Spark）生成Cube存储到存储引擎（HBase）中；QueryServer主要负责SQL的解析，逻辑计划的生成和优化，向HBase的多个Region发起请求，并对多个Region的结果进行汇总，生成最终的结果集。
-<img src="http://static.zybuluo.com/kangkaisen/tdqnnux9um7vihjcti83o0sn/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202017-11-04%20%E4%B8%8B%E5%8D%882.05.57.png" alt="kylin-data"></p>
+<img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202017-11-04%2520%25E4%25B8%258B%25E5%258D%25882.05.57.png" alt="kylin-data"></p>
 <p>下图是Kylin可插拔的架构图, 在架构设计上，Kylin的<strong>数据源</strong>，构建Cube的<strong>计算引擎</strong>，<strong>存储引擎</strong>都是可插拔的。Kylin的核心就是这套可插拔架构，Cube数据模型和Cuboid的算法。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/nl3jr2irb62stt7naentwk1g/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%886.29.42.png" alt="Kylin"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-14%2520%25E4%25B8%258B%25E5%258D%25886.29.42.png" alt="Kylin"></p>
 <h3 id="12-what-is-doris">1.2 What is Doris</h3>
 <p>Doris是一个MPP的OLAP系统，主要整合了<strong>Google Mesa</strong>（数据模型），<strong>Apache Impala</strong>（MPP Query Engine)和<strong>Apache ORCFile</strong> (存储格式，编码和压缩) 的技术。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/km2dj2w80iiv9kpuqnrkpzec/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%886.43.15.png" alt="apache-doris"></p>
+<p>![apache-doris] (<a href="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-14%2520%25E4%25B8%258B%25E5%258D%25886.43.15.png">https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-14%2520%25E4%25B8%258B%25E5%258D%25886.43.15.png</a>)</p>
 <p>Doris的系统架构如下，Doris主要分为FE和BE两个组件，FE主要负责查询的编译，分发和元数据管理（基于内存，类似HDFS NN）；BE主要负责查询的执行和存储系统。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/fr37ra96hr5yntvbld0bbizy/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.09.33.png" alt="apache-doris"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-18%2520%25E4%25B8%258B%25E5%258D%258811.09.33.png" alt="apache-doris"></p>
 <h2 id="2-数据模型">2 数据模型</h2>
 <h3 id="21-kylin的聚合模型">2.1 Kylin的聚合模型</h3>
 <p>Kylin将表中的列分为维度列和指标列。在数据导入和查询时相同维度列中的指标会按照对应的聚合函数(Sum, Count, Min, Max, 精确去重，近似去重，百分位数，TOPN)进行聚合。</p>
 <p>在存储到HBase时，<strong>Cuboid+维度 会作为HBase的Rowkey, 指标会作为HBase的Value</strong>，一般所有指标会在HBase的一个列族，每列对应一个指标，但对于较大的去重指标会单独拆分到第2个列族。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/eo3l397u4n800lhxrao2hmcy/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%887.03.57.png" alt="Kylin-model"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-14%2520%25E4%25B8%258B%25E5%258D%25887.03.57.png" alt="Kylin-model"></p>
 <h3 id="22-doris的聚合模型">2.2 Doris的聚合模型</h3>
 <p>Doris的聚合模型借鉴自Mesa，但本质上和Kylin的聚合模型一样，只不过Doris中将维度称作Key，指标称作Value。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/ia4fwu6uh9bmkujl7f9ugiki/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%887.21.25.png" alt="doris-data-model"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-14%2520%25E4%25B8%258B%25E5%258D%25887.21.25.png" alt="doris-data-model"></p>
 <p>Doris中比较独特的聚合函数是Replace函数，这个聚合函数能够<strong>保证相同Keys的记录只保留最新的Value</strong>，可以借助这个Replace函数来实现<strong>点更新</strong>。一般OLAP系统的数据都是只支持Append的，但是像电商中交易的退款，广告点击中的无效点击处理，都需要去更新之前写入的单条数据，在Kylin这种没有Relpace函数的系统中我们必须把包含对应更新记录的整个Segment数据全部重刷，但是有了Relpace函数，我们只需要再追加1条新的记录即可。 但是Doris中的Repalce函数有个缺点：<strong>无法支持预聚合</strong>，就是说只要你的SQL中包含了Repalce函数，即使有其他可以已经预聚合的Sum，Max指标，也必须现场计算。 </p>
 <p>为什么Doirs可以支持点更新呢？</p>
-<p>Kylin中的Segment是不可变的，也就是说HFile一旦生成，就不再发生任何变化。但是Doirs中的Segment文件和HBase一样，是可以进行Compaction的，具体可以参考<a href="https://blog.bcmeng.com/post/google-mesa.html#mesa%E6%95%B0%E6%8D%AE%E7%89%88%E6%9C%AC%E5%8C%96%E7%AE%A1%E7%90%86">Google Mesa 论文解读中的Mesa数据版本化管理</a></p>
+<p>Kylin中的Segment是不可变的，也就是说HFile一旦生成，就不再发生任何变化。但是Doirs中的Segment文件和HBase一样，是可以进行Compaction的，具体可以参考[Google Mesa 论文解读中的Mesa数据版本化管理][8]</p>
 <p>Doris的聚合模型相比Kylin有个缺点：<strong>就是一个Column只能有一个预聚合函数，无法设置多个预聚合函数</strong>。 不过Doris可以现场计算出其他的聚合函数。 Apache Doris的开发者Review时提到，针对这个问题，Doris还有一种解法：由于<strong>Doris支持多表导入的原子更新</strong>，所以1个Column需要多个聚合函数时，可以在Doris中建多张表，同一份数据导入时，Doris可以同时原子更新多张Doris表，缺点是多张Doris表的查询路由需要应用层来完成。</p>
 <p>Doris中和Kylin的Cuboid等价的概念是RollUp表，<strong>Cuboid和RollUp表都可以认为是一种Materialized Views或者Index</strong>。Doris的RollUp表和Kylin的Cuboid一样，<strong>在查询时不需要显示指定</strong>，系统内部会根据查询条件进行路由。 如下图所示：</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/5gnpkz5j27hmn9aep0dskwr5/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%887.26.07.png" alt="Doris Rollup"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-14%2520%25E4%25B8%258B%25E5%258D%25887.26.07.png" alt="Doris Rollup"></p>
 <p>Doris中RollUp表的路由规则如下：</p>
 <ol>
 <li>选择包含所有查询列的RollUp表</li>
@@ -129,7 +129,7 @@
 <li>列数最小的</li>
 </ol>
 <h3 id="23-kylin-cuboid-vs-doris-rollup">2.3 Kylin Cuboid VS Doris RollUp</h3>
-<p><img src="media/15545480639031/Kylin%20cuboid%20vs%20Doris%20rollup.png" alt="Kylin cuboid vs Doris rollup"></p>
+<p><img src="https://pic.bcmeng.com/Kylin%2520cuboid%2520vs%2520Doris%2520rollup.png" alt="Kylin cuboid vs Doris rollup"></p>
 <h3 id="24-doris的明细模型">2.4 Doris的明细模型</h3>
 <p>由于Doris的聚合模型存在下面的缺陷，Doris引入了明细模型。</p>
 <ul>
@@ -139,22 +139,22 @@
 </ul>
 <p>Doris的明细模型不会有任何预聚合，不区分维度列和指标列，但是在建表时需要指定Sort Columns，<strong>数据导入时会根据Sort Columns进行排序，查询时根据Sort Column过滤会比较高效</strong>。</p>
 <p>如下图所示，Sort Columns是Year和City。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/z0mv4e70sxcl13bj7yqojcxj/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-14%20%E4%B8%8B%E5%8D%887.33.43.png" alt="Doris-detail-model"></p>
+<p>![Doris-detail-model] (<a href="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-14%2520%25E4%25B8%258B%25E5%258D%25887.33.43.png">https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-14%2520%25E4%25B8%258B%25E5%258D%25887.33.43.png</a>)</p>
 <p>这里需要注意一点，<strong>Doris中一张表只能有一种数据模型</strong>，即要么是聚合模型，要么是明细模型，而且<strong>Roll Up表的数据模型必须和Base表一致</strong>，也就是说明细模型的Base 表不能有聚合模型的Roll Up表。</p>
 <h2 id="3-存储引擎">3 存储引擎</h2>
 <p><strong>Kylin存储引擎HBase：</strong></p>
-<p><img src="http://static.zybuluo.com/kangkaisen/4qh5yb2uyxathadmjpzo3qgz/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.16.16.png" alt="Kylin-HBase"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-18%2520%25E4%25B8%258B%25E5%258D%258811.16.16.png" alt="Kylin-HBase"></p>
 <p>如上图所示，在Kylin中1个Cube可以按照时间拆分为多个Segment,<strong>Segment是Kylin中数据导入和刷新的最小单位</strong>。Kylin中1个Segment对应HBase中一张Table。 HBase中的Table会按照Range分区拆分为多个Region,每个Region会按照大小拆分为多个HFile。</p>
 <p>关于HFile的原理网上讲述的文章已经很多了，我这里简单介绍下。首先HFile整体上可以分为元信息，Blcoks，Index3部分，Blcoks和Index都可以分为Data和Meta两部分。Block是数据读取的最小单位，Block有多个Key-Value组成，一个Key-Value代表HBase中的一行记录，Key-Value由Kylin-Len，Value-Len，Key-Bytes,Value-Bytes 4部分组成。更详细的信息大家可以参考下图(下图来源于互联网，具体出处不详）：</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/zbwuzcyu7r3nrdd0f92sh397/a112.png" alt="HBase-HFile"></p>
+<p><img src="https://pic.bcmeng.com/a112.png" alt="HBase-HFile"></p>
 <p><strong>Doris存储引擎：</strong></p>
-<p><img src="http://static.zybuluo.com/kangkaisen/3o3ree6nao9m8njpo9gbgphx/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.19.19.png" alt="屏幕快照 2018-04-18 下午11.19.19.png-125.8kB"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-18%2520%25E4%25B8%258B%25E5%258D%258811.19.19.png" alt="Doris 存储引擎"></p>
 <p>如上图所示，Doris的Table支持二级分区，可以先按照日期列进行一级分区，再按照指定列Hash分桶。具体来说，1个Table可以按照日期列分为多个Partition， 每个Partition可以包含多个Tablet，<strong>Tablet是数据移动、复制等操作的最小物理存储单元</strong>，各个Tablet之间的数据没有交集，并且在物理上独立存储。Partition 可以视为逻辑上最小的管理单元，<strong>数据的导入与删除，仅能针对一个 Partition进行</strong>。1个Table中Tablet的数量= Partition num * Bucket num。Tablet会按照一定大小（256M）拆分为多个Segment文件，Segment是列存的，但是会按行（1024）拆分为多个Rowblock。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/d727k37k30w9beq259zr1g89/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.26.13.png" alt="Doris segment file"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-18%2520%25E4%25B8%258B%25E5%258D%258811.26.13.png" alt="Doris segment file"></p>
 <p>下面我们来看下Doris Segment文件的具体格式，Doris文件格式主要参考了Apache ORC。如上图所示，Doris文件主要由Meta和Data两部分组成，Meta主要包括文件本身的Header，Segment Meta，Column Meta，和每个Column 数据流的元数据，每部分的具体内容大家看图即可，比较详细。 Data部分主要包含每一列的Index和Data，这里的Index指每一列的Min,Max值和数据流Stream的Position；Data就是每一列具体的数据内容，Data根据不同的数据类型会用不同的Stream来存储，Present Stream代表每个Value是否是Null，Data Stream代表二进制数据流，Length Stream代表非定长数据类型的长度。 下图是String使用字典编码和直接存储的Stream例子。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/0hfdk7masogmajyj1kh59rry/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.29.34.png" alt="Doris String encoding"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-18%2520%25E4%25B8%258B%25E5%258D%258811.29.34.png" alt="Doris String encoding"></p>
 <p>下面我们来看下Doris的前缀索引：</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/kpjuv1cokgdipur7fjo1um5p/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.32.12.png" alt="Doris index"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-18%2520%25E4%25B8%258B%25E5%258D%258811.32.12.png" alt="Doris index"></p>
 <p>本质上，Doris 的数据存储是类似 SSTable（Sorted String Table）的数据结构。该结构是一种有序的数据结构，可以按照指定的列有序存储。在这种数据结构上，以排序列作为条件进行查找，会非常的高效。而前缀索引，即在排序的基础上，实现的一种根据给定前缀列，快速查询数据的索引方式。前缀索引文件的格式如上图所示，<strong>索引的Key是每个Rowblock第一行记录的Sort Key的前36个字节，Value是Rowblock在Segment文件的偏移量</strong>。</p>
 <p>有了前缀索引后，我们查询特定Key的过程就是两次二分查找：</p>
 <ol>
@@ -163,13 +163,13 @@
 </ol>
 <h2 id="4-数据导入">4 数据导入</h2>
 <p><strong>Kylin数据导入：</strong>
-<img src="http://static.zybuluo.com/kangkaisen/ucj7msy47m6o7ygte5k37sa5/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.33.26.png" alt="Kylin data loading"></p>
+<img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-18%2520%25E4%25B8%258B%25E5%258D%258811.33.26.png" alt="Kylin data loading"></p>
 <p>如上图，Kylin数据导入主要分为建Hive大宽表(这一步会处理Join)；维度列构建字典；逐层构建Cuboid；Cuboid转为HFile；Load HFile To HBase; 元数据更新这几步。</p>
 <p>其中Redistribute大宽表这一步的作用是为了将整个表的数据搞均匀，避免后续的步骤中有数据倾斜，Kylin有配置可以跳过这一步。</p>
 <p>其中Extract Distinct Columns这一步的作用是获取需要构建字典的维度列的Distinct值。假如一个ID维度列有1，2，1，2，2，1，1，2这8行，那么经过这一步后ID列的值就只有1，2两行，做这一步是为了下一步对维度列构建字典时更快速。</p>
-<p>其他几个步骤都比较好理解，我就不再赘述。更详细的信息可以参考 <a href="https://blog.bcmeng.com/post/kylin-cube.html">Apache Kylin Cube 构建原理</a></p>
+<p>其他几个步骤都比较好理解，我就不再赘述。更详细的信息可以参考 [Apache Kylin Cube 构建原理][19]</p>
 <p><strong>Doris数据导入：</strong>
-<img src="http://static.zybuluo.com/kangkaisen/iaztr5b7lfu7oj7ohmyjae49/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.29.48.png" alt="Doris data loading"></p>
+<img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-18%2520%25E4%25B8%258B%25E5%258D%258811.29.48.png" alt="Doris data loading"></p>
 <p>Doris 数据导入的两个核心阶段是ETL和LOADING, ETL阶段主要完成以下工作：</p>
 <ul>
 <li>数据类型和格式的校验</li>
@@ -184,10 +184,10 @@
 <p>LOADING完成后会进行元数据的更新。</p>
 <h2 id="5-查询">5 查询</h2>
 <p><strong>Kylin查询：</strong></p>
-<p><img src="http://static.zybuluo.com/kangkaisen/cl8yx0hla4twg7soh48b7my4/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-04-18%20%E4%B8%8B%E5%8D%8811.34.52.png" alt="Kylin query"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-18%2520%25E4%25B8%258B%25E5%258D%258811.34.52.png" alt="Kylin query"></p>
 <p>如上图，整个Kylin的查询过程比较简单，是个Scatter-Gather的模型。图中圆形框的内容发生在Kylin QueryServer端，方形框的内容发生在HBase端。Kylin QueryServer端收到SQL后，会先进行SQL的解析，然后生成和优化Plan，再根据Plan生成和编译代码，之后会根据Plan生成HBase的Scan请求，如果可能，HBase端除了Scan之外，还会进行过滤和聚合（基于HBase的Coprocessor实现），Kylin会将HBase端返回的结果进行合并，交给Calcite之前生成好的代码进行计算。</p>
 <p><strong>Doris查询：</strong></p>
-<p><img src="http://static.zybuluo.com/kangkaisen/79z437wez74gf51x9ceec4ov/palo-impala.png" alt="Doris-impala-query"></p>
+<p><img src="https://pic.bcmeng.com/palo-impala.png" alt="Doris-impala-query"></p>
 <p>Doris的查询引擎使用的是Impala，是MPP架构。 Doris的FE 主要负责SQL的解析，语法分析，查询计划的生成和优化。查询计划的生成主要分为两步：</p>
 <ol>
 <li>生成单节点查询计划 （上图左下角）</li>
@@ -197,7 +197,7 @@
 <p>当FE生成好查询计划树后，BE对应的各种Plan Node（Scan, Join, Union, Aggregation, Sort等）执行自己负责的操作即可。</p>
 <h2 id="6-精确去重">6 精确去重</h2>
 <p><strong>Kylin的精确去重：</strong></p>
-<p>Kylin的精确去重是基于全局字典和RoaringBitmap实现的基于预计算的精确去重。具体可以参考 <a href="https://blog.bcmeng.com/post/kylin-distinct-count-global-dict.html">Apache Kylin 精确去重和全局字典权威指南</a></p>
+<p>Kylin的精确去重是基于全局字典和RoaringBitmap实现的基于预计算的精确去重。具体可以参考 [Apache Kylin 精确去重和全局字典权威指南][24]</p>
 <p><strong>Doris的精确去重：</strong></p>
 <p>Doris的精确去重是现场精确去重，Doris计算精确去重时会拆分为两步：</p>
 <ol>
@@ -220,11 +220,11 @@ select count(*) from (select count(*) from ssb_sf20.v2_lineorder group by lo_ord
 <p>Kylin元数据利用HBase存储的一个问题是，在Kylin可插拔架构下，即使我们实现了另一种存储引擎，我们也必须部署HBase来存储元数据，所以Kylin要真正做到存储引擎的可插拔，就必须实现一个独立的元数据存储。</p>
 <p><strong>Doris的元数据</strong>：</p>
 <p>Doris的元数据是基于内存的，这样做的好处是性能很好且不需要额外的系统依赖。 缺点是单机的内存是有限的，扩展能力受限，但是根据Doris开发者的反馈，由于Doris本身的元数据不多，所以元数据本身占用的内存不是很多，目前用大内存的物理机，应该可以支撑数百台机器的OLAP集群。 此外，OLAP系统和HDFS这种分布式存储系统不一样，我们部署多个集群的运维成本和1个集群区别不大。</p>
-<p>关于Doris元数据的具体原理大家可以参考Doris官方文档<a href="https://github.com/baidu/palo/wiki/Metadata-Design">Doris 元数据设计文档</a></p>
+<p>关于Doris元数据的具体原理大家可以参考Doris官方文档[Doris 元数据设计文档][25]</p>
 <h2 id="8-高性能">8 高性能</h2>
 <p><strong>Why Kylin Query Fast：</strong></p>
-<p><img src="http://static.zybuluo.com/kangkaisen/3ekcfow4xonod7y40nbje6pg/image.png" alt="Kylin query"></p>
-<p>Kylin查询快的核心原因就是预计算，如图(图片出处 <a href="https://www.slideshare.net/YangLi43/apache-kylin-20-from-classic-olap-to-realtime-data-warehouse">Apache kylin 2.0: from classic olap to real-time data warehouse</a>)<strong>，Kylin现场查询时不需要Join，也几乎不需要聚合，主要就是Scan + Filter</strong>。</p>
+<p><img src="https://pic.bcmeng.com/image.png" alt="Kylin query"></p>
+<p>Kylin查询快的核心原因就是预计算，如图(图片出处 [Apache kylin 2.0: from classic olap to real-time data warehouse][27])<strong>，Kylin现场查询时不需要Join，也几乎不需要聚合，主要就是Scan + Filter</strong>。</p>
 <p><strong>Why Doris Query Fast：</strong></p>
 <ol>
 <li>In-Memory Metadata。 Doris的元数据就在内存中，元数据访问速度很快。</li>
@@ -236,7 +236,7 @@ select count(*) from (select count(*) from ssb_sf20.v2_lineorder group by lo_ord
 </ol>
 <h2 id="9-高可用">9 高可用</h2>
 <p><strong>Kylin高可用：</strong></p>
-<p><strong>Kylin JobServer的高可用</strong>： Kylin的JobServer是无状态的，一台JobServer挂掉后，其他JobServer会很快接管正在Running的Job。JobServer的高可用是基于Zookeeper实现的，具体可以参考<a href="https://blog.bcmeng.com/post/kylin-job.html">Apache Kylin Job 生成和调度详解</a>。</p>
+<p><strong>Kylin JobServer的高可用</strong>： Kylin的JobServer是无状态的，一台JobServer挂掉后，其他JobServer会很快接管正在Running的Job。JobServer的高可用是基于Zookeeper实现的，具体可以参考[Apache Kylin Job 生成和调度详解][28]。</p>
 <p><strong>Kylin QueryServer的高可用</strong>：Kylin的QueryServer也是无状态的，其高可用一般通过Nginx这类的负载均衡组件来实现。 </p>
 <p><strong>Kylin Hadoop依赖的高可用</strong>： 要单纯保证Kylin自身组件的高可用并不困难，但是要保证Kylin整体数据导入和查询的高可用是<strong>十分困难的</strong>，因为必须同时保证HBase，Hive，Hive Metastore，Spark，Mapreduce，HDFS，Yarn，Zookeeper，Kerberos这些服务的高可用。</p>
 <p><strong>Doris高可用：</strong></p>
@@ -281,7 +281,7 @@ select count(*) from (select count(*) from ssb_sf20.v2_lineorder group by lo_ord
 <li>linked schema change: 无需转换数据，直接完成。对于历史数据不会重刷，新摄入的数据都按照新的Schema处理，对于旧数据，新加列的值直接用对应数据类型的默认值填充。例如加列操作。Druid也支持这种做法。</li>
 </ul>
 <h2 id="12-功能">12 功能</h2>
-<p><img src="media/15545480639031/kylin-doris.png" alt="Apache Kylin VS Apache Doris"></p>
+<p><img src="https://pic.bcmeng.com/kylin-doris.png" alt="Apache Kylin VS Apache Doris"></p>
 <p>注： 关于Kylin的明细查询，Kylin本身只有聚合模型，但是也可以<strong>通过将所有列作为维度列，只构建Base Cuboid来实现明细查询</strong>， 缺点是效率比较低下。</p>
 <p>注： 虽然Doirs理论上可以同时支持高并发，低延迟的OLAP查询和高吞吐的Adhoc查询，但显然这两类查询会相互影响。所以Baidu在实际应用中也是用两个集群分别满足OLAP查询和Adhoc查询需求。</p>
 <h2 id="13-社区和生态">13 社区和生态</h2>
