@@ -82,7 +82,8 @@
 </ul>
 <p>HTAP系统可以同时支持OLTP和OLAP，但是需要依赖外部系统（Storm, Kafka, Confluent）进行Stream Processing；</p>
 <p>SQL On Streaming系统无法高效处理复杂的OLAP查询，也无法高效Join实时和历史数据。</p>
-<p><img src="https://user-gold-cdn.xitu.io/2018/5/29/163ab44095f9dba4?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="Lambda架构"></p>
+<p><img src="https://pic.bcmeng.com/the_lambda_architecture_for_big_data_systems.png" alt="Lambda架构"></p>
+<p>上图原始地址：<a href="https://untitled-life.github.io/images/post/the_lambda_architecture_for_big_data_systems.png">https://untitled-life.github.io/images/post/the_lambda_architecture_for_big_data_systems.png</a></p>
 <p>上图是Lambda架构的一个示意，Lambda架构虽然可以满足Streaming Processing + OLTP + OLAP这3个需求，但是有以下缺点：</p>
 <ul>
 <li>Increased complexity and total of ownership：用户的学习成本高昂：用户需要熟悉多个系统的原理，概念，API，模型；用户的开发成本较高，开发效率较低；平台维护多个系统的成本高昂</li>
@@ -106,7 +107,7 @@
 <li>100% Compatible With Apache Spark：可以使用Spark SQL，Spark API，Spark ML访问; 支持Spark的所有Data Sources；支持结构化数据和半结构化数据</li>
 </ol>
 <p>下图是SnappyData的组件图，灰色部分是Spark本身的模块。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/59z6984y120cssmvn1ro22s1/snappydata-components.png" alt="snappydata-components.png-81.2kB"></p>
+<p><img src="https://pic.bcmeng.com/snappydata-components.png" alt="snappydata-components.png-81.2kB"></p>
 <h3 id="4-the-challenges-of-marrying-spark-amp-gemfire">4 The Challenges of Marrying Spark &amp; GemFire</h3>
 <p>Spark是一个高效的分布式计算引擎，GemFire是一个低延迟，高可用，支持事务，面向行存，分布式的Key-Value内存数据库。Spark的设计目标是高吞吐，GemFire的设计目标是低延迟。要将Spark和GemFire整合来同时满足Streaming Processing + OLTP + OLAP的需求，显然会有不少挑战：</p>
 <ol>
@@ -127,7 +128,7 @@
 <h4 id="snappydata的存储">SnappyData的存储</h4>
 <p>SnappyData同时支持行存和列存。列存是基于Spark RDD的实现衍生而来，行存是基于GemFire实现；一个表是使用行存还是列存需要在建表时指定；行存可以同时支持分区表和复制表（会复制到所有节点上，适合OLAP星型模型中的小维表），列存只支持基于Hash的分区表；行存支持索引，基于索引的Keys可以实现快速的读写，列存不支持索引，是按照连续的Blocks组织，支持dictionary，run-length 和bit 3种编码方式；行存支持“read committed” and “repeatable read”级别的事务隔离，列存支持快照级别的事务隔离。</p>
 <p>我们知道，行存实现点更新十分简单，但是列存如何实现高效的点更新呢？</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/ucgtva7xv753kw4n1hcd6o9j/SnappyData-column-store.png" alt="SnappyData-column-store"></p>
+<p><img src="https://pic.bcmeng.com/SnappyData-column-store.png" alt="SnappyData-column-store"></p>
 <p>如上图所示，和LSM的思想类似，列存表的点更新会先写入一个delta row buffer的数据结构， delta row buffer是一个合并队列，合并的含义是同一条记录的所有更新操作只会保留最终状态， delta row buffer使用Copy on Write的方式支持并发更新， 超过一定行数或大小时会转为列存。所以在查询列存表时需要Merge列存和delta row buffer的结果。</p>
 <h4 id="snappydata的查询接口">SnappyData的查询接口</h4>
 <p>SnappyData同时支持标准SQL（扩展自Saprk的SparkSQL dialect）和Saprk API.</p>
@@ -135,13 +136,13 @@
 <p>SnappyData的Stream Processing主要是通过Spark Streaming来实现的，不过SnappyData优化了Stream Processing的OLAP查询能力，比如columnar formats, approximate query processing, and co-partitioning。</p>
 <h4 id="snappydata的查询路由和调度">SnappyData的查询路由和调度</h4>
 <p>SnappyData将OLAP查询交给Spark，将OLTP查询交给GemFire。SnappyData一般将OLTP请求视为低延迟请求，将OLAP请求视为高延迟请求，低延迟的OLTP请求会绕过Saprk的调度直接操作数据，OLAP请求会交给Saprk的公平调度器调度执行。 当然，一个查询也可以显式的标注优先级。 下图是个简单的示意图：</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/22m1td3y6gc2nzjauxmpy7gs/SnappyData-query-route.png" alt="SnappyData-query-route"></p>
+<p><img src="https://pic.bcmeng.com/SnappyData-query-route.png" alt="SnappyData-query-route"></p>
 <h4 id="snappydata的高可用">SnappyData的高可用</h4>
 <p>Spark Driver通过主备的方式实现高可用。</p>
 <p>SnappyData的失败探测依赖依赖UDP neighbor ping和 TCP ack timeout。</p>
 <p>SnappyData将细粒度的事务更新的Recovery交给GemFire，将Batched and streaming micro-batch的操作交给了Spark。Saprk的Recovery依赖RDD的lineage；GemFire的Recovery依赖replication。</p>
 <h3 id="6-snappydata-architecture">6 SnappyData Architecture</h3>
-<p><img src="http://static.zybuluo.com/kangkaisen/52orda5r97jyry82w8q8jqlp/snappydata_Architecture.png" alt="snappydata_Architecture.png-311.1kB"></p>
+<p><img src="https://pic.bcmeng.com/snappydata_Architecture.png" alt="snappydata_Architecture.png-311.1kB"></p>
 <p>如上图所示，SnappyData的节点分为三类：</p>
 <ul>
 <li>Locator： 服务发现。</li>
@@ -167,11 +168,11 @@
 <h3 id="8-snappydata-deploy-modes">8 SnappyData Deploy Modes</h3>
 <p>SnappyData 有3种部署模式：</p>
 <p>1 <strong>Local 模式</strong>： Client Application, Executors和Data Store 都运行在一个JVM中，主要用来开发测试，如下图所示：</p>
-<p><img src="https://snappydatainc.github.io/snappydata/Images/SnappyLocalMode.png" alt="SnappyLocalMode"></p>
+<p><img src="https://pic.bcmeng.com/SnappyLocalMode.png" alt="SnappyLocalMode"></p>
 <p>2 <strong>Embedded SnappyData Store 模式</strong>：Spark Executors和Data Store 都运行在一个JVM中，如下图所示：</p>
-<p><img src="https://snappydatainc.github.io/snappydata/Images/SnappyEmbeddedMode.png" alt="SnappyEmbeddedMode"></p>
+<p><img src="https://pic.bcmeng.com/SnappyEmbeddedMode.png" alt="SnappyEmbeddedMode"></p>
 <p>3 <strong>SnappyData Smart Connector 模式</strong>： Spark Executors运行在独立的JVM中，把SnappyData当做Spark的一个普通的Data Source。 这就像Spark applications中访问Cassandra, Redis和HBase等外部Store一样。 如下图所示：</p>
-<p><img src="https://snappydatainc.github.io/snappydata/Images/SnappyConnectorMode.png" alt="SnappyConnectorMode"></p>
+<p><img src="https://pic.bcmeng.com/SnappyConnectorMode.png" alt="SnappyConnectorMode"></p>
 <h3 id="9-pros-and-cons-of-snappydata">9 Pros And Cons Of SnappyData</h3>
 <p>优点：</p>
 <ol>
