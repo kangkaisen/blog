@@ -82,12 +82,12 @@
 <p>《基于Druid的Kylin存储引擎实践》PDF下载： <a href="https://blog.bcmeng.com/pdf/kangkaisen-kylin-on-druid.pdf">https://blog.bcmeng.com/pdf/kangkaisen-kylin-on-druid.pdf</a></p>
 <p>本次分享的内容主要分为3部分，首先我会介绍下Kylin On HBase的问题，也就是我们为什么要为Kylin实现一个新的存储引擎，其次我会介绍下我们Kylin新存储引擎探索的过程，这部分会解释我们为什么选择了Druid作为Kylin的存储引擎，最后我会介绍下Kylin On Druid的整体架构,核心原理和Kylin On Druid的成果。 下面的分享中Kylin On Druid有时会简称为KOD。</p>
 <h2 id="kylin-在美团点评的服务现状">Kylin 在美团点评的服务现状</h2>
-<p><img src="http://static.zybuluo.com/kangkaisen/1cprpn2l7hxf855d9dvronsj/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%881.56.36.png" alt="Kylin 在美团点评的服务现状"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25881.56.36.png" alt="Kylin 在美团点评的服务现状"></p>
 <p>进入正式主题前，我先介绍下Kylin在美团点评的现状。<strong>目前我们线上Cube数有近1000个，Cube单副本存储近1PB；每天查询量380多万次，查询的TP50时延在200ms左右，TP90时延在1.2s左右。目前Kylin已经覆盖了美团点评所有主要业务线。</strong></p>
 <h2 id="kylin-on-hbase-问题">Kylin On HBase 问题</h2>
-<p><img src="http://static.zybuluo.com/kangkaisen/3vpnyeo9zzf9zfy5552ixrkv/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%881.58.59.png" alt="Kylin On HBase 问题"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25881.58.59.png" alt="Kylin On HBase 问题"></p>
 <p>随着Kylin在我司的大规模使用和我们对Kylin的深入优化改进，我们发现了Kylin本身的一些痛点和问题，其中之一便是Kylin On HBase的性能问题。如图：我们用同一SQL在同一集群查询同一Cube，前后性能相差上千倍。 两次查询的唯一不同点就是Kylin维度在HBase的RowKey中位置不同， 耗时90ms的查询中维度dt和poi_id在RowKey前两位，耗时100多s的查询中维度dt和poi_id在RowKey后两位。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/475vez3okzj3yxjt3ztn9hwi/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.00.40.png" alt="Kylin On HBase 问题"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.00.40.png" alt="Kylin On HBase 问题"></p>
 <p>下面我们来看下Kylin On HBase中前后缀过滤性能相差巨大的原因：如图所示：Kylin中会将Cuboid+所有维度拼接成HBase的Rowkey，Kylin默认会将所有普通指标拼接成HBase一个Column Family中同一列的Value。HBase只有单一Rowkey索引，所以只有查询能够匹配Rowkey的前缀时，查询性能会十分高效，反之，查询性能会比较低下，甚至会出现全表Scan。此外，即使只需要查询一个指标，Kylin在HBase侧也需要Scan所有指标列，相比列存性能也会有较大差距。 总的来说，HBase在Kylin的查询场景下Scan和Filter效率较低下。</p>
 <p>对于Kylin On HBase Scan和Filter效率低下的问题，我们比较自然会想到的解法是：<strong>用列存加速Scan，用索引来加速Filter</strong>。</p>
 <p>这里我简单介绍下列存的优点，主要包含以下3点：</p>
@@ -98,31 +98,31 @@
 </ol>
 <p>所以，要解决Kylin On HBase Scan和Filter效率低下的问题, 我们就需要为Kylin增加一个列存，有高效索引的存储引擎。</p>
 <h2 id="kylin-新存储引擎探索之路">Kylin 新存储引擎探索之路</h2>
-<p><img src="http://static.zybuluo.com/kangkaisen/9vo94ba7aaknp96il0fgstmr/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.05.42.png" alt="Kylin的存储引擎模块"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.05.42.png" alt="Kylin的存储引擎模块"></p>
 <p>在我们为Kylin新增一个存储引擎之前，我们自然就需要先了解Kylin的存储引擎组成。主要有5部分：存储格式，Cache，计算，调度和元数据。 计算指数据的Scan,过滤，聚合等，调度指文件增删，复制和负载均衡等，这里的元数据指的是存储引擎本身的元数据。其中存储格式对查询性能影响很大，也是HBase在Kylin查询场景下的痛点，所以我们决定首先去寻找或改造一个适合Kylin的存储格式。</p>
 <h3 id="kylin-新存储引擎实现思路">Kylin 新存储引擎实现思路</h3>
-<p><img src="http://static.zybuluo.com/kangkaisen/09nwegwf6gs8222ikewiltnx/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.06.57.png" alt="Kylin 新存储引擎实现思路"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.06.57.png" alt="Kylin 新存储引擎实现思路"></p>
 <p>当时我们主要有两个思路，<strong>一种思路是基于Spark + 存储格式进行演进</strong>： 就是找到一个优秀的存储格式后，和Spark进行集成。大概思路是将文件Cache到本地，用Spark来实现计算和查询的调度，整个方案大体上就可以Run起来。大家对这种思路感兴趣的话，可以参考TiDB的TiSpark项目，以及Snappydata这个系统。</p>
 <p>第二种思路就是<strong>找到或自研一个优秀的存储格式后，再参考HBase， Druid等系统，逐步完善成一个完整的存储引擎</strong>。</p>
 <p>所以，无论哪一种思路，我们都需要首先找到或者自研一个优秀的适合Kylin的存储格式。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/4v4sexw8n78gsvjmsj3ip6uw/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.08.14.png" alt="Kylin存储格式评测标准"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.08.14.png" alt="Kylin存储格式评测标准"></p>
 <p>我们在调研存储格式时<strong>主要考虑Scan和Filter性能，导入性能，压缩率，集成难度这4点因素</strong>，其中重点关注Scan和Filter性能。</p>
 <h3 id="kylin-on-parquet-poc">Kylin On Parquet POC</h3>
-<p><img src="http://static.zybuluo.com/kangkaisen/wygxvex4ccsnm9a9erixc00o/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.09.33.png" alt="Kylin On Parquet"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.09.33.png" alt="Kylin On Parquet"></p>
 <p>我们首先对Parquet进行了调研。因为Parquet是当前Hadoop生态列式文件的标准，在Hadoop生态中广泛使用。一个Parquet文件先按行逻辑上水平拆分成row groups，row groups内是列存，每一列是一个Column chunks，Column chunks进一步拆分成Page， Page是数据访问的最小单位。Parquet 可以通过min,max索引和字典实现row groups粒度的过滤，但是<strong>没有Page粒度的索引</strong>。</p>
 <p>我们在17年5月份的时候进行了Kylin On Parquet POC，POC的结果也符合我们的理论预期：由于Parquet是列存，所以在Scan部分列时性能优于HBase，但由于存在Tuple重组，也就是列转行的开销，Scan性能会随着访问列的个数增加而降低，Scan全部列时性能不如HBase。 Filter方面，Parquet在前缀和后缀过滤上性能没有差别，但是由于当时的Parquet没有Page粒度的细粒度索引，所以前缀过滤性能明显比HBase差。</p>
 <h3 id="kylin-on-carbondata">Kylin On CarbonData</h3>
-<p><img src="http://static.zybuluo.com/kangkaisen/1rm06vrxwlujhnvf6c4phjrj/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.11.36.png" alt="CarbonData File Format"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.11.36.png" alt="CarbonData File Format"></p>
 <p>由于Parquet过滤性能不足，所以我们就Pass了Kylin On Parquet的方案。 Parquet之后，我们又调研了当时新起的华为开源的存储格式CarbonData。和Parquet类似，CarbonData首先将数据水平切分成若干个Blocklet，Blocklet内部按列存储，每列的数据叫做一个Column Chunk。和Parquet不同的是，CarbonData拥有丰富的索引：MDK索引；Min，Max索引；倒排索引。MDK索引是多维度索引，类似Kylin中的维度索引，整个文件会按照多个维度列进行排序，这样对MDK列中的维度进行前缀过滤就会很高效。</p>
 <p>CarbonData的列存+丰富索引的设计的确是我们所期望的，不过CarbonData和Spark耦合较深，且当时的CarbonData没有OutputFormat，也不是很成熟，所以我们也Pass了Kylin On CarbonData的方案。</p>
 <h3 id="kylin-on-lucene-poc">Kylin On Lucene POC</h3>
-<p><img src="http://static.zybuluo.com/kangkaisen/utk3h0k6fs8i31rv7vmqwcas/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.13.06.png" alt="Kylin On Lucene"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.13.06.png" alt="Kylin On Lucene"></p>
 <p>Parquet，CarbonData之后。 我们差不多同时进行了Kylin On Lucene POC 和 Kylin On Druid POC。我们先来看下Lucene， Lucene大家应该都很熟悉，是一个被广泛使用的全文搜索库，其存储格式是基于MMAP，支持倒排索引的列存。</p>
 <p>Kylin On Lucene POC的结果和我们对倒排索引的理论认知符合：由于<strong>倒排索引是用额外的构建成本和存储成本换取查询时高效的过滤性能</strong>，所以Lucene的构建性能只有HBase的1/3，存储是HBase的4倍，但是过滤性能明显优于HBase。</p>
 <h3 id="kylin-on-druid-poc">Kylin On Druid POC</h3>
-<p><img src="http://static.zybuluo.com/kangkaisen/4hn0gpzvkoqc72xhnqnk6mks/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.14.35.png" alt="Druid Segment File Format"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.14.35.png" alt="Druid Segment File Format"></p>
 <p>下面我们来看下Druid的存储格式。和Lucene类似，Druid的存储格式也是基于MMAP，支持倒排索引的列存，区别是<strong>Druid的倒排索引是基于Bitmap的，Lucene的倒排索引是基于倒排表的</strong>。Druid的存储格式比较简单，就是直接按列依次存储，其中的M1,M2是指标列，D1,D2指维度列.除了数据文件之外，还会有一个meta文件记录每一列的offset。我们要读取Druid文件时，就将Druid文件MMap到内存，直接根据offset读取指定偏移量的数据。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/vwdakyt4yanpw0v4grnr77xp/image.png" alt="Druid Bitmap 倒排索引"></p>
+<p><img src="https://pic.bcmeng.com/druid_bitmap.png" alt="Druid Bitmap 倒排索引"></p>
 <p>图中上半部分是Druid Bitmap 倒排索引的实现原理：我们有维度列D2, 共4行数据，包含meituan,dianping两个值，Druid会首先对维度列进行字典编码，图中meituan编码为0，dianping编码为1，然后Druid会基于维度值和字典构建基于Bitmap的倒排索引，倒排索引的Key是编码后的ID，Value是Bitmap，Bitmap的哪个bit位是1，就表示该值出现在哪些行。 下半部分是Druid String 维度存储的具体内容：包括列的元数据，维度字典，维度编码后的ID和倒排索引。</p>
 <p>图中是Kylin On Druid POC的结果，我们可以看到Druid的过滤性能明显优于HBase，Scan性能和Parquet类似，在部分列时也明显优于HBase。 构建和存储的话，和Lucene类似，会比HBase差一点。</p>
 <h3 id="why-kylin-on-druid">Why Kylin On Druid</h3>
@@ -132,7 +132,7 @@
 <li>CarbonData与Spark 耦合较深，集成难度较大；</li>
 <li>Lucene 和 Druid相比，存储膨胀率较高，还有比较重要的一点是，Druid不仅仅是一个存储格式，也可以作为Kylin完整的存储引擎。</li>
 </ul>
-<p><img src="http://static.zybuluo.com/kangkaisen/mltpspnzybo0mv2pcgjbyt9v/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.16.50.png" alt="Why Kylin On Druid"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.16.50.png" alt="Why Kylin On Druid"></p>
 <p>我们再来看下我们选择Kylin On Druid的原因：</p>
 <ul>
 <li><strong>首先是Druid Scan,Filter性能很好</strong></li>
@@ -142,12 +142,12 @@
 <h2 id="kylin-on-druid">Kylin On Druid</h2>
 <p>OK，前半部分主要介绍了Kylin On Druid的大背景，回答了Why Kylin On Druid。 下面我们来看下How Kylin On Druid。</p>
 <h3 id="kylin-可插拔架构">Kylin 可插拔架构</h3>
-<p><img src="http://static.zybuluo.com/kangkaisen/nq95v7z7yf6reyblz3annjuy/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.18.04.png" alt="Kylin 可插拔架构"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-14%2520%25E4%25B8%258B%25E5%258D%25886.29.42.png" alt="Kylin 可插拔架构"></p>
 <p>在介绍Kylin On Druid之前，我们先来看下Kylin的可插拔架构。Kylin的可插拔架构对数据源，计算引擎， 存储引擎都有抽象，理论这3个部分都是可以替换的。目前数据源已经支持Hive，Kafka；计算引擎支持Spark，MR； 但是存储引擎只有HBase。 <strong>所谓的Kylin On Druid就是在Kylin的可插拔架构中用Druid替换掉HBas</strong>e。</p>
 <h3 id="kylin-on-druid-架构">Kylin On Druid 架构</h3>
-<p><img src="http://static.zybuluo.com/kangkaisen/dy315631qmdgnze19v14ehpd/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.19.02.png" alt="Kylin On Druid 架构"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.19.02.png" alt="Kylin On Druid 架构"></p>
 <p>图中是Kylin On Druid 简化后的架构图，分为数据导入和数据查询两条线。数据导入时，Kylin的JobServer会将Hive中的数据导入到Druid的Historical节点中；数据查询时，Kylin的Queryserver会通过Druid的Broker节点向Druid发起查询。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/gl21whf77ap8vv73i399lh30/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.19.42.png" alt="How KOD：Data Load"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.19.42.png" alt="How KOD：Data Load"></p>
 <p>下面我们来详细看下KOD数据导入和数据查询的过程，我们首先来看下数据导入过程： </p>
 <ol>
 <li>和HBase一样，首先需要计算出Cuboid</li>
@@ -156,7 +156,7 @@
 <li>Coordinator定期从MetaData Store Pull Segment元数据，发现有新Segment生成时，就会通知Historical节点Load Segment</li>
 <li>Historical节点收到Load Segment通知后，就会去HDFS上下载Segment文件，然后MMap到内存，至此整个数据导入过程完成。</li>
 </ol>
-<p><img src="http://static.zybuluo.com/kangkaisen/9fhno7uqw6ejaldhgx80llee/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.20.39.png" alt="How KOD：Data Query"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.20.39.png" alt="How KOD：Data Query"></p>
 <p>KOD的数据查询过程，Kylin和Druid如何交互我们可以有两种方案。 <strong>一种是通过直接访问Broker的方式和Druid集成，一种是通过直接访问Druid Historical节点的方式和Druid集成</strong>。  第一种方式我们只需要将Kylin的SQL翻译成Druid的json，通过Http向Druid的Broker发起查询。 第二种方式我们就需要在kylin中实现Druid Broker的功能，好处是性能会比第一种好，因为少一层网络传输，坏处是Kylin和Druid的依赖冲突会更严重，实现较复杂。本着侵入性小和简单可用的原则，我们选择了第一种方案。</p>
 <h3 id="kylin-on-druid-实现细节">Kylin On Druid 实现细节</h3>
 <p>在了解了KOD的架构和整个数据导入，数据查询过程后，我们再具体看下我们做了哪些方面的工作：</p>
@@ -167,9 +167,9 @@
 <li>运维工具适配</li>
 </ol>
 <p>其实这4方面的工作<strong>也是我们为Kylin增加一个存储引擎必须要做的工作</strong>。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/eogarx8ksgfnlf64l5hm829i/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.22.48.png" alt="How KOD：Schema映射"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.22.48.png" alt="How KOD：Schema映射"></p>
 <p>Kylin和Druid的Schema映射是这样的：Kylin的Cube对应Druid中的DataSource，Kylin的Segment对应Druid中的Segment，维度对维度，指标对指标，需要额外增加一个Cuboid维度列，Druid中没有的指标需要在Druid中进行扩展。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/6bmlttbg33xlqpbhd64uvld4/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.23.18.png" alt="How KOD：Druid指标扩展"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.23.18.png" alt="How KOD：Druid指标扩展"></p>
 <p>我们目前在Druid中增加了Kylin的精确去重指标，Kylin的ExtendColumn指标和Decimal指标。无论是Druid还是Kylin，我们新增一种聚合指标所要做的事情都是类似的，区别只是具体的接口和实现方式不同。我们自定义一种聚合指标要做这些事情：</p>
 <ul>
 <li>定义指标的元数据：指标的名称参数，返回类型，核心数据结构；</li>
@@ -177,11 +177,11 @@
 <li>定义指标序列化和反序列化的方式；</li>
 <li>注册指标，让系统发现新指标。</li>
 </ul>
-<p><img src="http://static.zybuluo.com/kangkaisen/n9d94ein8zl0e5p46ez8h1dt/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.24.08.png" alt="How KOD：Cube 构建侧适配"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.24.08.png" alt="How KOD：Cube 构建侧适配"></p>
 <p>Cube构建侧适配除了之前提到的将Cuboid 转为 Druid Segment和Load Segemnt这一步，KOD中为了支持Druid层的业务隔离，还增加了Update Druid Tier这一步，允许用户将不同的Cube存储到不同的Tier。在Druid Segment生成和Load这两步，都进行了一定的优化。 生成Druid Segment时，由于需要生成倒排索引，所以相比生成HBase的HFILE，就需要更多的内存，所以这一步进行了较多内存升的优化。 在Druid Load Segment这一步，初期发现多个Segment 并发导入时，Druid Load Segment会很慢。 经过排查发现，主要是Druid 0.10.0版本有bug，默认的并发度配置不生效，所以整个Load是串行，后来是通过升级到Druid 0.11，并将并发度设置为磁盘数的2倍解决的，因为Druid Load Segment的耗时99.9% 都是在从HDFS下载Segment上。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/3h0v1au7pzu5198db1wimuil/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.24.53.png" alt="Kylin 查询流程"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.24.53.png" alt="Kylin 查询流程"></p>
 <p>在介绍KOD对Cube查询侧的适配之前，我们先简单看下Kylin的查询流程。Kylin的SQL解析，逻辑计划的生成和优化都是通过Calcite实现的，Kylin会根据Calcite生成的查询计划生成HBase的Scan请求，HBase端经过Scan，Filter,Agg后会一次性将结果返回给Kylin的QueryServer，QueryServer会将HBase返回的结果反序列化，对维度根据字典进行解码生成Obejct数组，再将Obejct数组转为Tuple，Tuple和Obejct数组的主要区别是Tuple有了类型信息，最后Tuple会交给Calcite的Enumerator进行最终计算。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/zk5wbnhu41g7ogcxv7rabk45/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.25.31.png" alt="How KOD：Cube 查询侧适配"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.25.31.png" alt="How KOD：Cube 查询侧适配"></p>
 <p>下面我们来看下KOD对Cube查询侧的适配，我们拿到Calcite生成的查询计划后，为了实现谓词下推，会首先将Kylin的Filter转为Druid的Filter；其次会进行分区裁剪，避免访问不必要的Druid Segment；然后会根据查询的Cube，维度，指标，Filter等生成Druid的查询Json，通过Http向Druid发起查询，Druid端经过Scan，Filter,Agg后会按照Http Chunk的方式Pipline地将查询结果返回给Kylin的QueryServer，下来的过程基本和HBase类似，需要注意的是，由于我们本身在Druid中存储的就是原始值，所以查询就不需要加载字典进行维度的解码。</p>
 <p>最后我们来看下运维工具适配方面的工作，主要包括：</p>
 <ul>
@@ -192,10 +192,10 @@
 <p>这里我就不展开了，因为主要是一些实现和细节上的问题。</p>
 <h3 id="kylin-on-druid-成果">Kylin On Druid 成果</h3>
 <p>现在为止，我们已经清楚了KOD的整体架构和核心原理。 下面我们来看下，KOD的性能到底怎么样。 首先我们来看下SSB测试的结果，PPT中展示了我们测试的SQL样例和测试环境。 需要特别注意的是：<strong>我们在KOD和Kylin都只计算了Base Cuboid</strong>，因为如果KOD和Kylin都充分预计算，测试性能基本上没有意义，<strong>测试的目的就是为了对比KOD和Kylin的现场计算能力</strong>。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/vyw9c6sixbi5tmad3cgs3t9k/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.26.52.png" alt="KOD Performance: SSB 测试"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.26.52.png" alt="KOD Performance: SSB 测试"></p>
 <p>这是KOD和Kylin只计算Base Cuboid时SSB测试的结果，图中纵轴是KOD相比Kylin的加速比，千万量级时KOD的加速比是49，亿级时KOD的加速比是130。 总的来说，<strong>KOD的现场计算能力相比Kylin有了两个数量级的提升</strong>。</p>
 <p>这张图展示的是我们KOD第一批Cube上线后，线上的真实数据。 我们可以看到，KOD相比Kylin在查询性能提升的同时，存储和计算资源也有了明显的下降</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/23sj2pj2k3i523vr1awi9i82/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-08-26%20%E4%B8%8B%E5%8D%882.27.38.png" alt="KOD 易用性提升"></p>
+<p><img src="https://kks-dreaming.oss-cn-beijing.aliyuncs.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-08-26%2520%25E4%25B8%258B%25E5%258D%25882.27.38.png?Expires=1632152142&amp;OSSAccessKeyId=TMP.3KduvUkFzGaVvR7uyLsKgbkuWwN3FsAQxg48TzUdWDNfc5Av2zTGxrVRzg9UUfZGHFyiLuArkhesGFiK5TrJ6fEUf3Jomk&amp;Signature=oAoMMDUU%2Fz7UxYRG0K1yOxUOxPI%3D" alt="KOD 易用性提升"></p>
 <p>前面提到，KOD的现场计算能力相比Kylin有了两个数量级的提升，所以对于亿级及以下数据规模的数据，我们不需要再进行复杂的优化，只需要构建Base Cuboid就可以，用户的易用性有了显著提升。</p>
 <h3 id="kylin-on-druid-特性">Kylin On Druid 特性</h3>
 <p>在介绍完KOD的架构，核心原理，性能后，我们再总结下KOD的特性：</p>
