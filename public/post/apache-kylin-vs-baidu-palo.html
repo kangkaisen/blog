@@ -223,8 +223,8 @@ select count(*) from (select count(*) from ssb_sf20.v2_lineorder group by lo_ord
 <p>关于Doris元数据的具体原理大家可以参考Doris官方文档[Doris 元数据设计文档][25]</p>
 <h2 id="8-高性能">8 高性能</h2>
 <p><strong>Why Kylin Query Fast：</strong></p>
-<p><img src="https://pic.bcmeng.com/image.png" alt="Kylin query"></p>
-<p>Kylin查询快的核心原因就是预计算，如图(图片出处 [Apache kylin 2.0: from classic olap to real-time data warehouse][27])<strong>，Kylin现场查询时不需要Join，也几乎不需要聚合，主要就是Scan + Filter</strong>。</p>
+<p><img src="https://pic.bcmeng.com/20210920234802.png" alt="Kylin query"></p>
+<p>Kylin查询快的核心原因就是预计算，如图(图片出处 <a href="https://www.slideshare.net/YangLi43/apache-kylin-20-from-classic-olap-to-realtime-data-warehouse">Apache kylin 2.0: from classic olap to real-time data warehouse</a>)<strong>，Kylin现场查询时不需要Join，也几乎不需要聚合，主要就是Scan + Filter</strong>。</p>
 <p><strong>Why Doris Query Fast：</strong></p>
 <ol>
 <li>In-Memory Metadata。 Doris的元数据就在内存中，元数据访问速度很快。</li>
