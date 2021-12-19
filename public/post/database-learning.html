@@ -1,0 +1,587 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|数据库学习资料（持续更新中）</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="http://weibo.com/533234148" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 数据库学习资料（持续更新中）</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2021-12-19</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#数据库总览">数据库总览</a><ul>
+<li><a href="#书籍">书籍</a></li>
+<li><a href="#大学课程">大学课程</a></li>
+<li><a href="#系列教程">系列教程</a></li>
+<li><a href="#文章">文章</a></li>
+</ul>
+</li>
+<li><a href="#数据库领域博客专栏">数据库领域博客专栏</a></li>
+<li><a href="#数据库系统综述">数据库系统综述</a><ul>
+<li><a href="#数据库系统简介">数据库系统简介</a></li>
+<li><a href="#amazon-aurora">Amazon Aurora</a></li>
+<li><a href="#analyticdb">AnalyticDB</a></li>
+<li><a href="#arrow">Arrow</a></li>
+<li><a href="#apache-calcite">Apache Calcite</a></li>
+<li><a href="#apache-pulsar">Apache Pulsar</a></li>
+<li><a href="#aresdb">AresDB</a></li>
+<li><a href="#ceph">Ceph</a></li>
+<li><a href="#chubaofs">ChubaoFS</a></li>
+<li><a href="#clickhouse">ClickHouse</a></li>
+<li><a href="#cockroachdb">CockroachDB</a></li>
+<li><a href="#cynosdb">CynosDB</a></li>
+<li><a href="#db2">DB2</a></li>
+<li><a href="#dremio">Dremio</a></li>
+<li><a href="#druid">Druid</a></li>
+<li><a href="#f1">F1</a></li>
+<li><a href="#flink">Flink</a></li>
+<li><a href="#foundationdb">FoundationDB</a></li>
+<li><a href="#google-bigquery">Google BigQuery</a></li>
+<li><a href="#google-dremel">Google Dremel</a></li>
+<li><a href="#google-procella">Google Procella</a></li>
+<li><a href="#google-napa">Google Napa</a></li>
+<li><a href="#greenplum">GreenPlum</a></li>
+<li><a href="#hawq">HAWQ</a></li>
+<li><a href="#hbase">HBase</a></li>
+<li><a href="#histore">HiStore</a></li>
+<li><a href="#hudi">Hudi</a></li>
+<li><a href="#hyper">Hyper</a></li>
+<li><a href="#ignite">Ignite</a></li>
+<li><a href="#impala">Impala</a></li>
+<li><a href="#kudu">Kudu</a></li>
+<li><a href="#mysql">Mysql</a></li>
+<li><a href="#mesa">Mesa</a></li>
+<li><a href="#memsql">Memsql</a></li>
+<li><a href="#oceanbase">OceanBase</a></li>
+<li><a href="#omniscidb">OmniSciDB</a></li>
+<li><a href="#pinot">Pinot</a></li>
+<li><a href="#postgresql">PostgreSQL</a></li>
+<li><a href="#presto">Presto</a></li>
+<li><a href="#redshift">Redshift</a></li>
+<li><a href="#sap-hana">SAP HANA</a></li>
+<li><a href="#spanner">Spanner</a></li>
+<li><a href="#snappydata">SnappyData</a></li>
+<li><a href="#snowflake">Snowflake</a></li>
+<li><a href="#spark">Spark</a></li>
+<li><a href="#splice-machine">Splice machine</a></li>
+<li><a href="#tidb">TiDB</a></li>
+<li><a href="#vertica">Vertica</a></li>
+<li><a href="#voltdb">VoltDB</a></li>
+<li><a href="#x-engine">X-Engine</a></li>
+<li><a href="#hologres">Hologres</a></li>
+</ul>
+</li>
+<li><a href="#查询优化器">查询优化器</a><ul>
+<li><a href="#论文">论文</a></li>
+<li><a href="#文章">文章</a></li>
+</ul>
+</li>
+<li><a href="#查询执行">查询执行</a><ul>
+<li><a href="#论文">论文</a></li>
+<li><a href="#ppt">PPT</a></li>
+</ul>
+</li>
+<li><a href="#向量化">向量化</a><ul>
+<li><a href="#论文">论文</a></li>
+<li><a href="#课程">课程</a></li>
+<li><a href="#文章-ppt">文章 &amp; PPT</a></li>
+</ul>
+</li>
+<li><a href="#查询编译">查询编译</a><ul>
+<li><a href="#论文">论文</a></li>
+<li><a href="#课程">课程</a></li>
+<li><a href="#文章-ppt">文章 &amp; PPT</a></li>
+</ul>
+</li>
+<li><a href="#存储">存储</a><ul>
+<li><a href="#论文">论文</a></li>
+<li><a href="#文章">文章</a></li>
+</ul>
+</li>
+<li><a href="#数据导入">数据导入</a></li>
+<li><a href="#测试">测试</a></li>
+<li><a href="#事务">事务</a></li>
+<li><a href="#cloud-native">Cloud-Native</a></li>
+<li><a href="#性能优化">性能优化</a><ul>
+<li><a href="#profile-工具">Profile 工具</a></li>
+<li><a href="#cpu-微架构">CPU 微架构</a></li>
+<li><a href="#cpu-cache">CPU Cache</a></li>
+</ul>
+</li>
+</ul>
+<!-- toc stop -->
+<p>本文章会努力持续更新，也欢迎大家一起贡献和修改。</p>
+<p>TODO:</p>
+<ul>
+<li>[ ] 系统综述部分进行分类</li>
+<li>[ ] 每篇材料给出难度评级（入门，进阶，专业）</li>
+<li>[ ] 每篇材料给出必要性评级 （可选，必读）</li>
+<li>[ ] 每篇论文备注下核心观点，以及我们可以学习到什么</li>
+<li>[ ] 每个数据库系统架构的优点，缺点，以及我们可以学习到什么</li>
+</ul>
+<h2 id="数据库总览">数据库总览</h2>
+<h3 id="书籍">书籍</h3>
+<ul>
+<li><a href="https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/">Designing Data-Intensive Applications</a> ★★★★★</li>
+<li><a href="https://www.oreilly.com/library/view/database-internals/9781492040330/">Database Internals</a></li>
+<li><a href="https://www.oreilly.com/library/view/streaming-systems/9781491983867/">Streaming Systems: The What, Where, When, and How of Large-Scale Data Processing</a></li>
+<li><a href="https://dsf.berkeley.edu/papers/fntdb07-architecture.pdf">Architecture of a Database System</a></li>
+</ul>
+<h3 id="大学课程">大学课程</h3>
+<ul>
+<li><a href="https://15445.courses.cs.cmu.edu/fall2019/schedule.html">CMU 15445 数据库基础课程</a> ★★★★★</li>
+<li><a href="https://15721.courses.cs.cmu.edu/spring2020/schedule.html">CMU 15721 数据库高级课程</a> ★★★★★</li>
+<li><a href="https://www.db-book.com/db6/slide-dir/">Database System Concepts</a></li>
+<li><a href="https://www.eidos.ic.i.u-tokyo.ac.jp/~tau/lecture/parallel_distributed/2018/">Parallel and Distributed Programming</a> ★★★★★</li>
+</ul>
+<h3 id="系列教程">系列教程</h3>
+<ul>
+<li><a href="https://www.infoq.cn/theme/46">数据库内核杂谈</a></li>
+<li><a href="https://hpi.de/plattner/teaching/archive/winter-term-201819/develop-your-own-database.html">Build your own Database</a></li>
+<li><a href="https://cstack.github.io/db_tutorial/">用C语言从0构建一个简单的数据库</a></li>
+</ul>
+<h3 id="文章">文章</h3>
+<p><a href="http://coding-geek.com/how-databases-work/">How does a relational database work</a></p>
+<h2 id="数据库领域博客专栏">数据库领域博客专栏</h2>
+<ul>
+<li><a href="https://github.com/pingcap/presentations/blob/master/paper-reading.md">PingCAP Paper reading</a></li>
+<li><a href="https://zhuanlan.zhihu.com/db-readings">数据系统论文阅读小组</a></li>
+<li><a href="http://mysql.taobao.org/monthly/">数据库内核月报</a></li>
+<li><a href="https://www.youtube.com/channel/UCHnBsf2rH-K7pn09rb3qvkA">CMU Database Group 视频</a> ★★★★★</li>
+<li><a href="https://www.youtube.com/channel/UCHnBsf2rH-K7pn09rb3qvkA">Clickhouse 社区分享的PPT</a></li>
+<li><a href="https://www.youtube.com/channel/UCHnBsf2rH-K7pn09rb3qvkA">知乎 Presto 专栏</a></li>
+<li><a href="https://github.com/pingcap/awesome-database-learning">Awesome Database Learning</a></li>
+<li><a href="https://pingcap.com/blog-cn/">TIDB Blog</a></li>
+<li><a href="https://github.com/digoal/blog">PostgreSQL Blog</a></li>
+</ul>
+<h2 id="数据库系统综述">数据库系统综述</h2>
+<h3 id="数据库系统简介">数据库系统简介</h3>
+<p><a href="https://dbdb.io/">https://dbdb.io/</a></p>
+<h3 id="amazon-aurora">Amazon Aurora</h3>
+<p><a href="http://diego-pacheco.blogspot.com/2020/01/amazon-aurora-papers-review.html">Amazon Aurora paper</a></p>
+<h3 id="analyticdb">AnalyticDB</h3>
+<p><a href="https://www.vldb.org/pvldb/vol12/p2059-zhan.pdf">AnalyticDB: Real-time OLAP Database System at Alibaba Cloud</a></p>
+<h3 id="arrow">Arrow</h3>
+<p><a href="https://www.slideshare.net/dremio/apache-arrow-in-theory-in-practice">Apache Arrow: In Theory, In Practice</a></p>
+<h3 id="apache-calcite">Apache Calcite</h3>
+<p><a href="https://arxiv.org/pdf/1802.10233.pdf">Apache Calcite: A Foundational Framework for Optimized Query Processing Over Heterogeneous Data Sources</a></p>
+<h3 id="apache-pulsar">Apache Pulsar</h3>
+<p><a href="https://mp.weixin.qq.com/s/13sd3aR0LdkG-H6094r_Iw">「分布式系统前沿技术」专题 | Pulsar 的设计哲学</a></p>
+<h3 id="aresdb">AresDB</h3>
+<p><a href="https://eng.uber.com/aresdb/">Introducing AresDB: Uber’s GPU-Powered Open Source, Real-time Analytics Engine</a></p>
+<h3 id="ceph">Ceph</h3>
+<p><a href="https://www.ssrc.ucsc.edu/media/pubs/6ebbf2736ae06c66f1293b5e431082410f41f83f.pdf">Ceph: A Scalable, High-Performance Distributed File System</a></p>
+<h3 id="chubaofs">ChubaoFS</h3>
+<p><a href="https://arxiv.org/pdf/1911.03001.pdf">CFS: A Distributed File System for Large Scale Container Platforms</a></p>
+<h3 id="clickhouse">ClickHouse</h3>
+<p><a href="https://www.youtube.com/watch?v=ZOZQCQEtrz8">The Secrets of ClickHouse Performance Optimizations</a></p>
+<h3 id="cockroachdb">CockroachDB</h3>
+<p><a href="https://cdn2.hubspot.net/hubfs/1753393/guides/White%20Paper%20%7C%20CockroachDB%20The%20Resilient%20Geo-Distributed%20SQL%20Database%20(SIGMOD%202020">CockroachDB: The Resilient Geo-Distributed SQL Database</a>.pdf)</p>
+<h3 id="cynosdb">CynosDB</h3>
+<ul>
+<li><a href="https://cloud.tencent.com/developer/article/1367387">腾讯云新一代自研数据库CynosDB技术详解——架构设计</a></li>
+<li><a href="https://cloud.tencent.com/developer/article/1367388">CynosDB技术详解——存储集群管理</a></li>
+</ul>
+<h3 id="db2">DB2</h3>
+<p><a href="https://researcher.watson.ibm.com/researcher/files/us-ipandis/vldb13db2blu.pdf">DB2 with BLU Acceleration: So Much More than Just a Column Store</a></p>
+<h3 id="dremio">Dremio</h3>
+<p><a href="https://www.dremio.com/webinars/apache-arrow-calcite-parquet-relational-cache/">Using Apache Arrow, Calcite and Parquet to build a Relational Cache</a></p>
+<p><a href="https://www.dremio.com/library/#white-paper">Dremio white-paper</a></p>
+<h3 id="druid">Druid</h3>
+<p><a href="http://static.druid.io/docs/druid.pdf">Druid: A Real-time Analytical Data Store</a></p>
+<h3 id="f1">F1</h3>
+<p><a href="http://www.vldb.org/pvldb/vol11/p1835-samwel.pdf">F1 Query: Declarative Querying at Scale</a></p>
+<h3 id="flink">Flink</h3>
+<p><a href="http://sites.computer.org/debull/A15dec/p28.pdf">Apache Flink™: Stream and Batch Processing in a Single Engine</a></p>
+<h3 id="foundationdb">FoundationDB</h3>
+<p><a href="https://www.foundationdb.org/files/fdb-paper.pdf">FoundationDB: A Distributed Unbundled Transactional Key Value Store</a></p>
+<h3 id="google-bigquery">Google BigQuery</h3>
+<ul>
+<li><a href="https://panoply.io/data-warehouse-guide/bigquery-architecture/">A Deep Dive Into Google BigQuery Architecture</a></li>
+<li><a href="https://cloud.google.com/blog/products/gcp/bigquery-under-the-hood">BigQuery under the hood</a></li>
+<li><a href="http://vldb.org/pvldb/vol14/p3083-edara.pdf">Big Metadata: When Metadata is Big Data</a> </li>
+</ul>
+<h3 id="google-dremel">Google Dremel</h3>
+<p><a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/36632.pdf">Dremel: Interactive Analysis of Web-Scale Datasets</a></p>
+<h3 id="google-procella">Google Procella</h3>
+<p><a href="http://www.vldb.org/pvldb/vol12/p2022-chattopadhyay.pdf">Procella: Unifying serving and analytical data at YouTube</a></p>
+<h3 id="google-napa">Google Napa</h3>
+<p><a href="http://vldb.org/pvldb/vol14/p2986-sankaranarayanan.pdf">Napa: Powering Scalable Data Warehousing with Robust Query Performance at Google</a></p>
+<h3 id="greenplum">GreenPlum</h3>
+<p><a href="https://www.slideshare.net/AGrishchenko/greenplum-architecture">Greenplum Architecture</a></p>
+<p><a href="https://developpaper.com/why-greenplum-is-the-best-compared-with-others/">Why Greenplum is the best compared with others</a></p>
+<h3 id="hawq">HAWQ</h3>
+<p><a href="https://raw.githubusercontent.com/changleicn/publications/master/hawq-sigmod-2014.pdf">HAWQ: A Massively Parallel Processing SQL Engine in Hadoop</a></p>
+<h3 id="hbase">HBase</h3>
+<p><a href="https://blog.bcmeng.com/post/hbase-note.html">HBase 基本概念</a></p>
+<h3 id="histore">HiStore</h3>
+<p><a href="https://developer.aliyun.com/article/159558">HiStore：阿里巴巴海量数据场景下的OLAP解决方案</a></p>
+<p><a href="https://yq.aliyun.com/articles/73170">海量高性能列式数据库HiStore介绍</a></p>
+<h3 id="hudi">Hudi</h3>
+<p><a href="https://cwiki.apache.org/confluence/display/HUDI/Design+And+Architecture">Apache Hudi Design And Architecture</a></p>
+<h3 id="hyper">Hyper</h3>
+<p><a href="https://hyper-db.de/index.html#publications">Hyper Paper</a></p>
+<h3 id="ignite">Ignite</h3>
+<p><a href="http://samples.leanpub.com/ignite-sample.pdf">What is Apache Ignite?</a></p>
+<h3 id="impala">Impala</h3>
+<p><a href="http://cidrdb.org/cidr2015/Papers/CIDR15_Paper28.pdf">Impala: A Modern, Open-Source SQL Engine for Hadoop</a></p>
+<h3 id="kudu">Kudu</h3>
+<p><a href="https://kudu.apache.org/kudu.pdf">Kudu: Storage for Fast Analytics on Fast Data</a></p>
+<h3 id="mysql">Mysql</h3>
+<h3 id="mesa">Mesa</h3>
+<p><a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/42851.pdf">Mesa: Geo-Replicated, Near Real-Time, Scalable Data Warehousing</a></p>
+<h3 id="memsql">Memsql</h3>
+<ul>
+<li><a href="https://www.memsql.com/resources/?category=whitepaper">Memsql whitepaper</a></li>
+<li><a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/42851.pdf">Memsql 电子书</a></li>
+</ul>
+<h3 id="oceanbase">OceanBase</h3>
+<p><a href="https://mp.weixin.qq.com/s?__biz=MzU0ODg0OTIyNw==&amp;mid=2247485800&amp;idx=1&amp;sn=0b94e9154e5b1326b56e1343468491c1">OceanBase存储系统架构的演进历程及工程实践</a></p>
+<h3 id="omniscidb">OmniSciDB</h3>
+<p><a href="https://www.omnisci.com/resources">OmniSci Technical Whitepaper</a></p>
+<h3 id="pinot">Pinot</h3>
+<p><a href="https://cwiki.apache.org/confluence/download/attachments/103092375/Pinot.pdf?version=1&amp;modificationDate=1571428741000&amp;api=v2">Pinot: Realtime OLAP for 530 Million Users</a></p>
+<h3 id="postgresql">PostgreSQL</h3>
+<h3 id="presto">Presto</h3>
+<p><a href="https://prestosql.io/Presto_SQL_on_Everything.pdf">Presto: SQL on Everything</a></p>
+<h3 id="redshift">Redshift</h3>
+<p><a href="https://homepages.cwi.nl/~manegold/UvA-ABS-MBA-BDBA-ISfBD/p1917-gupta.pdf">Amazon Redshift and the Case for Simpler Data Warehouses</a></p>
+<p><a href="https://www.scitepress.org/papers/2017/65871/65871.pdf">Data Warehousing in the Cloud: Amazon Redshift vs Microsoft Azure SQL </a></p>
+<h3 id="sap-hana">SAP HANA</h3>
+<p><a href="https://15721.courses.cs.cmu.edu/spring2019/slides/26-saphana.pdf">SAP HANA: A Data Platform for Enterprise Applications Purpose Built for Modern Hardware</a>  ★★★★★</p>
+<p><a href="https://www.youtube.com/watch?v=aiQdWS9MLVI&amp;list=PLSE8ODhjZXja7K1hjZ01UTVDnGQdx5v5U&amp;index=26">SAP HANA: A Data Platform for Enterprise Applications Purpose Built for Modern Hardware 视频</a></p>
+<h3 id="spanner">Spanner</h3>
+<p><a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/spanner-osdi2012.pdf">Spanner: Google’s Globally-Distributed Database</a></p>
+<h3 id="snappydata">SnappyData</h3>
+<p><a href="https://web.eecs.umich.edu/~mozafari/php/data/uploads/cidr_2017.pdf">SnappyData: A Unified Cluster for Streaming,Transactions, and Interactive Analytics</a></p>
+<h3 id="snowflake">Snowflake</h3>
+<p><a href="http://pages.cs.wisc.edu/~remzi/Classes/739/Spring2004/Papers/p215-dageville-snowflake.pdf">The Snowflake Elastic Data Warehouse</a></p>
+<p><a href="https://www.usenix.org/system/files/nsdi20-paper-vuppalapati.pdf">Building An Elastic Query Engine on Disaggregated Storage</a></p>
+<p><a href="https://nattaylor.com/blog/2019/snowflake-internals/">Snowflake Database Internals</a></p>
+<h3 id="spark">Spark</h3>
+<p><a href="http://people.csail.mit.edu/matei/papers/2012/nsdi_spark.pdf">Resilient Distributed Datasets: A Fault-Tolerant Abstraction for In-Memory Cluster Computing</a></p>
+<p><a href="https://cs.stanford.edu/~matei/papers/2015/sigmod_spark_sql.pdf">Spark SQL: Relational Data Processing in Spark</a></p>
+<h3 id="splice-machine">Splice machine</h3>
+<p><a href="http://www.splicemachine.com/wp-content/uploads/Splice-Machine-Spark-White-Paper.pdf">Splice Machine</a></p>
+<p><a href="https://www.youtube.com/watch?v=SHY7uAgusG8&amp;list=PLSE8ODhjZXjagqlf1NxuBQwaMkrHXi-iz&amp;index=15&amp;t=0s">Splice Machine – An HTAP DB at Scale </a></p>
+<h3 id="tidb">TiDB</h3>
+<p>Tidb a raft based HTAP database</p>
+<p><a href="https://github.com/pingcap/tidb/tree/master/docs/design">TiDB 设计文档</a></p>
+<h3 id="vertica">Vertica</h3>
+<p><a href="https://vldb.org/pvldb/vol5/p1790_andrewlamb_vldb2012.pdf">The Vertica Analytic Database: C-Store 7 Years Later</a></p>
+<h3 id="voltdb">VoltDB</h3>
+<p><a href="https://15445.courses.cs.cmu.edu/fall2018/slides/25-voltdb.pdf">H-Store And VoltDB</a></p>
+<h3 id="x-engine">X-Engine</h3>
+<p><a href="https://www.cs.utah.edu/~lifeifei/papers/sigmod-xengine.pdf">X-Engine: An Optimized Storage Engine for Large-scale E-commerce Transaction Processing</a></p>
+<h3 id="hologres">Hologres</h3>
+<p><a href="http://www.vldb.org/pvldb/vol13/p3272-jiang.pdf?spm=a2c6h.12873639.0.0.77e75f66L3W23d&amp;file=p3272-jiang.pdf">Alibaba Hologres: A Cloud-Native Service for Hybrid Serving/Analytical Processing</a>  </p>
+<h2 id="查询优化器">查询优化器</h2>
+<h3 id="论文">论文</h3>
+<ul>
+<li><a href="https://15721.courses.cs.cmu.edu/spring2018/papers/15-optimizer1/xu-columbia-thesis1998.pdf">Efficiency in the Columbia Database Query Optimizer</a> ★★★★★</li>
+<li><a href="https://15721.courses.cs.cmu.edu/spring2016/papers/p337-soliman.pdf">Orca: A Modular Query Optimizer Architecture for Big Data</a></li>
+<li><a href="https://cs.uwaterloo.ca/~david/cs848/volcano.pdf">The Volcano Optimizer Generator: Extensibility and Efficient Search</a></li>
+<li><a href="https://15721.courses.cs.cmu.edu/spring2018/papers/15-optimizer1/graefe-ieee1995.pdf">The Cascades Framework for Query Optimization</a></li>
+<li><a href="http://btw2017.informatik.uni-stuttgart.de/slidesandpapers/F1-10-37/paper_web.pdf">The Complete Story of Joins (in HyPer)</a></li>
+<li><a href="https://arxiv.org/pdf/1802.10233.pdf">Apache Calcite: A Foundational Framework for Optimized Query Processing Over Heterogeneous Data Sources</a></li>
+<li><a href="https://cs.stanford.edu/~matei/papers/2015/sigmod_spark_sql.pdf">Spark SQL: Relational Data Processing in Spark</a></li>
+<li><a href="https://www2.cs.duke.edu/courses/fall19/compsci516/Papers/chaudhuri98.pdf">An Overview of Query Optimization in Relational Systems</a></li>
+<li><a href="http://www.vldb.org/pvldb/vol9/p1401-chen.pdf">The MemSQL Query Optimizer: A modern optimizer for real-time analytics in a distributed database</a></li>
+<li><a href="http://www.vldb.org/pvldb/vol9/p204-leis.pdf">How Good Are Query Optimizers, Really?</a> ★★★★★</li>
+<li><a href="http://www.vldb.org/pvldb/vol8/p1704-elhelw.pdf">Optimization of Common Table Expressions in MPP Database Systems</a></li>
+<li><a href="https://d1fto35gcfffzn.cloudfront.net/big-data/white-paper/OptimizingQueriesOverPartitionedTablesInMPPSystems.pdf">Optimizing Queries over Partitioned Tables in MPP Systems</a></li>
+<li><a href="https://db.in.tum.de/~radke/papers/hugejoins.pdf">Adaptive Optimization of Very Large Join Queries</a></li>
+<li><a href="https://dl.gi.de/bitstream/handle/20.500.12116/2418/383.pdf?sequence=1">Unnesting Arbitrary Queries</a></li>
+<li><a href="https://assets.red-gate.com/community/books/inside-the-sql-server-query-optimizer.pdf">Inside the SQL Server Query Optimizer</a></li>
+<li><a href="https://15721.courses.cs.cmu.edu/spring2017/papers/15-optimizer2/IDEAS01.pdf">Exploiting Upper and Lower Bounds in Top-Down Query Optimization</a></li>
+</ul>
+<h3 id="文章">文章</h3>
+<ul>
+<li><a href="https://prestosql.io/blog/2019/07/04/cbo-introduction.html">Introduction to Presto Cost-Based Optimizer</a></li>
+<li><a href="https://github.com/cmu-db/terrier/tree/master/src/optimizer">CMU 数据库 Optimizer</a></li>
+<li><a href="https://databricks.com/blog/2015/04/13/deep-dive-into-spark-sqls-catalyst-optimizer.html">Deep Dive into Spark SQL’s Catalyst Optimizer</a></li>
+<li><a href="https://docs.clustrix.com/display/CLXDOC/Query+Optimizer">ClustrixDB Query Optimizer</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/67078227">OceanBase查询优化器的设计之道和工程实践哲学</a></li>
+<li><a href="https://www.cockroachlabs.com/blog/building-cost-based-sql-optimizer/">How We Built a Cost-Based SQL Optimizer</a></li>
+<li><a href="https://www.zhihu.com/column/c_1364661018229141504">优化器技术论文学习 </a></li>
+</ul>
+<h2 id="查询执行">查询执行</h2>
+<h3 id="论文">论文</h3>
+<ul>
+<li><a href="https://15721.courses.cs.cmu.edu/spring2016/papers/p743-leis.pdf">Morsel-Driven Parallelism: A NUMA-Aware Query Evaluation Framework for the Many-Core Age</a>  ★★★★★</li>
+<li><a href="https://arxiv.org/pdf/1104.1729.pdf">Expression Templates Revisited: A Performance Analysis of the Current ET Methodology</a></li>
+<li><a href="https://arxiv.org/pdf/1701.00854.pdf">Is Parallel Programming Hard, And, If So, What Can You Do About It?</a></li>
+<li><a href="https://arxiv.org/abs/1610.09166">Push vs. Pull-Based Loop Fusion in Query Engines</a></li>
+</ul>
+<h3 id="ppt">PPT</h3>
+<ul>
+<li><a href="https://www.slideshare.net/databricks/a-deep-dive-into-query-execution-engine-of-spark-sql">A Deep Dive into Query Execution Engine of Spark SQL</a></li>
+<li><a href="https://github.com/ClickHouse/clickhouse-presentations/tree/master/meetup24/5.%20Clickhouse%20query%20execution%20pipeline%20changes">ClickHouse 执行模型</a></li>
+<li><a href="https://www.eidos.ic.i.u-tokyo.ac.jp/~tau/lecture/parallel_distributed/2018/slides/pdf/worksteal.pdf">Understanding Task Scheduling Algorithms</a></li>
+<li><a href="http://hpac.cs.umu.se/teaching/sem-accg-16/slides/03.Fischer-SET.pdf">Smart Expression Templates</a></li>
+</ul>
+<h2 id="向量化">向量化</h2>
+<h3 id="论文">论文</h3>
+<ul>
+<li><a href="https://15721.courses.cs.cmu.edu/spring2016/papers/p5-sompolski.pdf">Vectorization vs. Compilation in Query Execution</a></li>
+<li><a href="https://15721.courses.cs.cmu.edu/spring2018/papers/18-execution/boncz-cidr2005.pdf">MonetDB/X100: Hyper-Pipelining Query Execution</a></li>
+<li><a href="http://www.cs.columbia.edu/~orestis/sigmod15.pdf">Rethinking SIMD Vectorization for In-Memory Databases</a></li>
+<li><a href="http://www.vldb.org/pvldb/vol13/p226-fang.pdf">Interleaved Multi-Vectorizing</a></li>
+<li><a href="https://dare.uva.nl/search?identifier=5ccbb60a-38b8-4eeb-858a-e7735dd37487">Balancing vectorized query execution with bandwidth-optimized storage</a></li>
+<li><a href="https://dl.acm.org/doi/pdf/10.1145/3329785.3329928">Towards Practical Vectorized Analytical Query Engines</a></li>
+<li><a href="http://www.cs.columbia.edu/~orestis/sigmod15.pdf">Rethinking SIMD Vectorization for In-Memory Databases</a></li>
+<li><a href="https://www.researchgate.net/publication/325374644_BIPie_Fast_Selection_and_Aggregation_on_Encoded_Data_using_Operator_Specialization">BIPie: Fast Selection and Aggregation on Encoded Data using Operator Specialization</a></li>
+<li><a href="https://www.mdpi.com/2076-3417/10/6/1915">SAHA: A String Adaptive Hash Table for Analytical Databases</a></li>
+</ul>
+<h3 id="课程">课程</h3>
+<ul>
+<li><a href="http://www.cs.uu.nl/docs/vakken/mov/2017/">Optimization &amp; Vectorization</a></li>
+<li><a href="https://15721.courses.cs.cmu.edu/spring2020/schedule.html">CMU 15721 课程</a></li>
+</ul>
+<h3 id="文章-amp-ppt">文章 &amp; PPT</h3>
+<ul>
+<li><a href="https://www.dremio.com/webinars/vectorized-query-processing-apache-arrow/">Vectorized Query Processing Using Apache Arrow</a></li>
+<li><a href="http://0x80.pl/articles/">http://0x80.pl/</a> 专注于 SIMD 编程，有大量实践文章。</li>
+<li><a href="https://lemire.me/blog/">Daniel Lemire&#39;s blog</a> 专注于高性能计算，有大量优秀文章。</li>
+<li><a href="https://db.in.tum.de/teaching/ws1718/dataprocessing/chapter2.pdf">Data-Parallel Execution using SIMD Instructions</a></li>
+<li><a href="https://www.codeproject.com/Articles/874396/Crunching-Numbers-with-AVX-and-AVX">Crunching Numbers with AVX and AVX2</a></li>
+<li><a href="https://www.codingame.com/playgrounds/283/sse-avx-vectorization/what-is-sse-and-avx">SSE &amp; AVX Vectorization</a></li>
+<li><a href="https://www.kernel.org/pub/linux/kernel/people/geoff/cell/ps3-linux-docs/CellProgrammingTutorial/BasicsOfSIMDProgramming.html">Basics of SIMD Programming</a></li>
+<li><a href="https://kholdstare.github.io/technical/2020/05/26/faster-integer-parsing.html">最快的 integer-parsing 实现</a></li>
+<li><a href="http://enigmahuang.me/2017/09/29/AVX-SIMD/">使用 AVX 系列指令集进行向量化</a> 文末的链接可以看下</li>
+<li><a href="https://medium.com/@PingCAP/10x-performance-improvement-for-expression-evaluation-made-possible-by-vectorized-execution-and-6511b00631fb">TIDB 10x Performance Improvement for Expression Evaluation Made Possible by Vectorized Execution and the Community</a></li>
+<li><a href="https://www.cockroachlabs.com/blog/vectorized-hash-joiner/">40x faster hash joiner with vectorized execution</a></li>
+<li><a href="https://www.sciencedirect.com/topics/computer-science/scatter-instruction">Scatter Instruction</a></li>
+<li><a href="http://hpac.rwth-aachen.de/teaching/sem-accg-16/slides/08.Schmitz-GGC_Autovec.pdf">GCC Autovectorization</a></li>
+<li><a href="https://software.intel.com/content/www/us/en/develop/articles/requirements-for-vectorizable-loops.html">Requirements for Vectorizable Loops</a></li>
+<li><a href="https://www.eidos.ic.i.u-tokyo.ac.jp/~tau/lecture/parallel_distributed/2018/slides/pdf/simd2.pdf">SIMD Programming</a></li>
+<li><a href="https://lemire.me/blog/2019/04/12/why-are-unrolled-loops-faster/">Why are unrolled loops faster</a></li>
+<li><a href="https://deplinenoise.files.wordpress.com/2015/03/gdc2015_afredriksson_simd.pdf">SIMD at Insomniac Games (How we do the shuffle)</a> </li>
+<li><a href="https://www.agner.org/optimize/#manuals">Software optimization resources</a></li>
+<li><a href="https://events.prace-ri.eu/event/845/contributions/646/attachments/806/1118/Vectorization_Compilers.pdf">Vectorization with Compilers (C/C++)</a></li>
+<li><a href="http://www.pinnecke.info/dl/slides/gurumurthy-simdhashing.pdf">SIMD Vectorized Hashing for Grouped Aggregation</a></li>
+<li><a href="https://www.cs.uu.nl/docs/vakken/magr/2017-2018/files/SIMD%20Tutorial.pdf">Practical SIMD Programming</a></li>
+</ul>
+<h2 id="查询编译">查询编译</h2>
+<h3 id="论文">论文</h3>
+<ul>
+<li><a href="https://www.vldb.org/pvldb/vol4/p539-neumann.pdf">Efficiently Compiling Efficient Query Plans for Modern Hardware</a></li>
+<li><a href="http://www.vldb.org/pvldb/vol11/p1-menon.pdf">Relaxed Operator Fusion for In-Memory Databases: Making Compilation, Vectorization, and Prefetching Work Together At Last</a></li>
+<li><a href="https://www.vldb.org/pvldb/vol11/p2209-kersten.pdf">Everything You Always Wanted to Know About Compiled and Vectorized Queries But Were Afraid to Ask</a></li>
+<li><a href="https://db.in.tum.de/~leis/papers/adaptiveexecution.pdf">Adaptive Execution of Compiled Queries</a></li>
+<li><a href="http://sites.computer.org/debull/A14mar/p31.pdf">Runtime Code Generation in Cloudera Impala</a></li>
+<li><a href="https://llvm.org/pubs/2003-09-30-LifelongOptimizationTR.pdf">LLVM: A Compilation Framework for Lifelong Program Analysis &amp; Transformation</a></li>
+<li><a href="https://15721.courses.cs.cmu.edu/spring2017/papers/20-compilation/krikellas-icde2010.pdf">Generating code for holistic query evaluation</a></li>
+<li><a href="https://vldb.org/pvldb/vol14/p2691-funke.pdf">Low-Latency Compilation of SQL Qeries to Machine Code</a></li>
+</ul>
+<h3 id="课程">课程</h3>
+<ul>
+<li><a href="http://hpac.rwth-aachen.de/teaching/sem-accg-16/">Automation, Compilers, and Code-Generation</a></li>
+<li><a href="https://15721.courses.cs.cmu.edu/spring2020/schedule.html">CMU 15721 课程</a></li>
+<li><a href="https://github.com/jamiebuilds/the-super-tiny-compiler">the-super-tiny-compiler</a></li>
+</ul>
+<h3 id="文章-amp-ppt">文章 &amp; PPT</h3>
+<ul>
+<li><a href="https://www.dremio.com/webinars/using-llvm-accelerate-data-processing-apache-arrow/">Using LLVM to Accelerate Processing of Data in Apache Arrow</a></li>
+<li><a href="https://databricks.com/blog/2016/05/23/apache-spark-as-a-compiler-joining-a-billion-rows-per-second-on-a-laptop.html">Apache Spark as a Compiler: Joining a Billion Rows per Second on a Laptop</a></li>
+<li><a href="http://highscalability.com/blog/2016/9/7/code-generation-the-inner-sanctum-of-database-performance.html">Code Generation: The Inner Sanctum Of Database Performance</a></li>
+<li><a href="https://www.pgcon.org/2017/schedule/attachments/467_PGCon%202017-05-26%2015-00%20ISPRAS%20Dynamic%20Compilation%20of%20SQL%20Queries%20in%20PostgreSQL%20Using%20LLVM%20JIT.pdf">JIT-Compiling SQL Queries in PostgreSQL Using LLVM</a></li>
+<li><a href="https://wiki.nervtech.org/doku.php?id=blog:2020:0414_jit_cpp_compiler">JIT C++ compiler with LLVM</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/60965109">查询编译综述</a></li>
+<li><a href="https://github.com/pivotal/blog/blob/master/content/post/codegen-gpdb-qx.md">Overhead of a Generalized Query Execution Engine</a></li>
+</ul>
+<h2 id="存储">存储</h2>
+<h3 id="论文">论文</h3>
+<ul>
+<li><a href="https://db.in.tum.de/downloads/publications/datablocks.pdf">Data Blocks: Hybrid OLTP and OLAP on Compressed Storage using both Vectorization and Compilation</a></li>
+<li><a href="https://pingcap.com/blog-cn/tile-row-store/">基于 Tile 连接 Row-Store 和 Column-Store</a></li>
+<li><a href="https://pingcap.com/blog-cn/pax/">PAX：一个 Cache 友好高效的行列混存方案</a></li>
+<li><a href="https://www.slideshare.net/abadid/vldb-2009-tutorial-on-columnstores">VLDB 2009 Tutorial on Column-Stores</a> ★★★★★</li>
+<li><a href="https://stratos.seas.harvard.edu/files/stratos/files/columnstoresfntdbs.pdf">The Design and Implementation of Modern Column-Oriented Database Systems</a> ★★★★★</li>
+<li><a href="http://justinlevandoski.org/papers/fnt-mmdb.pdf">Main Memory Database Systems</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/30953751">WiscKey: Separating Keys from Values in SSD-conscious Storage</a></li>
+<li><a href="https://www.usenix.org/system/files/fast21-pan.pdf">Facebook’s Tectonic Filesystem: Efficiency from Exascale</a> </li>
+</ul>
+<h3 id="文章">文章</h3>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/161564256">X-Engine的In-Memory读性能优化</a></li>
+<li><a href="https://15721.courses.cs.cmu.edu/spring2017/slides/11-compression.pdf">Database Compression</a></li>
+<li><a href="https://www.mssqltips.com/sqlservertip/3099/understanding-sql-server-memoryoptimized-tables-hash-indexes/">Understanding SQL Server Memory-Optimized Tables Hash Indexes</a></li>
+<li><a href="https://www.slideshare.net/liangchen18/apache-carbondatanew-high-performance-data-format-for-faster-data-analysis">Apache CarbonData:New high performance data format for faster data analysis</a></li>
+<li><a href="https://github.com/apache/parquet-format">Apache Parquet</a></li>
+<li><a href="https://github.com/apache/parquet-format/blob/master/Encodings.md">Parquet Encoding</a></li>
+<li><a href="https://orc.apache.org/docs">Apache ORC File</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/34455548">2018 存储技术热点与趋势总结</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/135188922">2020 存储技术热点与趋势总结</a></li>
+<li><a href="https://www.zybuluo.com/babydragon/note/368654">设计SSD友好的应用</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/41356902">非易失性内存在阿里生产环境的应用：Tair NVM实践总结</a></li>
+<li><a href="https://www.memsql.com/blog/memsql-singlestore-then-there-was-one/">MemSQL SingleStore – And Then There Was One</a></li>
+</ul>
+<h2 id="数据导入">数据导入</h2>
+<ul>
+<li><a href="https://pdfs.semanticscholar.org/a1b0/67fc941d6727169ec18a882080fa1f074595.pdf">Instant Loading for Main Memory Databases</a></li>
+<li><a href="https://www.microsoft.com/en-us/research/publication/speculative-distributed-csv-data-parsing-for-big-data-analytics/">Speculative Distributed CSV Data Parsing for Big Data Analytics</a></li>
+</ul>
+<h2 id="测试">测试</h2>
+<ul>
+<li><a href="http://www.vldb.org/pvldb/vol13/p1206-dreseler.pdf">Quantifying TPC-H Choke Points and Their Optimizations</a></li>
+<li><a href="https://arxiv.org/abs/2007.08292">Detecting Optimization Bugs in Database Engines via Non-Optimizing Reference Engine Construction</a></li>
+<li><a href="https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.233.446&amp;rep=rep1&amp;type=pdf">Automated SQL Query Generation for Systematic Testing of Database Engines</a></li>
+</ul>
+<h2 id="事务">事务</h2>
+<ul>
+<li>A Critique of ANSI SQL Isolation Levels</li>
+<li>Transaction Processing: Concepts and Techniques</li>
+<li>Granularity of Locks and Degrees of Consistency in a Shared Data Base</li>
+<li>(Percolator) Large-scale Incremental Processing Using Distributed Transactions and Notifications</li>
+<li>(Omid) Omid, Reloaded: Scalable and Highly-Available Transaction Processing</li>
+<li>(2PC) Database System Concepts.</li>
+<li>(2PC) Database Systems The Complete Book</li>
+<li>(OCC) On Optimistic Methods for Concurrency Control</li>
+<li>(TicTok) TicToc: Time Traveling Optimistic Concurrency Control</li>
+<li>(Silo) Speedy Transactions in Multicore In-Memory Databases</li>
+<li>(Hekaton) High-Performance Concurrency Control Mechanisms for Main-Memory Databases</li>
+</ul>
+<h2 id="cloud-native">Cloud-Native</h2>
+<p>待完善</p>
+<ul>
+<li><a href="https://dl.acm.org/doi/pdf/10.1145/3406011">What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing</a></li>
+<li><a href="https://arxiv.org/pdf/1911.11727.pdf">Starling: A Scalable Query Engine on Cloud Function Services</a></li>
+<li><a href="https://dl.acm.org/doi/abs/10.1145/3448016.3457563">Bringing Cloud-Native Storage to SAP IQ</a></li>
+<li><a href="https://www.snowflake.com/resource/cloud-data-lakes-for-dummies/">cloud data lakes for dummies</a></li>
+</ul>
+<h2 id="性能优化">性能优化</h2>
+<ul>
+<li><a href="https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-optimization-manual.pdf">Intel® 64 and IA-32 Architectures Optimization Reference Manual </a></li>
+<li><a href="https://github.com/CppCon/CppCon2020/blob/main/Presentations/performance_matters/performance_matters__emery_berger__cppcon_2020.pdf">performance_matters<strong>emery_berger</strong>cppcon_2020 </a></li>
+<li><a href="https://book.easyperf.net/perf_book">Denis Bakhvalov - Performance Analysis and Tuning on Modern CPUs </a></li>
+<li><a href="https://www.researchgate.net/publication/269302126_A_Top-Down_method_for_performance_analysis_and_counters_architecture">A Top-Down Method for Performance Analysis and Counters Architecture</a>  ★★★★★</li>
+<li><p><a href="https://github.com/Kobzol/hardware-effects">Hardware effects</a></p>
+</li>
+<li><p><a href="https://www.brendangregg.com/blog/">https://www.brendangregg.com/blog/</a></p>
+</li>
+<li>Systems Performance Enterprise and the Cloud by Brendan Gregg</li>
+<li>BPF Performance Tools</li>
+<li>Computer Architecture: A Quantitative Approach</li>
+</ul>
+<h3 id="profile-工具">Profile 工具</h3>
+<ul>
+<li><a href="https://godbolt.org/">https://godbolt.org/</a></li>
+<li><a href="https://quick-bench.com/">https://quick-bench.com/</a></li>
+<li>vtune-profiler   ★★★★★</li>
+<li><a href="https://github.com/andikleen/pmu-tools/wiki/toplev-manual">https://github.com/andikleen/pmu-tools/wiki/toplev-manual</a></li>
+<li><a href="https://github.com/facebookincubator/BOLT">https://github.com/facebookincubator/BOLT</a></li>
+<li><a href="https://github.com/plasma-umass/coz">https://github.com/plasma-umass/coz</a></li>
+<li><a href="http://prace.it4i.cz/sites/prace.it4i.cz/files/files/phi-02-2018-04_profiling.pdf">Profiling: Understand Your Application</a></li>
+<li><a href="https://www.youtube.com/watch?v=zWxSZcpeS8Q">Benchmarking C++ Code</a></li>
+</ul>
+<h3 id="cpu-微架构">CPU 微架构</h3>
+<ul>
+<li><a href="https://www.infoq.com/presentations/microarchitecture-modern-cpu/">Understanding CPU Microarchitecture to Increase Performance</a></li>
+<li><a href="https://plantegg.github.io/2021/06/01/CPU%E7%9A%84%E5%88%B6%E9%80%A0%E5%92%8C%E6%A6%82%E5%BF%B5/">CPU的制造和概念</a></li>
+<li><a href="https://decodezp.github.io/archives/">Skylake微架构(Microarchitecture)剖析</a></li>
+<li><a href="https://www.zhihu.com/column/CArch">Computer Arch</a></li>
+</ul>
+<h3 id="cpu-cache">CPU Cache</h3>
+<ul>
+<li><a href="https://www.stardog.com/blog/writing-cache-friendly-code/">https://www.stardog.com/blog/writing-cache-friendly-code/</a></li>
+<li><a href="https://lwn.net/Articles/255364/">Memory part 5: What programmers can do</a></li>
+<li><a href="https://nwcpp.org/talks/2007/Machine_Architecture_-_NWCPP.pdf">Machine Architecture: Things Your Programming Language Never Told You</a></li>
+<li><a href="https://courses.cs.washington.edu/courses/cse548/06wi/slides/cacheAdv.pdf">Advanced Caching Techniques</a></li>
+<li><a href="https://www.csd.uoc.gr/~hy460/pdf/AMH/10.pdf">An Overview of Cache Optimization Techniques and Cache-Aware Numerical Algorithms</a></li>
+<li><a href="https://www.eidos.ic.i.u-tokyo.ac.jp/~tau/lecture/parallel_distributed/2018/slides/pdf/memory2.pdf">What You Must Know about Memory,Caches, and Shared Memory</a> ★★★★★</li>
+</ul>
+
+            <hr/>
+            <h3>评论</h3>
+            <div id="vcomment"></div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=61bf02f1577c0425e809311e
+                 data-title=数据库学习资料（持续更新中）
+                 data-url=database-learning>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+<script src="../js/av-min.js"></script>
+<script src='../js/Valine.min.js'></script>
+<script type="text/javascript">
+    window.valine = new Valine({
+        el: '#vcomment' ,
+        verify: true,
+        notify: true,
+        appId: 'BlLnB0re5OzQVzrgEplAxkyg-gzGzoHsz',
+        appKey: 'wUyxSV0U4Vi7oK1EHK6ipErv',
+        placeholder: '欢迎评论'
+    });
+</script>
+
+</body>
+</html>
