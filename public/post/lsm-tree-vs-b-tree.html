@@ -92,7 +92,7 @@ bash-3.2$ cat database
 <p>Index是基于原始数据衍生的<strong>附加的数据结构</strong>，增加索引必然意味着降低数据写入速度，增大存储空间，所以Index是<strong>以数据写入时的处理成本和存储的空间成本来换取查询的加速</strong>。这也是数据库设计的一个trade-off，不同索引的查询加速比，写入时的处理成本，存储的空间成本往往是不同的，所以在设计数据库时选择何种索引是一个很重要的点。</p>
 <h3 id="3-hash-index">3 Hash Index</h3>
 <p>下面就让我们用Index加速之前最简单的Key-Value DB。之前我们db_get方法查询特定Key必须全表Scan的原因，是因为我们不知道特定Key在文件中的Offset，假如我们知道了每个Key的Offset，我们就可以直接Seek到Key对应的Offset，直接读取Key对应的Value。而Key到Offset的映射我们自然会想起到我们熟悉的数据结构HashMap，我们可以在内存中维护一个HashMap，HashMap的Key就是Key-Value DB的每一条记录的Key，HashMap的Value就是每一条记录在文件中的Offset。 </p>
-<p><img src="http://static.zybuluo.com/kangkaisen/z23dumh7qlxg2ltuop2fp0a3/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-05-01%20%E4%B8%8B%E5%8D%885.56.01.png" alt="屏幕快照 2018-05-01 下午5.56.01.png-298kB"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-05-01%2520%25E4%25B8%258B%25E5%258D%25885.56.01.png" alt="屏幕快照 2018-05-01 下午5.56.01.png-298kB"></p>
 <p>有了HashMap后，我们每次写数据后就必须要更新HashMap，查询数据时先从HashMap获取特定Key的Offset，再直接Seek到文件对应Offset的位置，读取数据。 事实上Bitcask（Riak的默认存储引擎）就是这样做的。</p>
 <p>不过显然Hash Index有两个缺陷：</p>
 <ol>
@@ -102,7 +102,7 @@ bash-3.2$ cat database
 <h3 id="4-segment">4 Segment</h3>
 <p>目前为止，我们都是把数据写到一个文件中，这显然是不合理的。 一个常见的做法就是将文件按照大小拆为为Segment，<strong>每个Segment是不可变的</strong>。 Segment的概念很常见，比如Kylin和Druid中都有Segment的概念，指一定大小或者一定时间内不可变的文件。  </p>
 <p>第1部分我们知道，我们同一个Key的Value的更新只是追加写入，并没有删除旧的Value。 当我们有了多个Segment后，我们自然就可以定期在后台执行<strong>Compaction</strong>操作，将同一个Key的旧Value删除，更进一步，如果我们数据库支持delete的话，我们可以在一开始只进行标记，并不实际删除，等到Compaction的时候，我们再进行实际删除。 总之一句话，<strong>基于log-structured的存储引擎，我们可以通过后台的Compaction来实现update和delete</strong>，Compaction时依然可以进行数据的写入和查询。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/1d4ci2m08l4c4zqqswc7urm4/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-05-01%20%E4%B8%8B%E5%8D%886.10.49.png" alt="屏幕快照 2018-05-01 下午6.10.49.png-239.1kB"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-05-01%2520%25E4%25B8%258B%25E5%258D%25886.10.49.png" alt="屏幕快照 2018-05-01 下午6.10.49.png-239.1kB"></p>
 <p>至此，每个Segment文件都在内存中有了对应的Hash table。 我们查询时为了找到特定Key对应的Value，我们依次查询每个Segment文件即可，查询每个Segment文件的过程和之前一样。</p>
 <p>这种Append-only Log-structured的存储引擎的优点：</p>
 <ol>
@@ -120,7 +120,7 @@ bash-3.2$ cat database
 <li>由于我们的读取的最小粒度是Block，我们也可以基于Blcok粒度做压缩，减小磁盘空间和IO。</li>
 <li>SSTable不仅可以较好的支持Point Query，也可以很好的支持Range Scan。</li>
 </ol>
-<p><img src="http://static.zybuluo.com/kangkaisen/8k5gu97fbeb98bcviiuzarsu/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-05-01%20%E4%B8%8B%E5%8D%886.26.22.png" alt="屏幕快照 2018-05-01 下午6.26.22.png-292.6kB"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-05-01%2520%25E4%25B8%258B%25E5%258D%25886.26.22.png" alt="屏幕快照 2018-05-01 下午6.26.22.png-292.6kB"></p>
 <p>那么我们如何保证Segment文件有序呢？ 因为数据写入一般都要经过内存，在内存中我们可以利用Red-black tree 或者AVL tree保证有序。</p>
 <p>至此，我们基于SSTable的存储引擎可以这样Run起来：</p>
 <ol>
@@ -133,9 +133,9 @@ bash-3.2$ cat database
 <p>至此，LSM-Tree（Log-Structured Merge-Tree）的3个组件：SSTable，Memtable，Write-Ahead-Log终于全了。 从开始最简单的Key-Value 数据库 讲到现在，我相信你已经理解了LSM-Tree的核心思想。</p>
 <p>LSM-Tree 已经被广泛使用，比如LevelDB，RocksDB，Cassandra，HBase等，其中的SSTable也是被广泛借鉴，比如ClickHouse，Palo等。</p>
 <h3 id="6-磁盘简介">6 磁盘简介</h3>
-<p><img src="http://img.my.csdn.net/uploads/201210/18/1350524012_9824.gif" alt="磁盘结构"></p>
+<p><img src="https://pic.bcmeng.com/disk.png" alt="磁盘结构"></p>
 <p>如图，一个磁盘由多个<strong>盘片</strong>组成。</p>
-<p><img src="https://tech.meituan.com/img/about-desk-io/%E7%A3%81%E7%9B%98%E5%9E%82%E7%9B%B4%E8%A7%86%E8%A7%92.png" alt="磁盘结构"></p>
+<p><img src="https://awps-assets.meituan.net/mit-x/blog-images-bundle-2017/6af12fac.png" alt="磁盘结构"></p>
 <p>如图，1个盘片由一个个的同心圆组成，一个同心圆就是一个<strong>磁道</strong>，每个磁道由多个<strong>扇区</strong>组成，每个磁道的扇区数量是一个常量，每个扇区的大小一般是4KB，<strong>扇区是磁盘基本的物理单元</strong>。</p>
 <p>一次磁盘IO的耗时主要由三部分组成：<strong>寻道时间 + 旋转延迟 + 数据传输时间</strong>。</p>
 <ol>
@@ -148,7 +148,7 @@ bash-3.2$ cat database
 <p>前面我们从零开始了解了LSM-Tree的核心原理，但是在数据库领域使用最广泛的索引结构是B-tree及其变种。</p>
 <p>其实之前我们为最简单的数据库增加索引的时候，如果我们同时希望提高查询性能，支持原地更新和删除，支持Point query和Scan query, 保持高效的插入性能，我们就会比较自然的想到二叉查找树, 平衡二叉查找树,红黑树，B-Tree 及其最常见的变种B+Tree等树结构， 如果再考虑到面向磁盘，以及更好地支持Scan query，我们就会选择B+Tree。B+Tree具有较低的深度，这样就减少了磁盘 Seek操作的次数。</p>
 <p>类似LSM-Tree，B-Tree也可以提供高效地Point query和Scan query。 但是两者的设计哲学是完全不同的：LSM-Tree是将数据拆分为几百M大小的Segments，并是顺序写入；B-Tree则是面向磁盘，将数据拆分为固定大小的Block或Page, 一般是4KB大小，和磁盘一个扇区的大小对应，Page是读写的最小单位。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/2n3c480crpi1c47d2pyowpl8/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-05-01%20%E4%B8%8B%E5%8D%886.43.19.png" alt="屏幕快照 2018-05-01 下午6.43.19.png-310kB"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-05-01%2520%25E4%25B8%258B%25E5%258D%25886.43.19.png" alt="屏幕快照 2018-05-01 下午6.43.19.png-310kB"></p>
 <p>在数据的更新和删除方面，B-Tree可以做到原地更新和删除，但由于LSM-Tree只能追加写，所以只能在Segment Compaction的时候进行真正地更新和删除。</p>
 <p>大家可以通过<a href="https://www.cs.usfca.edu/~galles/visualization/BPlusTree.html">B+Tree 可视化</a>理解B+Tree的插入，查找，更新和删除过程。</p>
 <p>关于B+Tree更详细的原理可以参考此文<a href="http://blog.codinglabs.org/articles/theory-of-mysql-index.html">MySQL索引背后的数据结构及算法原理</a>。</p>
@@ -168,7 +168,7 @@ bash-3.2$ cat database
 <h3 id="9-参考资料">9 参考资料</h3>
 <p>1《Designing-Data-Intensive-Applications》第3章的第一部分《Data Structures That Power Your Database》</p>
 <p>2 <a href="https://blog.csdn.net/iter_zc/article/details/43023367">计算机底层知识拾遗（三）理解磁盘的机制</a> 第6部分磁盘简介参考</p>
-<p>3 <a href="https://tech.meituan.com/about-desk-io.html">磁盘I/O那些事</a> 第6部分磁盘简介参考</p>
+<p>3 <a href="https://tech.meituan.com/2017/05/19/about-desk-io.html">磁盘I/O那些事</a> 第6部分磁盘简介参考</p>
 
             <hr/>
             <h3>评论</h3>
