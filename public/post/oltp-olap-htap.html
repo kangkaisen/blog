@@ -50,10 +50,10 @@
 <p>OLTP的查询一般只会访问少量的记录，且大多时候都会利用索引。在线的面向终端用户直接使用的Web应用：金融，博客，评论，电商等系统的查询都是OLTP查询，比如最常见的基于主键的CRUD操作。</p>
 <p>OLAP的查询一般需要Scan大量数据，大多时候只访问部分列，聚合的需求（Sum，Count，Max，Min等）会多于明细的需求（查询原始的明细数据）。 OLAP的典型查询一般像：现在各种应用在年末会发布的大数据分析和统计应用，比如2017豆瓣读书报告，2017豆瓣读书榜单，网易云音乐2017听歌报告； OLAP在企业中的一个重要应用就是BI分析，比如2017年最畅销的手机品牌Top5;哪类人群最喜欢小米或华为手机等等。</p>
 <p>《Designing-Data-Intensive-Applications》一书指出的OLTP和OLAP的主要区别如下：</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/ydf2bq899yi002i1hdcjz3o2/OLAP%20vs%20OLTP.png" alt="OLAP vs OLTP"></p>
+<p><img src="https://pic.bcmeng.com/OLAP%2520vs%2520OLTP.png" alt="OLAP vs OLTP"></p>
 <p>在CMU-CS 15-415的课程中对OLAP和OLTP这样介绍：</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/crao9ltiib4x4uaf42b83hai/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-05-27%20%E4%B8%8B%E5%8D%889.14.36.png" alt="OLTP"></p>
-<p><img src="http://static.zybuluo.com/kangkaisen/3a21p0i9pun8wnvqgyzyvqlp/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-05-27%20%E4%B8%8B%E5%8D%889.14.43.png" alt="OLAP"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-05-27%2520%25E4%25B8%258B%25E5%258D%25889.14.36.png" alt="OLTP"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-05-27%2520%25E4%25B8%258B%25E5%258D%25889.14.43.png" alt="OLAP"></p>
 <p>在《An Overview of Data Warehousing and OLAP Technology》论文中对OLAP和OLTP这样介绍：</p>
 <p>OLTP的特点：</p>
 <ul>
@@ -74,11 +74,11 @@
 <p>通过前面对OLTP和OLAP特点的介绍，大家对OLTP和OLAP应该有了感性的认识。</p>
 <p>最开始的时候，数据量比较小，所以数据库可以用来同时做OLTP和OLAP查询的，比如Mysql，如果数据比较小的话，Mysql的OLAP查询性能也是可以满足需求的。但是随着数据量越来越大，大概在1990年代，业界开始用单独的数据库来满足OLAP需求，并把这种专门满足OLAP需求的数据库称之为数据仓库（Data Warehousing）。这样做的原因是为了保证在线OLTP业务的稳定性，不让复杂的OLAP查询线上业务的稳定性和性能。</p>
 <p>Data Warehousing是所有决策支持技术的集合，目标是让行政管理人员，分析人员做出更好，更快的决策；Data Warehousing是主题相关的，完整的，时间变化的，稳定的数据集合，被用来作为组织制定决策的主要依据。Data Warehousing一般是公司各个OLTP系统数据的只读Copy， 数据一般会从各个OLTP数据库中抽取（Extract）出来，进行数据清理，并转换（Transform）为对OLAP更友好的数据格式，最终导入（Load）进Data Warehousing中。 这就是所谓的Extract–Transform–Load  (ETL)过程，下图是个示例。 目前业界使用最广泛的Data Warehousing应该都是基于Hive构建的。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/surr245wdrutmpjrta9kcfj4/ETL.png" alt="ETL"></p>
+<p><img src="https://pic.bcmeng.com/ETL.png" alt="ETL"></p>
 <p>Data Warehousing的数据模型主要有两类：星型模型和雪花模型。 下图是张星型模型的示例，星型模型中的表分两类： fact table和 dimension tables。fact table的每一行记录特定时间发生的一条事件，fact table中的列一般分为两类：维度和指标。 维度一般表示一条事件的who, what, where, when, how, and why，指标一般是数值型的属性，比如价格，点击量，访问量等。  所谓的维表就是维度信息的详细描述，一般维表的主键和事实表中的外键进行关联。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/ij2badyuu8qlwz7qx4cil533/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-05-27%20%E4%B8%8B%E5%8D%888.57.22.png" alt="星型模型"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-05-27%2520%25E4%25B8%258B%25E5%258D%25888.57.22.png" alt="星型模型"></p>
 <p>所谓的雪花模型，就是将维表进一步拆为为子维表。如下图所示，Year维表和Month维表就是从Date维表中进一步拆分出来的。</p>
-<p><img src="http://static.zybuluo.com/kangkaisen/qcfa8oqbo54s3seaifvq5qi0/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-05-27%20%E4%B8%8B%E5%8D%889.05.05.png" alt="屏幕快照 2018-05-27 下午9.05.05.png-121.3kB"></p>
+<p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-05-27%2520%25E4%25B8%258B%25E5%258D%25889.05.05.png" alt="屏幕快照 2018-05-27 下午9.05.05.png-121.3kB"></p>
 <p>星型模型和雪花模型名称的来源都是根据模型的样子命名的，星型模型是多个维表围着中间的事实表，比较像星星，雪花模型是看起来比较像雪花。<strong>一般在公司业务实际中使用更多的是星型模型，因为星型模型更加简单。</strong></p>
 <p>前面简介了下OLTP和OLAP的特点，上面的特点决定了OLTP和OLAP在存储模型，查询计划的生成和优化上都是有很大区别。在<a href="https://blog.bcmeng.com/post/tidb-application-htap.html#5-tidb-htap-%E6%BC%94%E8%BF%9B%E4%B9%8B%E8%B7%AF">畅想TiDB应用场景和HTAP演进之路</a> 一文中，我解释了为什么OLTP系统需要行存，而OLAP系统需要列存。 正因为OLTP和OLAP在技术实现上的区别较大，所以在较长时间内，现在的数据库要么只满足OLTP需求，要么只满足OLAP需求。 但是这样做有以下缺点：</p>
 <ol>
