@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="../css/code.css" type="text/css"/>
     <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
     <link rel="stylesheet" href="../css/main.css" type="text/css"/>
-    <title>编程小梦|数据库学习资料（持续更新中）</title>
+    <title>编程小梦|数据库学习资料（2022-01-09 更新）</title>
 </head>
 <body>
 <nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
@@ -40,7 +40,7 @@
     <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> 数据库学习资料（持续更新中）</h1>
+            <h1> 数据库学习资料（2022-01-09 更新）</h1>
             <hr/>
             <p>作者: 康凯森</p>
             <p>日期: 2021-12-19</p>
@@ -110,6 +110,7 @@
 <li><a href="#hologres">Hologres</a></li>
 </ul>
 </li>
+<li><a href="#c-语言">C++ 语言</a></li>
 <li><a href="#查询优化器">查询优化器</a><ul>
 <li><a href="#论文">论文</a></li>
 <li><a href="#文章">文章</a></li>
@@ -193,6 +194,7 @@
 <li><a href="https://github.com/pingcap/awesome-database-learning">Awesome Database Learning</a></li>
 <li><a href="https://pingcap.com/blog-cn/">TIDB Blog</a></li>
 <li><a href="https://github.com/digoal/blog">PostgreSQL Blog</a></li>
+<li><a href="https://umbra-db.com/">Umbra DB 论文</a></li>
 </ul>
 <h2 id="数据库系统综述">数据库系统综述</h2>
 <h3 id="数据库系统简介">数据库系统简介</h3>
@@ -315,6 +317,18 @@
 <p><a href="https://www.cs.utah.edu/~lifeifei/papers/sigmod-xengine.pdf">X-Engine: An Optimized Storage Engine for Large-scale E-commerce Transaction Processing</a></p>
 <h3 id="hologres">Hologres</h3>
 <p><a href="http://www.vldb.org/pvldb/vol13/p3272-jiang.pdf?spm=a2c6h.12873639.0.0.77e75f66L3W23d&amp;file=p3272-jiang.pdf">Alibaba Hologres: A Cloud-Native Service for Hybrid Serving/Analytical Processing</a>  </p>
+<h2 id="c-语言">C++ 语言</h2>
+<ol>
+<li><a href="https://www.learncpp.com/">https://www.learncpp.com/</a>  比较系统，通俗易懂，适合入门时系统学习，也可以在忘记某个细节时查一查</li>
+<li><a href="https://learning.oreilly.com/library/view/a-tour-of/9780134998053">A Tour of C++</a> ★★★★★ 如果有其他编码语言基础，建议直接阅读此书入门 C++</li>
+<li><a href="https://hpi.de/plattner/teaching/archive/winter-term-201819/develop-your-own-database.html">Build your own Database</a> 介绍了数据库开发需要的 C++ 知识点，里面的知识点搞懂后，就可以开始用 C++ 开发数据库了</li>
+<li><a href="https://isocpp.org/faq">https://isocpp.org/faq</a> ★★★★★ 对某个 C++ 细节点搞不清楚时，可以进行参考</li>
+<li><a href="https://goalkicker.com/CPlusPlusBook/">Programming Notes for Professionals books</a>  Stack Overflow C++ 问题高频，经典问题的系统整理，在对某个 C++ 细节点搞不清楚时，可以进行参考</li>
+<li><a href="https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines">CppCoreGuidelines</a> C++ 编程规范和最佳实践，有空了可以系统过一遍，不过每个细节不用都记住，IDE 有提供对应的插件，可以在你编码时进行提醒</li>
+<li><a href="https://github.com/CppCon">CppCon 历年会议 PPT</a> ★★★★★ 有很多关于 C++ 设计，语法，工具，性能优化，数据结构的精彩分享， 感觉自己 C++ 入门后，可以每天抽空看一个小分享</li>
+<li>Effective C++ 系列：Effective 系列有4本书，自己时间充裕的话，可以阅读全书，时间紧张的话建议直接阅读网上大家整理好的笔记</li>
+</ol>
+<p>编程语言是工具，工具重在使用，所以学习编程语言和学习英语一样，提升最快的方式就是多使用，多实践，不需要等到对语言完全熟悉或者精通后才开始使用，实践中遇到了某个点不清楚，就一个点一个点逐一突破。</p>
 <h2 id="查询优化器">查询优化器</h2>
 <h3 id="论文">论文</h3>
 <ul>
@@ -413,6 +427,7 @@
 <li><a href="https://llvm.org/pubs/2003-09-30-LifelongOptimizationTR.pdf">LLVM: A Compilation Framework for Lifelong Program Analysis &amp; Transformation</a></li>
 <li><a href="https://15721.courses.cs.cmu.edu/spring2017/papers/20-compilation/krikellas-icde2010.pdf">Generating code for holistic query evaluation</a></li>
 <li><a href="https://vldb.org/pvldb/vol14/p2691-funke.pdf">Low-Latency Compilation of SQL Qeries to Machine Code</a></li>
+<li><a href="https://db.cs.cmu.edu/papers/2020/p101-menon.pdf">Permutable Compiled Queries: Dynamically Adapting Compiled Queries without Recompiling</a></li>
 </ul>
 <h3 id="课程">课程</h3>
 <ul>
@@ -441,6 +456,7 @@
 <li><a href="http://justinlevandoski.org/papers/fnt-mmdb.pdf">Main Memory Database Systems</a></li>
 <li><a href="https://zhuanlan.zhihu.com/p/30953751">WiscKey: Separating Keys from Values in SSD-conscious Storage</a></li>
 <li><a href="https://www.usenix.org/system/files/fast21-pan.pdf">Facebook’s Tectonic Filesystem: Efficiency from Exascale</a> </li>
+<li><a href="https://db.cs.cmu.edu/papers/2020/p534-li.pdf">Mainlining Databases: Supporting Fast Transactional Workloads on Universal Columnar Data File Formats</a></li>
 </ul>
 <h3 id="文章">文章</h3>
 <ul>
@@ -467,6 +483,7 @@
 <li><a href="http://www.vldb.org/pvldb/vol13/p1206-dreseler.pdf">Quantifying TPC-H Choke Points and Their Optimizations</a></li>
 <li><a href="https://arxiv.org/abs/2007.08292">Detecting Optimization Bugs in Database Engines via Non-Optimizing Reference Engine Construction</a></li>
 <li><a href="https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.233.446&amp;rep=rep1&amp;type=pdf">Automated SQL Query Generation for Systematic Testing of Database Engines</a></li>
+<li><a href="https://cs.uwaterloo.ca/~tozsu/publications/other/sigmod07-final.pdf">QAGen: Generating Query-Aware Test Databases</a></li>
 </ul>
 <h2 id="事务">事务</h2>
 <ul>
@@ -481,6 +498,7 @@
 <li>(TicTok) TicToc: Time Traveling Optimistic Concurrency Control</li>
 <li>(Silo) Speedy Transactions in Multicore In-Memory Databases</li>
 <li>(Hekaton) High-Performance Concurrency Control Mechanisms for Main-Memory Databases</li>
+<li><a href="https://www.cs.cmu.edu/~pavlo/slides/noisepage-daf-cidr2021.pdf">Deferred Action Framework</a></li>
 </ul>
 <h2 id="cloud-native">Cloud-Native</h2>
 <p>待完善</p>
@@ -547,7 +565,7 @@
         <div class="col-md-10 col-sm-12">
             <div class="ds-thread"
                  data-thread-key=61bf02f1577c0425e809311e
-                 data-title=数据库学习资料（持续更新中）
+                 data-title=数据库学习资料（2022-01-09 更新）
                  data-url=database-learning>
             </div>
         </div>
