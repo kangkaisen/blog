@@ -249,20 +249,8 @@ Bug类型的issue应该描述bug产生的原因，Fix bug的思路。Improve类�
 <p>一个意外是在所有环境升级2.0的4天之后，发生了一次查询事故。事故的原因是升级2.0后，由于新版的Coprocessor会加载更多的类，所以HBase RegionServer的PermGen增加了10M左右，超过了MaxPermSize，所以PermGen就OOM了。事故的本质原因是RegionServer的PermGen配置较小和Kylin Coprocessor 中catch了OOM异常。而<strong>事实上OOM异常几乎没有理由去catch，Kylin Coprocessor中更不应该去catch OOM</strong>。</p>
 
             <hr/>
-            <h3>广告</h3>
-            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3229784283984818" crossorigin="anonymous"></script>
-            <!-- 横幅1 -->
-            <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-client="ca-pub-3229784283984818"
-                 data-ad-slot="7815002801"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
-            <script>
-                (adsbygoogle = window.adsbygoogle || []).push({});
-            </script>
-            <h3>评论</h3>
-            <div id="vcomment"></div>
+            <h3>欢迎来知识星球和我交流</h3>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.jpeg" /></p></div>
         </div>
         <div class="col-md-1"></div>
     </div>
@@ -299,18 +287,5 @@ Bug类型的issue应该描述bug产生的原因，Fix bug的思路。Improve类�
         s.parentNode.insertBefore(hm, s);
     })();
 </script>
-<script src="../js/av-min.js"></script>
-<script src='../js/Valine.min.js'></script>
-<script type="text/javascript">
-    window.valine = new Valine({
-        el: '#vcomment' ,
-        verify: true,
-        notify: true,
-        appId: 'BlLnB0re5OzQVzrgEplAxkyg-gzGzoHsz',
-        appKey: 'wUyxSV0U4Vi7oK1EHK6ipErv',
-        placeholder: '欢迎评论'
-    });
-</script>
-
 </body>
 </html>
