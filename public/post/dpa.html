@@ -1,0 +1,191 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Data-Parallel Actors：千行代码构建高性能 OLAP 数据库</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                
+                    <li><a href="https://t.zsxq.com/07avIYrZl" target="_blank"  rel="nofollow">知识星球</a></li>
+                
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="https://weibo.com/u/1801506560" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Data-Parallel Actors：千行代码构建高性能 OLAP 数据库</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2022-11-05</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#what-is-data-parallel-actors">What is Data-Parallel Actors</a></li>
+<li><a href="#why-need-data-parallel-actors">Why need Data-Parallel Actors</a></li>
+<li><a href="#how-data-parallel-actors">How Data-Parallel Actors</a><ul>
+<li><a href="#actors-和数据模型的映射">Actors 和数据模型的映射</a></li>
+<li><a href="#dpa-提供的接口">DPA 提供的接口</a></li>
+<li><a href="#整体架构">整体架构</a></li>
+</ul>
+</li>
+<li><a href="#相比-druid-mongodb-clickhouse-等数据库的优点">相比 Druid, MongoDB, ClickHouse 等数据库的优点</a><ul>
+<li><a href="#根据机器负载-balance-查询请求">根据机器负载 balance 查询请求</a></li>
+<li><a href="#elasticity-and-auto-scaling">Elasticity and Auto-Scaling</a></li>
+</ul>
+</li>
+<li><a href="#限制">限制</a></li>
+<li><a href="#难点">难点</a></li>
+<li><a href="#思考">思考</a><ul>
+<li><a href="#开源界必然出现类似-dpa-的系统">开源界必然出现类似 DPA 的系统</a></li>
+<li><a href="#开源数据库会越来越模块化">开源数据库会越来越模块化</a></li>
+<li><a href="#打造一个高性能的数据库原型会越来越简单">打造一个高性能的数据库原型会越来越简单</a></li>
+</ul>
+</li>
+<li><a href="#参考资料">参考资料</a></li>
+</ul>
+<!-- toc stop -->
+<h2 id="what-is-data-parallel-actors">What is Data-Parallel Actors</h2>
+<p><img src="media/16676395433430/Screen%20Shot%202022-11-05%20at%208.46.27%20PM.png" alt="Screen Shot 2022-11-05 at 8.46.27 PM"></p>
+<p>如上图，DPA 是一个 high-level 的编程模型：对分布式查询的相关功能进行了统一和抽象：数据复制，更新一致性，容错，查询负载均衡，弹性，持久化等。</p>
+<p>有了 DPA，开发者只实现单机的数据结构和算子，就可以获得一个可靠的，高性能的分布式分析型数据库。开发者使用 DPA 只需要专注自己的独特和核心的逻辑。</p>
+<p>论文中通过 Druid, Solr, and MongoDB 3 个系统论证了 DPA 的普适性和实际效果，利用 DPA 实现前面 3 个系统每个都不超过 1 千行代码。 并且在标准测试集的性能，不比之前的系统差，而且在有数据倾斜的场景，还有 3 倍的性能提升。</p>
+<p>开发者需要通过查询优化器将用户的请求转为 DPA 的并行算子。</p>
+<h2 id="why-need-data-parallel-actors">Why need Data-Parallel Actors</h2>
+<ol>
+<li><p>分布式功能每个系统都大同小异，都需要耗费大量的人力，不应该也不需要重复实现。</p>
+</li>
+<li><p>当前的分布式系统（Erlang,Ray,Spark 等）不能满足分析型数据库的需求：数据并行的低延迟查询和高频的批量数据更新。</p>
+</li>
+</ol>
+<h2 id="how-data-parallel-actors">How Data-Parallel Actors</h2>
+<h3 id="actors-和数据模型的映射">Actors 和数据模型的映射</h3>
+<p>DPA 将一个数据库视为 stateful actors 的集合，每个 Actor 封装了一部分数据，同时负责这部分数据的状态和计算。 </p>
+<ul>
+<li>在 Solr 里，一个 Actor 封装了 Solr 的 inverted index</li>
+<li>在 Druid 里，一个 Actor 封装了 Druid 的 segment，一组 Actor 组成 Druid 的 data source</li>
+<li>在 MongoDB，一组 Actor 封装了 MongoDB 的 collections</li>
+</ul>
+<p>DPA 不关心每个系统的 actor 具体如何实现，只需要实现几个核心接口： create, destroy, serialize, and deserialize。DPA 会依靠这些接口实现分布式的相关功能，来管理 Actor 和执行查询。</p>
+<h3 id="dpa-提供的接口">DPA 提供的接口</h3>
+<p><img src="media/16676395433430/Screen%20Shot%202022-11-05%20at%208.58.16%20PM.png" alt="Screen Shot 2022-11-05 at 8.58.16 PM"></p>
+<p>如上图所示，DPA 提供的接口主要分为 4 类：</p>
+<ol>
+<li>Actor 状态管理相关的接口，DPA 依赖这些接口去管理 Actor</li>
+<li>更新相关的接口，DPA 依赖这些接口实现 Actor 数据的更新，DPA 支持不同级别的一致性</li>
+<li>Operator 并行化的接口，DPA 依赖这些接口实现 Actor 的并行查询</li>
+<li>具体的 Operator 算子， DPA 依赖这些接口 实现 Actor 的具体查询逻辑。 不同数据库的算子基本都可以通过这几个抽象算子实现。每个 Operator 不应该修改 Actor 的 state，而是物化输入，让后一个 Operator 读取。其中 Scatter and Gather 算子可以实现 Actor 之间进行数据传输，模拟分布式数据库中的 broadcast and shuffle</li>
+</ol>
+<h3 id="整体架构">整体架构</h3>
+<p><img src="media/16676395433430/Screen%20Shot%202022-11-05%20at%209.07.32%20PM.png" alt="Screen Shot 2022-11-05 at 9.07.32 PM"></p>
+<p>如果所示，Uniserve 是 DPA 的一个具体实现。有 3 个 角色：</p>
+<ol>
+<li>Uniserve Client：负责发送查询和更新请求，在查询部分，会承担查询优化器的职责，将 将用户的请求转为 DPA 的算子。</li>
+<li>Uniserve Server: 负责服务 每个 Actor 的查询和更新请求。</li>
+<li>Uniserve Coordinator: 负责 实现 DPA 的分布式逻辑：数据复制，更新一致性，容错，查询负载均衡，弹性，持久化等。</li>
+<li>DPA 会将数据存储在 S3 等分布式存储上。 </li>
+</ol>
+<h2 id="相比-druid-mongodb-clickhouse-等数据库的优点">相比 Druid, MongoDB, ClickHouse 等数据库的优点</h2>
+<p>主要是两点：</p>
+<h3 id="根据机器负载-balance-查询请求">根据机器负载 balance 查询请求</h3>
+<p>默认的策略比较简单：就是将负载最高的 actor 从负载最高的 server 上迁移到 负载最低的 server 上。</p>
+<p>优点是调度策略是可扩展的，允许开发者自定义自己的策略</p>
+<h3 id="elasticity-and-auto-scaling">Elasticity and Auto-Scaling</h3>
+<p>具备弹性伸缩的能力，同时策略也是可扩展的，弹性伸缩的策略我们一方面要参考集群的 CPU，内存，网络，磁盘等资源的使用率，也要参考集群的查询请求负载。</p>
+<p>我理解主要也是因为这两点，DPA 可以做到在数据倾斜场景下有 3 倍的性能提升。</p>
+<h2 id="限制">限制</h2>
+<ol>
+<li>DPA 的查询模型对数据并行的查询最合适</li>
+<li>DPA 不适合 TP 场景有事务要求的高频点查</li>
+</ol>
+<h2 id="难点">难点</h2>
+<p>1 如何支持多种查询和数据模型：</p>
+<ul>
+<li>关系型</li>
+<li>搜索</li>
+<li>时序</li>
+<li>文档</li>
+<li>向量数据库</li>
+</ul>
+<p>2 如何对查询调度，副本均衡，弹性伸缩等分布式核心功能进行正确的抽象，允许不同的数据库，不同的业务需求都可以在定义好的接口下实现。</p>
+<h2 id="思考">思考</h2>
+<h3 id="开源界必然出现类似-dpa-的系统">开源界必然出现类似 DPA 的系统</h3>
+<p>凡是重复的，有价值的功能和模块，在开源界，肯定会有专门的系统来做</p>
+<h3 id="开源数据库会越来越模块化">开源数据库会越来越模块化</h3>
+<p>开源的数据库模块越来越多：DPA，Apache Calcite，Apache Arrow, Velox, gRPC 等，而且被工业界采纳的也越来越多</p>
+<h3 id="打造一个高性能的数据库原型会越来越简单">打造一个高性能的数据库原型会越来越简单</h3>
+<p>因为开源数据会越来越模块化，所以我们从零打造一个高性能的数据库原型就会越来越简单，我在下一篇文档会详细解释这一点</p>
+<h2 id="参考资料">参考资料</h2>
+<p><a href="https://cs.stanford.edu/~matei/papers/2022/nsdi_uniserve.pdf">https://cs.stanford.edu/~matei/papers/2022/nsdi_uniserve.pdf</a></p>
+
+            <hr/>
+            <h3>欢迎来知识星球和我交流</h3>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.jpeg" /></p></div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=63666e59486ed6b1133ff3ba
+                 data-title=Data-Parallel Actors：千行代码构建高性能 OLAP 数据库
+                 data-url=dpa>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+</body>
+</html>
