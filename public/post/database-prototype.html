@@ -1,0 +1,181 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|如何快速打造一个高性能数据库原型</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                
+                    <li><a href="https://t.zsxq.com/07avIYrZl" target="_blank"  rel="nofollow">知识星球</a></li>
+                
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="https://weibo.com/u/1801506560" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 如何快速打造一个高性能数据库原型</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2022-11-06</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#如何快速打造一个高性能数据库原型">如何快速打造一个高性能数据库原型</a><ul>
+<li><a href="#查询优化-apache-calcite">查询优化 Apache Calcite</a></li>
+<li><a href="#查询执行-velox">查询执行 Velox</a></li>
+<li><a href="#内存存储-apache-arrow">内存存储 Apache Arrow</a></li>
+<li><a href="#分布式框架-dpa">分布式框架 DPA</a></li>
+<li><a href="#rocksdb">RocksDB</a></li>
+<li><a href="#序列化">序列化</a></li>
+<li><a href="#打造一个成熟的数据库的难点有哪些">打造一个成熟的数据库的难点有哪些</a></li>
+<li><a href="#参考资料">参考资料</a></li>
+</ul>
+</li>
+</ul>
+<!-- toc stop -->
+<h1 id="如何快速打造一个高性能数据库原型">如何快速打造一个高性能数据库原型</h1>
+<p>在上篇博客 <a href="https://blog.bcmeng.com/post/dpa.html">Data-Parallel Actors：千行代码构建高性能 OLAP 数据库 </a> 中，我提出开源数据库会越来越模块化，打造一个高性能的数据库原型会越来越简单，下图是一个利用 DPA 和 一些开源系统打造的数据库架构示意，可能只需要 1 个或者几个人月，就可以打造出这个原型，并且在 SSB，TPC-H,TPC-DS 等标准测试集上取得不错的性能。下面会对图中的一些系统进行介绍。</p>
+<p><img src="media/16620835915011/Scratch%20Performance%20Database%20With%20Open%20Source.png" alt="Scratch Performance Database With Open Source"></p>
+<h2 id="查询优化-apache-calcite">查询优化 Apache Calcite</h2>
+<p>Apache Calcite 网上相关的资料已经很多了，这里就不过多介绍了。 Calcite 相比 StarRocks 的优化器扩展性会更好，但是性能不及 StarRocks 的优化器。</p>
+<h3 id="架构">架构</h3>
+<p><img src="media/16620835915011/calcite%20architecture%20and%20interaction.png" alt="calcite architecture and interaction"></p>
+<p>Calcite 的核心是优化器，同时支持 RBO 和 CBO，包括 Catalog, SQL parser, SQL validator, Query Optimizer，JDBC Server 和 内置的执行器</p>
+<h3 id="可扩展性">可扩展性</h3>
+<p>Calcite 的目标是成为一个通用的查询优化器，可以被各种系统使用，所以在扩展性上做的比较好，开发者在使用 Calcite 时对以下部分都可以进行扩展：</p>
+<ul>
+<li>relational operators</li>
+<li>planner rules</li>
+<li>cost model</li>
+<li>statistics</li>
+<li>元数据：支持 行数，基数，选择度，唯一性等很多元数据都可以定义</li>
+</ul>
+<h3 id="built-in-sql-implementation">Built-in SQL implementation</h3>
+<p>Calcite 也内置了一套 执行器，可以执行所有的算子和表达式。Calcite 会生成 java 代码，然后编译，并在 JVM 中执行。Calcite 就利用了 Janino 库来将优化后的方案编译成 JVM Bytecode 来执行，虽然性能比较低下，但是可以作为默认的保底和 fall-back 的方式。</p>
+<h3 id="流行度">流行度</h3>
+<p>Calcite 在工业界已经被大量采用，许多项目都使用 Apache Calcite 实现 SQL parsing， 查询优化，数据联邦，物化视图重写，知名的项目有 Apache Hive, Apache Drill, Apache Flink, Apache Kylin, Apache Druid, Dremio 等。</p>
+<h2 id="查询执行-velox">查询执行 Velox</h2>
+<p>Velox 是由 Mate 开源的执行引擎，目标是想打造一个统一的高性能 C++ 执行引擎，整体实现和 StarRocks 的执行引擎很类型，亮点不多。 可以参考 Velox 的论文，也可以参考之前我对 StarRocks 执行引擎的介绍：</p>
+<ul>
+<li><a href="https://blog.bcmeng.com/post/starrocks-source-code-1.html">StarRocks 源码导读一 执行器部分 </a></li>
+<li><a href="https://blog.bcmeng.com/post/fastest_database.html">如何打造一款极速分析型数据库 </a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/506063323">StarRocks 技术内幕：查询原理浅析 </a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/555302106">StarRocks 技术内幕：向量化编程精髓 </a></li>
+</ul>
+<p>Velox 的执行引擎，和 StarRocks 主要包括下面几部分：</p>
+<ul>
+<li>Type</li>
+<li>兼容 Arrow 的列式布局</li>
+<li>向量化的表达式计算</li>
+<li>标量和聚合函数</li>
+<li>向量化算子</li>
+<li>序列化</li>
+<li>资源管理</li>
+</ul>
+<h3 id="流行度">流行度</h3>
+<p>Velox 开源不久，还没有完全成熟，目前主要和是 Presto 和 Spark 项目合作，一起在搞。</p>
+<h2 id="内存存储-apache-arrow">内存存储 Apache Arrow</h2>
+<p>Apache Arrow 项目的目标是成为一个跨平台，跨语言的列式内存格式和磁盘格式 （Apache Parquet），并以此基础，实现了基于内存的查询引擎，最终成为一个内存数据处理的标准。</p>
+<p><img src="media/16620835915011/arrow.jpg" alt="Arrow format"></p>
+<p>上图是 Arrow 的列式内存布局。</p>
+<h3 id="网络传输-apache-arrow-flight">网络传输 Apache Arrow Flight</h3>
+<p>基于 grpc 和 arrow 列式格式的网络传输框架, 下面两个图是个简单示意，具体可以参考：<a href="https://www.dremio.com/subsurface/an-introduction-to-apache-arrow-flight-sql/">https://www.dremio.com/subsurface/an-introduction-to-apache-arrow-flight-sql/</a> </p>
+<p><img src="media/16620835915011/apache%20arrow%20flight%201.png" alt="apache arrow flight 1"></p>
+<p><img src="media/16620835915011/apache%20arrow%20flight%202.png" alt="apache arrow flight 2"></p>
+<h3 id="datafusion">DataFusion</h3>
+<p>基于 apache arrow 实现的 可扩展的查询引擎，包括查询优化和查询执行框架。</p>
+<p>下图是 Arrow 和 DataFusion 逐步向 DataBase 演化的路径：</p>
+<p><img src="media/16620835915011/arrow%20-%20datafusion.png" alt="arrow - datafusion"></p>
+<p>下图是 DataFusion 的框架，核心是可扩展：</p>
+<p><img src="media/16620835915011/16677265297142.png" alt="arrow - datafusion 2"></p>
+<h3 id="流行度">流行度</h3>
+<p>Apache Arrow 已经被很多业界项目广泛采用，比如 Velox，Spark, StarRocks, Snowflake 等系统都使用了 Apache Arrow。</p>
+<h2 id="分布式框架-dpa">分布式框架 DPA</h2>
+<p>对分布式查询的相关功能进行了统一和抽象：数据复制，更新一致性，容错，查询负载均衡，弹性，持久化等。 可以参考之前的文章：<a href="https://blog.bcmeng.com/post/dpa.html">Data-Parallel Actors：千行代码构建高性能 OLAP 数据库 </a></p>
+<h2 id="rocksdb">RocksDB</h2>
+<p>一个基于 LSM tree 的 KV store，被大量用来打造分布式 KV 存储或者存储元数据。</p>
+<h2 id="序列化">序列化</h2>
+<p>常量有 json，Protobuf 等协议，业内已经有大量的成熟框架。</p>
+<h2 id="打造一个成熟的数据库的难点有哪些">打造一个成熟的数据库的难点有哪些</h2>
+<p>有人会问，打造一个数据库原型如此简单的话，那么数据库公司花费数十人年，数百人年，甚至数千人年都是在做什么。 下面文章我会回答这个问题，为什么打造一个成熟数据库如此困难，为什么数据库是一个如此复杂的工程。</p>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li>Apache Calcite 论文：<a href="https://arxiv.org/pdf/1802.10233.pdf">https://arxiv.org/pdf/1802.10233.pdf</a></li>
+<li>Apache Calcite 介绍：<a href="https://www.slideshare.net/JordanHalterman/introduction-to-apache-calcite">https://www.slideshare.net/JordanHalterman/introduction-to-apache-calcite</a></li>
+<li>Velox 论文：<a href="https://vldb.org/pvldb/vol15/p3372-pedreira.pdf">https://vldb.org/pvldb/vol15/p3372-pedreira.pdf</a></li>
+<li>Apache Arrow Flight 介绍：<a href="https://www.dremio.com/subsurface/an-introduction-to-apache-arrow-flight-sql/">https://www.dremio.com/subsurface/an-introduction-to-apache-arrow-flight-sql/</a> </li>
+<li>Arrow-datafusion 介绍：<a href="https://docs.google.com/presentation/d/1q1bPibvu64k2b7LPi7Yyb0k3gA1BiUYiUbEklqW1Ckc/view">https://docs.google.com/presentation/d/1q1bPibvu64k2b7LPi7Yyb0k3gA1BiUYiUbEklqW1Ckc/view</a></li>
+</ul>
+
+            <hr/>
+            <h3>欢迎来知识星球和我交流</h3>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.jpeg" /></p></div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=63678fb0486ed6b1133ff3bb
+                 data-title=如何快速打造一个高性能数据库原型
+                 data-url=database-prototype>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+</body>
+</html>
