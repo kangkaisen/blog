@@ -51,20 +51,30 @@
             <hr/>
             <!-- toc -->
 <ul>
-<li><a href="#如何快速打造一个高性能数据库原型">如何快速打造一个高性能数据库原型</a><ul>
-<li><a href="#查询优化-apache-calcite">查询优化 Apache Calcite</a></li>
-<li><a href="#查询执行-velox">查询执行 Velox</a></li>
-<li><a href="#内存存储-apache-arrow">内存存储 Apache Arrow</a></li>
+<li><a href="#查询优化-apache-calcite">查询优化 Apache Calcite</a><ul>
+<li><a href="#架构">架构</a></li>
+<li><a href="#可扩展性">可扩展性</a></li>
+<li><a href="#built-in-sql-implementation">Built-in SQL implementation</a></li>
+<li><a href="#流行度">流行度</a></li>
+</ul>
+</li>
+<li><a href="#查询执行-velox">查询执行 Velox</a><ul>
+<li><a href="#流行度">流行度</a></li>
+</ul>
+</li>
+<li><a href="#内存存储-apache-arrow">内存存储 Apache Arrow</a><ul>
+<li><a href="#网络传输-apache-arrow-flight">网络传输 Apache Arrow Flight</a></li>
+<li><a href="#datafusion">DataFusion</a></li>
+<li><a href="#流行度">流行度</a></li>
+</ul>
+</li>
 <li><a href="#分布式框架-dpa">分布式框架 DPA</a></li>
 <li><a href="#rocksdb">RocksDB</a></li>
 <li><a href="#序列化">序列化</a></li>
 <li><a href="#打造一个成熟的数据库的难点有哪些">打造一个成熟的数据库的难点有哪些</a></li>
 <li><a href="#参考资料">参考资料</a></li>
 </ul>
-</li>
-</ul>
 <!-- toc stop -->
-<h1 id="如何快速打造一个高性能数据库原型">如何快速打造一个高性能数据库原型</h1>
 <p>在上篇博客 <a href="https://blog.bcmeng.com/post/dpa.html">Data-Parallel Actors：千行代码构建高性能 OLAP 数据库 </a> 中，我提出开源数据库会越来越模块化，打造一个高性能的数据库原型会越来越简单，下图是一个利用 DPA 和 一些开源系统打造的数据库架构示意，可能只需要 1 个或者几个人月，就可以打造出这个原型，并且在 SSB，TPC-H,TPC-DS 等标准测试集上取得不错的性能。下面会对图中的一些系统进行介绍。</p>
 <p><img src="media/16620835915011/Scratch%20Performance%20Database%20With%20Open%20Source.png" alt="Scratch Performance Database With Open Source"></p>
 <h2 id="查询优化-apache-calcite">查询优化 Apache Calcite</h2>
