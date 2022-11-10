@@ -83,18 +83,18 @@
 <p><img src="media/16620835915011/calcite%20architecture%20and%20interaction.png" alt="calcite architecture and interaction"></p>
 <p>Calcite 的核心是优化器，同时支持 RBO 和 CBO，包括 Catalog, SQL parser, SQL validator, Query Optimizer，JDBC Server 和 内置的执行器</p>
 <h3 id="可扩展性">可扩展性</h3>
-<p>Calcite 的目标是成为一个通用的查询优化器，可以被各种系统使用，所以在扩展性上做的比较好，开发者在使用 Calcite 时对以下部分都可以进行扩展：</p>
+<p>Calcite 的目标是成为一个通用的查询优化器，可以被各种系统使用，所以在扩展性上做的比较好，开发者在使用 Calcite 时对下面的模块都可以进行扩展：</p>
 <ul>
-<li>relational operators</li>
-<li>planner rules</li>
-<li>cost model</li>
-<li>statistics</li>
-<li>元数据：支持 行数，基数，选择度，唯一性等很多元数据都可以定义</li>
+<li>Relational operators</li>
+<li>Planner rules</li>
+<li>Cost model</li>
+<li>Statistics</li>
+<li>元数据：支持 行数，基数，选择度，唯一性等，很多元数据都可以定义</li>
 </ul>
 <h3 id="built-in-sql-implementation">Built-in SQL implementation</h3>
-<p>Calcite 也内置了一套 执行器，可以执行所有的算子和表达式。Calcite 会生成 java 代码，然后编译，并在 JVM 中执行。Calcite 就利用了 Janino 库来将优化后的方案编译成 JVM Bytecode 来执行，虽然性能比较低下，但是可以作为默认的保底和 fall-back 的方式。</p>
+<p>Calcite 也内置了一套执行器，可以执行所有的算子和表达式。Calcite 会生成 java 代码，然后编译，并在 JVM 中执行。Calcite 利用了 Janino 库来将优化后的 Plan 编译成 JVM Bytecode 来执行，虽然性能比较低下，但是可以作为默认的保底和 fall-back 的执行方式。</p>
 <h3 id="流行度">流行度</h3>
-<p>Calcite 在工业界已经被大量采用，许多项目都使用 Apache Calcite 实现 SQL parsing， 查询优化，数据联邦，物化视图重写，知名的项目有 Apache Hive, Apache Drill, Apache Flink, Apache Kylin, Apache Druid, Dremio 等。</p>
+<p>Calcite 在工业界已经被大量采用，许多项目都使用 Apache Calcite 实现 SQL Parsing， 查询优化，数据联邦，物化视图重写，知名的项目有 Apache Hive, Apache Drill, Apache Flink, Apache Kylin, Apache Druid 和 Dremio 等。</p>
 <h2 id="查询执行-velox">查询执行 Velox</h2>
 <p>Velox 是由 Mate 开源的执行引擎，目标是想打造一个统一的高性能 C++ 执行引擎，整体实现和 StarRocks 的执行引擎很类型，亮点不多。 可以参考 Velox 的论文，也可以参考之前我对 StarRocks 执行引擎的介绍：</p>
 <ul>
@@ -120,25 +120,25 @@
 <p><img src="media/16620835915011/arrow.jpg" alt="Arrow format"></p>
 <p>上图是 Arrow 的列式内存布局。</p>
 <h3 id="网络传输-apache-arrow-flight">网络传输 Apache Arrow Flight</h3>
-<p>基于 grpc 和 arrow 列式格式的网络传输框架, 下面两个图是个简单示意，具体可以参考：<a href="https://www.dremio.com/subsurface/an-introduction-to-apache-arrow-flight-sql/">https://www.dremio.com/subsurface/an-introduction-to-apache-arrow-flight-sql/</a> </p>
+<p>Apache Arrow Flight 基于 gRpc 和 Arrow 列式格式的网络传输框架, 下面两个图是个简单示意，具体可以参考：<a href="https://www.dremio.com/subsurface/an-introduction-to-apache-arrow-flight-sql/">https://www.dremio.com/subsurface/an-introduction-to-apache-arrow-flight-sql/</a> </p>
 <p><img src="media/16620835915011/apache%20arrow%20flight%201.png" alt="apache arrow flight 1"></p>
 <p><img src="media/16620835915011/apache%20arrow%20flight%202.png" alt="apache arrow flight 2"></p>
 <h3 id="datafusion">DataFusion</h3>
-<p>基于 apache arrow 实现的 可扩展的查询引擎，包括查询优化和查询执行框架。</p>
+<p>基于 Apache Arrow 实现的可扩展的查询引擎，包括查询优化和查询执行框架。</p>
 <p>下图是 Arrow 和 DataFusion 逐步向 DataBase 演化的路径：</p>
 <p><img src="media/16620835915011/arrow%20-%20datafusion.png" alt="arrow - datafusion"></p>
 <p>下图是 DataFusion 的框架，核心是可扩展：</p>
 <p><img src="media/16620835915011/16677265297142.png" alt="arrow - datafusion 2"></p>
 <h3 id="流行度">流行度</h3>
-<p>Apache Arrow 已经被很多业界项目广泛采用，比如 Velox，Spark, StarRocks, Snowflake 等系统都使用了 Apache Arrow。</p>
+<p>Apache Arrow 已经被业界项目广泛采用，比如 Velox，Spark, StarRocks, Snowflake 等系统都使用了 Apache Arrow。</p>
 <h2 id="分布式框架-dpa">分布式框架 DPA</h2>
 <p>对分布式查询的相关功能进行了统一和抽象：数据复制，更新一致性，容错，查询负载均衡，弹性，持久化等。 可以参考之前的文章：<a href="https://blog.bcmeng.com/post/dpa.html">Data-Parallel Actors：千行代码构建高性能 OLAP 数据库 </a></p>
 <h2 id="rocksdb">RocksDB</h2>
-<p>一个基于 LSM tree 的 KV store，被大量用来打造分布式 KV 存储或者存储元数据。</p>
+<p>一个基于 LSM Tree 的 KV store，被大量用来打造分布式 KV 存储或者元数据存储。</p>
 <h2 id="序列化">序列化</h2>
-<p>常量有 json，Protobuf 等协议，业内已经有大量的成熟框架。</p>
+<p>常见有 Json，ProtoBuf，FlatBuffers 等框架，业内已经有大量的成熟框架可供选择。</p>
 <h2 id="打造一个成熟的数据库的难点有哪些">打造一个成熟的数据库的难点有哪些</h2>
-<p>有人会问，打造一个数据库原型如此简单的话，那么数据库公司花费数十人年，数百人年，甚至数千人年都是在做什么。 下面文章我会回答这个问题，为什么打造一个成熟数据库如此困难，为什么数据库是一个如此复杂的工程。</p>
+<p>有人会问，打造一个数据库原型如此简单的话，那么数据库公司花费数十人年，数百人年，甚至数千人年都是在做什么。 下一篇文章我会回答这个问题，为什么打造一个成熟数据库如此困难，为什么数据库是一个如此复杂的工程。</p>
 <h2 id="参考资料">参考资料</h2>
 <ul>
 <li>Apache Calcite 论文：<a href="https://arxiv.org/pdf/1802.10233.pdf">https://arxiv.org/pdf/1802.10233.pdf</a></li>
