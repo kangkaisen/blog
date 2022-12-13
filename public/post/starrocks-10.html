@@ -1,0 +1,216 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|最强开源 OLAP 数据库，你应该选择的 10 个理由</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                
+                    <li><a href="https://t.zsxq.com/07avIYrZl" target="_blank"  rel="nofollow">知识星球</a></li>
+                
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="https://weibo.com/u/1801506560" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 最强开源 OLAP 数据库，你应该选择的 10 个理由</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2022-12-13</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#一-极速-olap">一 极速 OLAP</a></li>
+<li><a href="#二-极速数据湖分析">二 极速数据湖分析</a></li>
+<li><a href="#三-主键更新">三 主键更新</a></li>
+<li><a href="#四-资源隔离">四 资源隔离</a></li>
+<li><a href="#五-物化视图">五 物化视图</a></li>
+<li><a href="#六-query-cache">六 Query Cache</a></li>
+<li><a href="#七-半结构化数据分析">七 半结构化数据分析</a></li>
+<li><a href="#八-查询并行度自适应">八 查询并行度自适应</a></li>
+<li><a href="#九-云原生存储分离">九 云原生存储分离</a></li>
+<li><a href="#十-saas-byoc">十 SAAS BYOC</a></li>
+</ul>
+<!-- toc stop -->
+<h2 id="一-极速-olap">一 极速 OLAP</h2>
+<p><img src="media/16679811340710/16688670975989.jpg" alt=""></p>
+<p>图中是我们官网展示的 SSB 单表的查询性能对比，可以看到，相比业界其他优秀的 OLAP 数据库，我们 StarRcoks 在性能上有着明显的优势，不止是 SSB 单表查询，SSB 多表，TPC-H 查询，TPC-DS 等复杂的多表查询，我们同样拥有极致的性能。TPC-DS 查询在 100G 和 1T 规模下，StarRcoks 相比 Snowflake 有2到3倍的性能优化。</p>
+<p>我们 StarRcoks 能拥有极致的 OLAP 分析性能，是因为2年多来，我们在以下几个方面做了大量持续深入的优化：</p>
+<ol>
+<li><strong>MPP 分布式执行</strong>：首先 StarRocks 拥有MPP 的分布式执行框架，这保证了 StarRocks 可以充分发挥多机 scale out 的能力</li>
+<li><strong>Pipeline 并行执行框架</strong>：我们从零打造了 pipeline 并行框架，可以让  StarRocks 充分发挥多核 scale up 的能力</li>
+<li><strong>向量化执行</strong>：我们从零打造了 StarRocks 的向量化执行引擎，让 StarRocks 单核可以拥有极致的执行性能</li>
+<li><strong>CBO 优化器</strong>：通过 MPP 分布式执行， Pipeline 并行执行 和 向量化执行，我们拥有了世界领先的查询执行器，但是对于复杂的SQL，优化器产生的 Plan 好坏对查询性能影响更大，所以我们又从零打造了 CBO 优化器，让 StarRocks 对于复杂查询可以产生足够好的 Plan，进而对于复杂查询，StarRocks 也可以拥有极佳的查询性能</li>
+<li><strong>Global Runtime Filter</strong> : Runtime Filter 对复杂的join 查询影响极大，可以有几十倍的查询，我们在 Global 和 Local Runtime Filter 上都做了挺多深度优化和创新</li>
+<li><strong>全局低基数字典优化</strong>：目前主要是可以优化包含低基数字符串的各类查询，整体会有2到3倍的性能提升，面向的场景主要是业务的维表中会有大量的低基数字符串列。</li>
+</ol>
+<p>对技术原理感兴趣的可以参考我们团队同学之前的分享：</p>
+<h2 id="二-极速数据湖分析">二 极速数据湖分析</h2>
+<p>当我们拥有了一个极速的查询引擎，可以实现极速 Olap 分析后，一个自然而然的想法就是，我们是不是也可以直接查询 Apache Hive、Apache Iceberg 和 Apache Hudi 等开源数据湖或数据仓库的数据上呢？ 答案是 Yes ! 这样的一个巨大好处是用户省去了数据导入或者同步这个工作，对用户的易用性大大增强。</p>
+<p>所以从21年开始，我们就成立了专门的数据湖分析团队，致力于提供开箱即用的极速数据湖分析体验。一年多来，用户侧可以感知的优化和功能如下：</p>
+<ul>
+<li><strong>1 各种外部数据源接入更加简单</strong>：开发了全新的 Connector 框架和 Catalog 机制，访问外部数据源变得很容易，只需要配置下 Catalog，就可以查询到对应 DB 下的所有表数据，而不是最初一张表一张表，极大提升了用户的易用性。</li>
+</ul>
+<p><img src="media/16679811340710/16688650649458.jpg" alt=""></p>
+<ul>
+<li><strong>2 更加极致的性能</strong>：除了查询引擎本身的持续性能提升，数据湖分析额外在 Scan 算子和外表元数据访问上做了大量优化</li>
+</ul>
+<p><img src="media/16679811340710/16679830144946.jpg" alt=""></p>
+<ul>
+<li><strong>3 更加弹性</strong>： 当 BE 不负责数据存储时，就变成了一个无状态的计算节点，弹性伸缩就变得十分自然和容易。 而且数据湖分析大多属于 Adhoc 查询，查询范式不固定，相比与传统的 Olap 查询，更需要弹性伸缩的能力。</li>
+</ul>
+<p><img src="media/16679811340710/16709203320364.jpg" alt=""></p>
+<ul>
+<li><strong>4 更加安全</strong>： 我们更好地支持了 Kerberos 认证，接入了云厂商托管的 IAM 服务。</li>
+</ul>
+<h2 id="三-主键更新">三 主键更新</h2>
+<p>过去两年来，我们从零实现了全新的 Delete-and-Insert 模式 的主键更新模型，可以同时支持实时更新和极致的查询性能，在大规模实时数据写入的同事，查询性能可以做到其他行业领先 OLAP 数据库的 3-5 倍。</p>
+<p><img src="media/16679811340710/16709237307812.jpg" alt=""></p>
+<p>两年来，我们的主键模型做了如下优化：</p>
+<ul>
+<li><strong>主键索引持久化</strong>：减少了主键索引的内存使用量，可以支持更大数据量的单表</li>
+<li><strong>部分列更新</strong>：以现有的 Delete + Insert 模式为基础，通过读取老版本数据，来填充缺失列</li>
+<li><strong>条件更新</strong>：当满足某个固定条件时才更新对应行，否则就不更新</li>
+<li><strong>高频导入优化</strong>：对 Publish version 过程，compaction 过程，合并事务数等优化</li>
+<li><strong>Update 和 Delete 语句支持复杂表达式和子查询</strong></li>
+<li><strong>主键和排序键分离</strong></li>
+</ul>
+<p>实时化是整个数据分析的大趋势，而更新的需求也越来越多，有了 StarRocks 的主键模型，你可以更好的支持下面的业务场景：</p>
+<ol>
+<li>CDC 实时同步 TP 数据到 StarRocks 中，这也是使用最广泛的场景</li>
+<li>数据处理范式从 ETL 变成 ELT，也需要强大的更新能力</li>
+<li>实时流中通过多表 Join 更新数据的场景，有了 Partial-Update，我们就不再需要 多表 Join</li>
+<li>根据某个时间戳进行条件更新</li>
+<li>。。。</li>
+</ol>
+<h2 id="四-资源隔离">四 资源隔离</h2>
+<p>在生产环境中，大家一般都会遇到大查询的问题： 几个大查询吃满了整个集群的资源，影响了正常的小查询，大查询很难及时熔断和定位。  针对大查询的问题，我们从 2.3 版本开始，基于 Pipeline 执行引擎，实现了资源隔离。 目前我们支持内存资源的硬隔离，支持 CPU 和 IO 资源的软隔离。</p>
+<p><img src="media/16679811340710/16709327441519.jpg" alt=""></p>
+<h2 id="五-物化视图">五 物化视图</h2>
+<p>StarRocks 第一版的物化视图是从 Rollup 转换而来，只能用来透明加速查询，不能显示直接查询某个物化视图，也就是说物化视图只有物化的语义，没有视图的语义。</p>
+<p>我们物化视图 2.0 版本进行了5方面的加强：</p>
+<ol>
+<li><strong>让物化视图可以直接被查询</strong>：将物化视图也视为一张表，这样在复杂的 ELT 或者 ELT 的数据处理过程中，就可以使用物化视图来简化 SQL</li>
+<li><strong>在数据建模场景下，支持任意复杂的SQL</strong>：也就是说，物化视图里面可以定义任意复杂的SQL，但是不保证每个物化视图都支持透明的查询改写加速</li>
+<li><strong>在透明加速场景下，支持更复杂的SQL:</strong> 目前 StarRocks 已经可以支持 Aggregate, Join, Filter, Union 等复杂查询的物化视图透明改写</li>
+<li><strong>支持对数据湖上的数据建立物化视图</strong>：对数据湖上的近期热点数据利用物化视图进行强有力的透明加速</li>
+<li><strong>物化视图支持异步刷新和自动刷新</strong>：让物化视图的创建过程和刷新过程更加简单</li>
+</ol>
+<p>在 StarRocks 3.0 中，物化视图将会有一个质变，成为 StarRocks 的 Killer Feature， 大家敬请期待。</p>
+<h2 id="六-query-cache">六 Query Cache</h2>
+<h2 id="七-半结构化数据分析">七 半结构化数据分析</h2>
+<p>过去两年来，StarRocks 在持续完善半结构化数据分析能力：</p>
+<ol>
+<li>支持了 Array, Map, Struct, Json 数据类型</li>
+<li>支持了大量 Array, Map, Struct, Json 相关函数</li>
+<li>支持了 Lateral Join 和 Unnest Table Function  详情可以参考 <a href="https://docs.starrocks.io/zh-cn/latest/using_starrocks/Lateral_join">https://docs.starrocks.io/zh-cn/latest/using_starrocks/Lateral_join</a></li>
+<li>支持了 Lambda 函数  详情可以参考 StarRocks Lambda 函数用户文档</li>
+</ol>
+<p>有了这些基础能力，你可以用 StarRocks 做一些更强大的事情：</p>
+<ol>
+<li>StarRocks 可以更好地支持用户行为分析（留存及漏斗分析，路径分析等）</li>
+<li>StarRocks 可以更好地支持 Parquet, ORC 等文件导入和分析</li>
+<li>支持 Map 和 Json 类型可以让 StarRocks 更容易进行 Schema 变更</li>
+<li>支持 Json 类型让 StarRocks 对日志分析，事件分析等场景支持更加友好</li>
+<li>。。。</li>
+</ol>
+<h2 id="八-查询并行度自适应">八 查询并行度自适应</h2>
+<p>StarRocks 的查询一开始是 Fragment 并行机制，将每个查询的并行度设置交给了用户，但是这个具体的并行度值用户很难设置，简单查询可能没有并发时并行度高点性能会好，但是高并发时，并行度高性能反而会更长，因为旧版的执行框架，是每个 fragment 一个执行线程，fragment 数越多，执行线程会更多，线程切换和竞争的开销会更大。</p>
+<p>为了解决这个问题，StarRocks 一年多来分三步走解决了这个问题：</p>
+<ol>
+<li><strong>实现 Pipeline 并行引擎</strong>：将执行线程数固定成 CPU 核数，查询默认的并行度改成核数的一半，用户不需要再关心并行度的设置，但是还存在一些优化空间</li>
+<li><strong>单 Tablet 内部并行</strong>：支持单个 Tablet 可以并行查询，将查询的并行度和 Tablet 数解耦，解决了 Tablet 数较少时 无法设置更高并行度的问题</li>
+<li><strong>查询并行度自适应（下个版本支持）</strong>: 根据不同的集群复杂和查询类型，自动设置最合理的并行度。默认并行度设置成为核数，当数据量比较少时 或者 集群负载比较高时，自动减少并行度；</li>
+</ol>
+<h2 id="九-云原生存储分离">九 云原生存储分离</h2>
+<p>大家都知道，Cloud Native 是大势所趋，而要支持 Cloud Native，StarRocks 就必须从之前的 Shard-Nothing 架构转向存算分离架构。从 21 年初，StarRocks 就组建了专门的 Cloud 团队全力打造全新的存算分离架构，历经我们 Cloud 团队长达两年的设计和研发，存算分离的 StarRocks 第一版已经开发测试完成，目前已经交付部分用户进行试用测试，有想提前尝鲜的用户也欢迎联系我们。</p>
+<p>如上图所示，是我们 StarRocks 新一代的全新架构，我们新一代存算分离架构的核心是 StarOS, StarOS 一个极具创新和野心的项目，简单来说，StarOS 会对分布式相关逻辑进行抽象和统一，对云上存储进行抽象和统一，让我们打造未来打造一个存算分离服务变得十分简单。 具体的技术内幕大家可以期待我们 Cloud 团队同学之后的深度分享。</p>
+<p>那么从用户视角来看，我们全新的存算分离架构会提供什么独特的优势呢？</p>
+<ol>
+<li>在可以弹性伸缩的同时，可以提供媲美 Shard-Nothing 架构的性能</li>
+<li>依靠 StarOS,  同时支持云上部署和本地部署</li>
+<li>实时更新能力</li>
+</ol>
+<p>当然，普遍存储架构的优点我们已经或即将具备：</p>
+<ol>
+<li>极致弹性</li>
+<li>更低成本</li>
+<li>多租户</li>
+<li>读写分离</li>
+<li>Serverless</li>
+</ol>
+<h2 id="十-saas-byoc">十 SAAS BYOC</h2>
+<p>所谓云原生的存算分离，我们除了存储分离的内核，还需要在云上将数据库服务化，所以在一边打造存算分离内核的同时，我们也成立了一个专门的团队在打造 SAAS 服务，我们目前已经推出了 BYOC 的 SASS 模式。 BYOC 是 bring-your-own-cloud 的缩写，也就是<strong>使用用户自己的云，这样会有更好的数据隐私，更好的安全性</strong>。如图所示，整个架构分为控制面板和数据面板，控制面板在 StarRocks 的 VPC， 数据面板在用户的 VPC，目前已经有多个用户在正式使用。</p>
+
+            <hr/>
+            <h3>欢迎来知识星球和我交流</h3>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=63989bffc6bc44d132fac295
+                 data-title=最强开源 OLAP 数据库，你应该选择的 10 个理由
+                 data-url=starrocks-10>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+</body>
+</html>
