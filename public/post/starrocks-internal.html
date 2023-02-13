@@ -51,41 +51,42 @@
             <hr/>
             <!-- toc -->
 <ul>
-<li><a href="#查询">查询</a><ul>
-<li><a href="#查询整体介绍">查询整体介绍</a></li>
-<li><a href="#cbo-优化器">CBO 优化器</a></li>
-<li><a href="#查询调度">查询调度</a></li>
-<li><a href="#向量化引擎">向量化引擎</a></li>
-<li><a href="#pipeline-引擎">Pipeline 引擎</a></li>
-<li><a href="#hash-聚合原理">Hash 聚合原理</a></li>
-<li><a href="#多表-join-原理">多表 Join 原理</a></li>
-<li><a href="#exchange-shuffle-原理">Exchange &amp; Shuffle 原理</a></li>
-<li><a href="#sort-原理">Sort 原理</a></li>
-<li><a href="#scan-原理">Scan 原理</a></li>
-<li><a href="#窗口函数-原理">窗口函数 原理</a></li>
-<li><a href="#union-原理">Union 原理</a></li>
-<li><a href="#物化视图">物化视图</a></li>
-<li><a href="#低基数全局字典优化">低基数全局字典优化</a></li>
-<li><a href="#资源隔离">资源隔离</a></li>
-<li><a href="#性能优化">性能优化</a></li>
-<li><a href="#数据湖">数据湖</a></li>
+<li><a href="#starrocks-查询">StarRocks 查询</a><ul>
+<li><a href="#starrocks-查询整体介绍">StarRocks 查询整体介绍</a></li>
+<li><a href="#starrocks-cbo-优化器">StarRocks CBO 优化器</a></li>
+<li><a href="#starrocks-查询调度">StarRocks 查询调度</a></li>
+<li><a href="#starrocks-向量化引擎">StarRocks 向量化引擎</a></li>
+<li><a href="#starrocks-pipeline-引擎">StarRocks Pipeline 引擎</a></li>
+<li><a href="#starrocks-hash-聚合原理">StarRocks Hash 聚合原理</a></li>
+<li><a href="#starrocks-多表-join-原理">StarRocks 多表 Join 原理</a></li>
+<li><a href="#starrocks-runtime-filter-原理">StarRocks Runtime Filter 原理</a></li>
+<li><a href="#starrocks-exchange-shuffle-原理">StarRocks Exchange &amp; Shuffle 原理</a></li>
+<li><a href="#starrocks-sort-原理">StarRocks Sort 原理</a></li>
+<li><a href="#starrocks-scan-原理">StarRocks Scan 原理</a></li>
+<li><a href="#starrocks-窗口函数-原理">StarRocks 窗口函数 原理</a></li>
+<li><a href="#starrocks-union-原理">StarRocks Union 原理</a></li>
+<li><a href="#starrocks-物化视图">StarRocks 物化视图</a></li>
+<li><a href="#starrocks-低基数全局字典优化">StarRocks 低基数全局字典优化</a></li>
+<li><a href="#starrocks-资源隔离">StarRocks 资源隔离</a></li>
+<li><a href="#starrocks-性能优化">StarRocks 性能优化</a></li>
+<li><a href="#starrocks-数据湖">StarRocks 数据湖</a></li>
 </ul>
 </li>
-<li><a href="#存储">存储</a><ul>
-<li><a href="#实时更新的主键模型">实时更新的主键模型</a></li>
+<li><a href="#starrocks-存储">StarRocks 存储</a><ul>
+<li><a href="#starrocks-实时更新的主键模型">StarRocks 实时更新的主键模型</a></li>
 </ul>
 </li>
 </ul>
 <!-- toc stop -->
 <p>本文主要整理下介绍 StarRocks 内部技术原理和源码分析的文章和视频，会持续更新，应用场景和案例的文章可以关注 StarRocks 官方微信公众号。</p>
-<h2 id="查询">查询</h2>
-<h3 id="查询整体介绍">查询整体介绍</h3>
+<h2 id="starrocks-查询">StarRocks 查询</h2>
+<h3 id="starrocks-查询整体介绍">StarRocks 查询整体介绍</h3>
 <ul>
 <li><a href="https://mp.weixin.qq.com/s/AkTAibnAaM29aC5JJT58YQ">StarRocks 查询原理浅析</a></li>
 <li><a href="https://blog.bcmeng.com/post/starrocks-source-code-1.html">StarRocks 源码导读一</a></li>
 <li><a href="https://blog.bcmeng.com/post/fastest_database.html">如何打造一款极速分析型数据库</a></li>
 </ul>
-<h3 id="cbo-优化器">CBO 优化器</h3>
+<h3 id="starrocks-cbo-优化器">StarRocks CBO 优化器</h3>
 <ul>
 <li><a href="https://zhuanlan.zhihu.com/p/577956480">StarRocks 优化器代码导读</a></li>
 <li><a href="https://zhuanlan.zhihu.com/p/582214743">StarRocks 统计信息和 Cost 估算</a></li>
@@ -95,75 +96,80 @@
 <li><a href="https://zhuanlan.zhihu.com/p/583997914">StarRocks 如何添加一个优化规则</a></li>
 <li><a href="https://zhuanlan.zhihu.com/p/586331147">StarRocks 如何添加一个 Operator</a></li>
 </ul>
-<h3 id="查询调度">查询调度</h3>
+<h3 id="starrocks-查询调度">StarRocks 查询调度</h3>
 <ul>
 <li><a href="https://zhuanlan.zhihu.com/p/588406885">StarRocks 查询调度源码解析</a></li>
 </ul>
-<h3 id="向量化引擎">向量化引擎</h3>
+<h3 id="starrocks-向量化引擎">StarRocks 向量化引擎</h3>
 <ul>
 <li><a href="https://mp.weixin.qq.com/s/J6_L6ijaiuuO6FXCa-AW9w">StarRocks 向量化编程精髓</a></li>
 <li><a href="https://www.bilibili.com/video/BV1ea41187KK/">StarRocks 向量化编程精髓 视频</a></li>
 </ul>
-<h3 id="pipeline-引擎">Pipeline 引擎</h3>
+<h3 id="starrocks-pipeline-引擎">StarRocks Pipeline 引擎</h3>
 <ul>
 <li><a href="https://mp.weixin.qq.com/s/eS5tMjE5O5mBnCmzse0kmQ">StarRocks Pipeline 引擎原理下</a></li>
 <li><a href="https://mp.weixin.qq.com/s/fgNwk2DyijKM4D9L77LQNA">StarRocks Pipeline 引擎原理上</a></li>
 <li><a href="https://www.bilibili.com/video/BV1ES4y137fY/">StarRocks Pipeline 引擎原理 视频</a></li>
 </ul>
-<h3 id="hash-聚合原理">Hash 聚合原理</h3>
+<h3 id="starrocks-hash-聚合原理">StarRocks Hash 聚合原理</h3>
 <ul>
 <li><a href="https://zhuanlan.zhihu.com/p/592058276">StarRocks 聚合算子源码解析</a></li>
 </ul>
-<h3 id="多表-join-原理">多表 Join 原理</h3>
+<h3 id="starrocks-多表-join-原理">StarRocks 多表 Join 原理</h3>
 <ul>
 <li><a href="https://mp.weixin.qq.com/s/Fv_FaoYDGZuPt4TBHPg-wg">StarRocks Join 实现原理</a></li>
 <li><a href="https://www.bilibili.com/video/BV1bi4y1r7Td/">StarRocks Join 实现原理 视频</a></li>
 <li><a href="https://zhuanlan.zhihu.com/p/593611907">StarRocks Hash Join 源码解析</a></li>
 </ul>
-<h3 id="exchange-amp-shuffle-原理">Exchange &amp; Shuffle 原理</h3>
+<h3 id="starrocks-runtime-filter-原理">StarRocks Runtime Filter 原理</h3>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/605085563">StarRocks Runtime Filter 源码解析</a></li>
+</ul>
+<h3 id="starrocks-exchange-amp-shuffle-原理">StarRocks Exchange &amp; Shuffle 原理</h3>
 <ul>
 <li><a href="https://zhuanlan.zhihu.com/p/596838323">StarRocks Exchange 算子源码解析</a></li>
 </ul>
-<h3 id="sort-原理">Sort 原理</h3>
+<h3 id="starrocks-sort-原理">StarRocks Sort 原理</h3>
 <ul>
 <li><a href="https://zhuanlan.zhihu.com/p/595225671">StarRocks Sort 算子源码解析</a></li>
 </ul>
-<h3 id="scan-原理">Scan 原理</h3>
+<h3 id="starrocks-scan-原理">StarRocks Scan 原理</h3>
 <ul>
 <li><a href="https://zhuanlan.zhihu.com/p/590275534">StarRocks Scan 算子源码解析</a></li>
 </ul>
-<h3 id="窗口函数-原理">窗口函数 原理</h3>
+<h3 id="starrocks-窗口函数-原理">StarRocks 窗口函数 原理</h3>
 <ul>
 <li><a href="https://zhuanlan.zhihu.com/p/598630498">StarRocks 窗口函数源码解析</a></li>
 </ul>
-<h3 id="union-原理">Union 原理</h3>
+<h3 id="starrocks-union-原理">StarRocks Union 原理</h3>
 <ul>
 <li><a href="https://zhuanlan.zhihu.com/p/602915147">StarRocks Union 算子源码解析</a></li>
 </ul>
-<h3 id="物化视图">物化视图</h3>
+<h3 id="starrocks-物化视图">StarRocks 物化视图</h3>
 <ul>
 <li><a href="https://mp.weixin.qq.com/s/uy2wZPIrXkYH00Qo1xg22A">StarRocks 多表物化视图的设计与实现</a></li>
 </ul>
-<h3 id="低基数全局字典优化">低基数全局字典优化</h3>
+<h3 id="starrocks-低基数全局字典优化">StarRocks 低基数全局字典优化</h3>
 <ul>
 <li><a href="https://mp.weixin.qq.com/s/eJKGD7y8jWacKjsvdi-AJg">StarRocks 基于低基数全局字典的查询优化</a></li>
 <li><a href="https://www.bilibili.com/video/BV1ra411N7g8/">StarRocks 基于低基数全局字典的查询优化 视频</a></li>
 </ul>
-<h3 id="资源隔离">资源隔离</h3>
+<h3 id="starrocks-资源隔离">StarRocks 资源隔离</h3>
 <ul>
-<li><a href="https://www.bilibili.com/video/BV17e4y1q7vC/">StarRocks 资源隔离原理解析</a></li>
+<li><a href="https://www.bilibili.com/video/BV17e4y1q7vC/">StarRocks 资源隔离原理解析 视频</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/605900476">StarRocks 资源隔离原理解析 文章</a></li>
 </ul>
-<h3 id="性能优化">性能优化</h3>
+<h3 id="starrocks-性能优化">StarRocks 性能优化</h3>
 <ul>
 <li><a href="https://zhuanlan.zhihu.com/p/397088602">StarRocks 性能调优实战（一）</a></li>
 </ul>
-<h3 id="数据湖">数据湖</h3>
+<h3 id="starrocks-数据湖">StarRocks 数据湖</h3>
 <ul>
 <li><a href="https://mp.weixin.qq.com/s/oROdpb4dHjGwTM8xLvKsWw">StarRocks 支持 Apache Hudi 原理解析</a></li>
 <li><a href="https://zhuanlan.zhihu.com/p/588518790">StarRocks 极速数据湖分析 原理解析</a></li>
 </ul>
-<h2 id="存储">存储</h2>
-<h3 id="实时更新的主键模型">实时更新的主键模型</h3>
+<h2 id="starrocks-存储">StarRocks 存储</h2>
+<h3 id="starrocks-实时更新的主键模型">StarRocks 实时更新的主键模型</h3>
 <ul>
 <li><a href="https://mp.weixin.qq.com/s/hnBsx4-i43_o5BqedIQ1Kg">StarRocks 实时更新的主键模型的优化工作</a></li>
 <li><a href="https://mp.weixin.qq.com/s/9Wm5piUx9xNeHD7WjYa1lA">StarRocks 实时更新的主键模型的技术原理</a></li>
