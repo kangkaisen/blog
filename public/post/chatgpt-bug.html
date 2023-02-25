@@ -1,0 +1,144 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|ChatGPT 自动为数据库找 Bug</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                
+                    <li><a href="https://t.zsxq.com/07avIYrZl" target="_blank"  rel="nofollow">知识星球</a></li>
+                
+                <li class="active"><a href="/">Blog</a></li>
+                
+                <li><a href="https://github.com/kangkaisen" target="_blank" rel="nofollow">GitHub</a></li>
+                
+                
+                <li><a href="https://weibo.com/u/1801506560" target="_blank" rel="nofollow">WeiBo</a></li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> ChatGPT 自动为数据库找 Bug</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2023-02-25</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#chatgpt-代替-sqlsmith">ChatGPT 代替 SQLsmith</a></li>
+<li><a href="#chatgpt-惊艳的学习能力">ChatGPT 惊艳的学习能力</a></li>
+<li><a href="#chatgpt-代替-sqlancer">ChatGPT 代替 SQLancer</a></li>
+<li><a href="#chatgpt-生成-query-aware-的建表语句">ChatGPT 生成 Query-Aware 的建表语句</a></li>
+<li><a href="#总结">总结</a></li>
+</ul>
+<!-- toc stop -->
+<h2 id="chatgpt-代替-sqlsmith">ChatGPT 代替 SQLsmith</h2>
+<p>SQLsmith 是一款数据库自动化测试工具，主要原理是根据固定的 table schame，生成随机的 SQL，发送到数据库，看数据库会不会 crash。</p>
+<p>这一点对于 ChatGPT 没有任何挑战，ChatGPT 可以根据自然语言描述生成任意复杂的SQL，这样 ChatGPT 就可以代替 SQLsmith。</p>
+<p><img src="media/16773072915576/sqlsmith.png" alt="sqlsmith"></p>
+<h2 id="chatgpt-惊艳的学习能力">ChatGPT 惊艳的学习能力</h2>
+<p>下一步我首先想到的是，ChatGPT 能不能解决我们维护 SQLsmith 和 SQLancer 等自动化测试工具的一大痛点： 每当新增函数，算子，数据类型时，我们都需要更新 SQLsmith 和 SQLancer 等工具的源码，及时发现新功能 的 Bug。 所以我就试了一下 StarRocks 的 Json 函数，第一次 ChatGPT 回复 截止 2021年9月，StarRocks 不支持 Json 函数，然后我就给了 StarRocks 的 Json 文档，再让 ChatGPT 生成带 Json 函数 的SQL， ChatGPT 就可以生成了，展现了惊艳的学习能力。</p>
+<p>下图是 一开始 ChatGPT 说 StarRocks 不支持 Json 函数：</p>
+<p><img src="media/16773072915576/2%20no%20json.png" alt="2 no json"></p>
+<p>下图是 我让 ChatGPT 学习 StarRocks 的 Json 函数：
+<img src="media/16773072915576/3%20json%20learn.png" alt="3 json learn"></p>
+<p>下图是 ChatGPT 成功生成带 Json 函数的 SQL ：</p>
+<p><img src="media/16773072915576/4%20known%20json.png" alt="4 known json"></p>
+<h2 id="chatgpt-代替-sqlancer">ChatGPT 代替 SQLancer</h2>
+<p>知道了 ChatGPT 能代替 SQLsmith 后，我就想试试 ChatGPT 能不能代替 SQLancer。 主要试了 SQLancer 的 TLP 方法，</p>
+<p><img src="media/16773072915576/16773131878132.jpg" alt="SQLancer TLP "></p>
+<p>上图是 TLP 原理的示意，简单来说，任意给一个SQL Q，和一个谓词P，这个 SQL Q 经过 P，not P, P is null 3 个谓词过滤后的结果求Union all 和原始 SQL Q的 查询结果集一致。</p>
+<p>经过十几次训练后，ChatGPT 就初步具备了依据 TLP 原理生成等价 SQL 的能力：</p>
+<p><img src="media/16773072915576/5%20sqllancer%20.png" alt="5 sqllancer "></p>
+<p>完整的 SQLancer 的 TLP 测试还需要额外两步，随机创建表，随机插入数据，这个对 ChatGPT 来说很简单，下面几张图是一个完整的流程示意：</p>
+<p><img src="media/16773072915576/6%20sqlance%20.png" alt="6 sqlance "></p>
+<p><img src="media/16773072915576/7%20sqlancer.png" alt="7 sqlancer"></p>
+<p><img src="media/16773072915576/8%20sqlancer.png" alt="8 sqlancer"></p>
+<p><img src="media/16773072915576/9%20SQLancer.png" alt="9 SQLancer"></p>
+<h2 id="chatgpt-生成-query-aware-的建表语句">ChatGPT 生成 Query-Aware 的建表语句</h2>
+<p>数据库 SQL 自动化测试主要包括下面3个大点：</p>
+<ol>
+<li>如何自动建表和数据导入</li>
+<li>如何自动生成测试 SQL</li>
+<li>如何自动生成测试 预言（确认 SQL 执行的结果是否符合预期）</li>
+</ol>
+<p>数据库 SQL 自动化测试的挑战主要有下面 4 点：</p>
+<ol>
+<li>要确保自动生成的 SQL 是语法和语义正确的</li>
+<li>自动生成合法的 Schame 和数据集</li>
+<li>自动生成的 SQL 代码覆盖度足够高</li>
+<li>要有高效的方式校验 SQL 执行结果是否正确</li>
+</ol>
+<p>所以我再专门测试了 ChatGPT 能不能生成 Query-Aware 的建表语句，Query-Aware 的意思是建表和导入数据是参考查询 SQL 来的，可以保证对应的 SQL 会有查询结果。 这个点对 ChatGPT 的挑战很小：</p>
+<p><img src="media/16773072915576/10%20query%20aware.png" alt="10 query aware"></p>
+<p>可以看到生成的 3个建表语句，可以满足对应 SQL Schema 的要求。</p>
+<h2 id="总结">总结</h2>
+<p>从初步测试来看，利用 ChatGPT 进行数据库 SQL 自动化测试的潜力很大，难点在于 ChatGPT 要完全理解一些自动化测试的基础逻辑，比如 SQLancer 的 TLP 测试的基础改写原理，经过我几十次训练后，ChatGPT 还是没有完全理解，改写的 SQL 中谓词可能会出错，但是从理论上讲，经过足够多次的训练后，ChatGPT 完全理解这个逻辑没啥问题，而 ChatGPT 最大的优势，便是其惊艳的学习能力，这可以让 ChatGPT 针对新功能写测试 Case 的效率远远超过人类，之后我会再继续尝试和探索下。</p>
+
+            <hr/>
+            <h3>欢迎来知识星球和我交流</h3>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=63f9ca342f0ad4b05f0bc739
+                 data-title=ChatGPT 自动为数据库找 Bug
+                 data-url=chatgpt-bug>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+</body>
+</html>
