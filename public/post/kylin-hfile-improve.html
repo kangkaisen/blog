@@ -104,6 +104,8 @@
 <p>在实现过程中有一个坑需要注意，就是TotalOrderPartitioner在setconf的时候用的是ComparatorClass的确是mapreduce.job.output.key.comparator.class，但是其调用的方法是comparator.compare(splitPoints[i], splitPoints[i+1])，并不是compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2)。也就是说我们仅仅继承WritableComparator实现一个Comparator是不够的，我们还必须实现WritableComparable接口来重写compareTo(T o)方法，因为WritableComparator的compare方法调用了compareTo方法。</p>
 
             <hr/>
+            <h3>欢迎体验 免费 极速 无需翻墙的 ChatGPT</h3>
+            <p><a href="https://chat.bcmeng.com/" target="_blank" >chat.bcmeng.com</a></p>
             <h3>欢迎来知识星球和我交流</h3>
             <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
         </div>
