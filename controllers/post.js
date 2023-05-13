@@ -13,6 +13,7 @@ exports.save = function(req, res){
             Post.getAllPost(function(err, posts){
                 if (posts){
                     md.compilePages(posts);
+                    md.compileRss(posts);
                 }
             })
             Post.getPostByTag(req.body.tag,function(err, posts){
@@ -62,6 +63,7 @@ exports.update = function(req, res){
         Post.getAllPost(function(err, posts){
             if (posts){
                 md.compilePages(posts);
+                md.compileRss(posts);
             }
         })
 
@@ -100,6 +102,7 @@ exports.delete = function(req, res){
             Post.getAllPost(function(err, posts){
                 if (posts){
                     md.compilePages(posts);
+                    md.compileRss(posts);
                 }
             })
 
