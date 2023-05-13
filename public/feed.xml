@@ -1,0 +1,608 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>编程小梦</title>
+    <description>编程小梦|康凯森的技术博客</description>
+    <link>https://blog.bcmeng.com/</link>
+    <lastBuildDate>Sat, 13 May 2023 04:33:52 GMT</lastBuildDate>
+    <pubDate>Sat, 13 May 2023 04:33:52 GMT</pubDate>
+    <item>
+      <title>康凯森的公开分享</title>
+      <description><!-- toc -->
+
+* 2017-01 InfoQ [《Apache Kylin 精确去重指标优化历程》](https://mp.weixin.qq.com/s?__biz=MzU1NDA4NjU2MA==&mid=2247486321&idx=1&sn=2e1bdc75914ab115b169a65c84acdfee)
+* 2017-07 Kylin 社区官方 [《Improving Spark Cubing in Kylin 2.0》 ](https://kylin.apache.org/blog/2017/07/21/Improving-Spark-Cubing/)
+* 2018-07 InfoQ [《Apache Kylin VS Apache Doris》](https://mp.weixin.qq.com/s/e0nkJK927ANPCsoFzlBFsg) (全网阅读量 10万+)
+* 2018-08 Kylin MeetUp [《基于Druid的Kylin存储引擎实践》](https://blog.bcmeng.com/post/kylin-on-druid.html)
+* 2019-04 Doris MeetUp [《Apache Doris 在美团点评的实践》](https://blog.bcmeng.com/post/meituan-doris.html)
+* 2019-12 Doris MeetUp [《Apache Doris 基于 Bitmap的精确去重和用户行为分析》](https://blog.bcmeng.com/post/doris-bitmap.html)
+* 2019-12 中国软件大会 [《Apache Doris 在美团点评的实践》](https://blog.bcmeng.com/post/meituan-doris.html)
+* 2020-04 美团技术团队 [《Apache Doris 在美团外卖数仓中的应用实践》](https://mp.weixin.qq.com/s/wzVc-FngOBbqbMzJjRqajw)
+* 2020-12 中国软件大会 《DorisDB —— 新一代极速 MPP 数据库》
+* 2021-05 DataFunTalk 《DorisDB —— 新一代极速 MP</description>
+      <link>kks-public</link>
+      <pubDate>2023-01-04</pubDate>
+    </item>
+    <item>
+      <title>我 ChatGPT 网站一次微小升级的复盘</title>
+      <description><!-- toc -->
+
+## 背景
+
+我自己部署的免费 ChatGPT 网站，已经稳定运行一个多月，无需翻墙，响应极速，**已累计服务上万名用户**。 由于自己很忙，一个多月也一直没有更新网站，昨天周六，感觉能抽出一些时间，就心血来潮想给网站加个密码访问的功能，即用户需要关注我的微信公众号，获取到密码后，才可以继续免费使用  ChatGPT。
+
+这个功能很简单，我几分钟改完就直接推上线了，不过上线后，还是暴露了几个小问题，感觉可以以小见大，延伸总结下。
+
+## 问题
+
+### 1 没有做到无缝升级
+
+就是 ChatGPT 和微信公众号的自动回复是两个 ServerLess 的服务，我应该先更新 微信公众号 的服务，让用户回复密码关键字后可以获取到密码，再更新 ChatGPT 服务开启密码限制。
+
+我当时没管这一点的原因是，想着周六晚上10点多应该没几个人用我的服务，但是没想到加了限制后，半个小时内，就有几十个人索要密码。
+
+这一点的启示就是：我们的线上服务应该永远保证服务一直可用，对任何服务来讲，现在的技术手段都可以做到这一点，只要你认为这一点的用户体验是重要的。
+
+### 2 字符串判等没有去空格
+
+因为需要将用户的密码和服务端的密码进行比较，所以肯定有断等的操作，我当时在写的时候，就想着要不要去空格，一开始想着严格一点，就没有去空格。
+
+但是上线几分钟后，果然暴露了这个问题，因为用户大概率是从我的回复中复制粘贴的，而我为了让密码看起来清晰点，就两边留了空格。
+
+这一点的启示就是：我们在做交互设计和接口设计的时候，应该想到用户最本能，最便利的操作方式是哪样的。
+
+### 3 多余选项的误导
+![](media/16810185464952/16810230364799.jpg)
+
+
+如上图所示，我在加密码设置的时候，想顺便把系统角色的这个功能也加上，让用户体验更好，但是一些用户却以为这个和密码设置一样是必选项，而不是可选项，对用户进行了误导。
+
+这一点的启示就是：在产品设计上，我们给用户的选择要尽可能少，甚至是没有选择，每多一个选择，用户就多一个学习和理解成本，同时我们也很难保证各种选择的排列着都能给用户最佳体验。
+
+### 4 客户端网页缓存
+
+在我的服务端更新后，且用户的网页之前一直打</description>
+      <link>chatgpt-case</link>
+      <pubDate>2023-04-09</pubDate>
+    </item>
+    <item>
+      <title>MPP Pipeline VS Grouped Execution VS Stage By Stage</title>
+      <description><!-- toc -->
+
+Presto 最近发布了新的论文，[Presto: A Decade of SQL Analytics at Meta](https://research.facebook.com/publications/presto-a-decade-of-sql-analytics-at-meta/) 刚好 Presto 同时支持了 MPP Pipeline , Grouped Execution, Stage By Stage 3 种分布式执行模式，就想把这3种执行模式对比下。
+
+## What Is In MPP Pipeline
+
+![MPP vs spark](media/16809257712677/16809304004199.jpg)
+
+![mpp 1](media/16809257712677/16809304667938.jpg)
+
+
+如图所示，本文特指以 StarRocks,Presto 为代表的 MPP 查询引擎，具有以下特点：
+
+1. 整个分布式执行是全部 In Memory 的
+2. 整个分布式执行是 Pipeline 的，每个 Fragment 会 Streaming 的传输数据给下一个 Fragment，不需要一个 Fragment 处理完所有数据再传输给下一个 Fragment
+3. 支持 Shuffle， Shuffle 是 In Memory 和 Streaming 的
+
+## What Is Grouped Execution
+
+![colocate join](media/16809257712677/colocate%20join.png)
+
+Grouped Execution 其实很好理解，大家可以从 Colocate join 来理解，如上图，T1 和 T2 两张表的数据在导入时已经按照 Id 列分桶，所以相同的 Id 的数据都在一台节点上，Join 时就不需要重新 shuffle，但还有一个重要的点是：**每个分桶的 Join 执行完成后就可以直接返回 Join 的最终结果，所以当我们内存不足时，我们就不需要所有节点或者分桶上面的 Join 同时启动，我们可以按照一个分桶一个分桶依次执行 Join 操作**，这样我们需要内存的资源就会减少几十倍，同时也可以按照</description>
+      <link>mpp-grouped-excution-stage</link>
+      <pubDate>2023-04-08</pubDate>
+    </item>
+    <item>
+      <title>OLAP 查询性能优化 10 问</title>
+      <description><!-- toc -->
+
+
+## 1 查询性能优化的意义
+
+对一个数据库产品来说：
+
+1. 性能提升 10 倍：用户的机器资源可以从100台减少到10台
+2. 从 10 秒 到1秒:  交互式分析体验, 让之前不可能上线的应用变得可能
+3. 敲门砖：产品 POC 几乎不会缺少的环节，因为查询性能相对比较容易量化
+
+对一个数据库工程师来说：
+
+1. 当一个优化有好几倍甚至是数量级的提升时，会有很大的成就感
+2. 专业能力的快速提升，因为数据库的性能优化是一个多维度，很复杂的系统工程，从架构到细节，从硬件到软件，从内核到应用，几乎都会有涉及
+
+## 2 查询性能优化的目标
+从应用视角，主要是 Latency 和 Throughput。 （在总资源不变的情况下 缩短响应时间，一般都可以提升吞吐率。）
+
+从系统资源的视角，我们要优化 CPU, IO, Memory, NetWork 等系统资源的利用率。 (在性能优化的过程中，我们在关注查询吞吐和时延的同时，也一定要关注系统资源的利用率。因为有时候的性能提升几倍的同时，也多用了几倍的 CPU)
+
+## 3 如何发现性能瓶颈点
+一方面可以通过数据库系统内置的性能优化工具或者可观测性工具去找到瓶颈点，另一方面可以通过 Linux 通用的性能测试工具来寻找瓶颈点。
+
+### 3.1 StarRocks Observability : Query Profile
+![](media/16795404287791/16806894404824.jpg)
+
+如上图所示，查询 Profile 是我们发现性能瓶颈点最常用的工具，从 Profile， 我们可以知道一个查询是慢在 plan 阶段，还是执行阶段，也能知道是哪个算子是执行瓶颈
+
+### 3.2 StarRocks Observability : Optimizer Trace
+
+![](media/16795404287791/16806896501641.jpg)
+
+如上图所示，我们通过一个命令就可以知道 StarRocks 优化器到底慢在哪一个阶段，可以快速定位出优化器阶段的性能瓶颈。
+
+### 3.3 StarRocks Observability : Executor Trace
+
+![](medi</description>
+      <link>olap-performance-10</link>
+      <pubDate>2023-04-05</pubDate>
+    </item>
+    <item>
+      <title>ChatGPT 真的可以让流浪地球的丫丫 “复活”</title>
+      <description><!-- toc -->
+
+## 一 流浪地球2中的YY
+![yaya](media/16786259781472/yaya.png)
+
+流浪地球2中图恒宇利用超级计算机制造了数字生命丫丫，并最终拯救了整个人类，看这部影片时，还感觉数字生命可能离我们还比较遥远，可能需要很多年才能变成现实，但是最近随着对一些 ChatGPT 应用的粗浅思考，感觉数字生命已经离我们人类不是很遥远，至少初级版的丫丫现在就可以制造出原型。
+
+## 二 如何利用 ChatGPT 和 AI 工具“复活”丫丫
+
+### 2.1 ChatGPT 赋予丫丫思想，性格，说话风格，记忆
+现在公开版的 ChatGPT 是基于大规模数据集预先训练好的模型，所以还不够个性化，但是 ChatGPT 是可以利用额外输入进行训练的，让其足够个性化。 原理可以参考：[Question_answering_using_embeddings](https://github.com/openai/openai-cookbook/blob/main/examples/Question_answering_using_embeddings.ipynb), 通俗版解释可以参考：[ChatGPT：未来，你会被淘汰吗？](https://mp.weixin.qq.com/s/EYGnSBPmVNzY2_KTSlubZQ) 
+
+大家只需要理解，你给 ChatGPT 一个 PDF 文件，一个网页链接，ChatGPT 就可以理解输入的内容，对输入的内容进行总结，解释你的疑问，和你进行对话。
+
+进一步，我们如果把一个人在社交媒体上所有的聊天记录，他创作过的所有文章，图片，视频输入给 ChatGPT，ChatGPT 基本就可以学习到这个人的性格，说话风格，思考问题的方式。
+
+如果这样还不够准确，我们还可以把这个人看过的书籍，电影，成长经历等也输入给 ChatGPT，也就是说，让 ChatGPT 经历一遍这个人的教育，成长过程，让 ChatGPT 更懂这个人。
+
+如果这样还不够准确呢？你还可以像教育孩子一样，在和 ChatGPT 不断交流互动的过程中，不断训练他，告诉它什么是对的，什么是错的。
+
+### 2.2 Whisper 让丫丫理解语音
+Whisper 将语音转换给文本， 输入给 ChatGPT，</description>
+      <link>chatgpt-life</link>
+      <pubDate>2023-03-12</pubDate>
+    </item>
+    <item>
+      <title>ChatGPT  教程&资源&应用大全</title>
+      <description><!-- toc -->
+
+## 1 如何注册 ChatGPT 账号
+可以直接使用 https://chat.bcmeng.com/   无需注册，响应极速，无需翻墙
+
+## 2 如何升级 ChatGPT plus 账号 体验 GPT-4
+注：自己注册 ChatGPT 账号需要会科学上网，推荐 [fastlink](https://v02.fl-aff.com/auth/register?code=Muo0) 
+
+1. 可以使用自己的邮箱注册
+2. 手机验证码可以在 sms-activate.org 购买，然后参考 https://sms-activate.org/cn/info/ChatGPT 注册 ChatGPT 免费账号
+3. 注册一个美国虚拟信用卡，我用的是 nobepay: https://www.nobepay.com/app/service ，优点是操作简单，支持国内支付宝付款。
+4. 在 ChatGPT 左下角点击升级成 plus 账号，绑定刚才注册的信用卡就行。绑卡时，需要隐身模式，开启全局代理。大家要注意，**全局代理的国家不一定非要是美国，提升你的信用卡被拒绝时，可以依次尝试代理 英国，德国，法国，澳大利亚等，我是通过澳大利亚绑定成功的。**
+
+## 3 如何下载 ChatGPT 各种客户端
+https://writesonic.com/blog/chatgpt-download/
+
+ChatGPT 桌面版： https://github.com/lencx/ChatGPT/releases
+
+## 4 15个 ChatGPT Chrome 插件
+https://writesonic.com/blog/chatgpt-chrome-extensions/ 
+
+## 5 如何写好 ChatGPT 提示语 （prompt），成为 ChatGPT 专家
+
+* 以一个指令的单词开始：比如写，创建，制作
+* 提供更多的上下文
+* 使用角色扮演，让 ChatGPT 扮演某个角色
+* 提供参考资料
+* 让模仿某个名人的风格：比如莎士比亚，马斯克
+* 用引号强调重点
+* 给出简单，明确的示例
+* 指明期望的回复长度
+* 持续多轮改进
+* 可以明确语气，风格，口吻
+* 长时间交谈后可以总结下
+</description>
+      <link>chatgpt-money</link>
+      <pubDate>2023-02-26</pubDate>
+    </item>
+    <item>
+      <title>ChatGPT 自动为数据库找 Bug</title>
+      <description><!-- toc -->
+
+## ChatGPT 代替 SQLsmith
+SQLsmith 是一款数据库自动化测试工具，主要原理是根据固定的 table schame，生成随机的 SQL，发送到数据库，看数据库会不会 crash。
+
+这一点对于 ChatGPT 没有任何挑战，ChatGPT 可以根据自然语言描述生成任意复杂的SQL，这样 ChatGPT 就可以代替 SQLsmith。
+
+![sqlsmith](media/16773072915576/sqlsmith.png)
+
+## ChatGPT 惊艳的学习能力
+下一步我首先想到的是，ChatGPT 能不能解决我们维护 SQLsmith 和 SQLancer 等自动化测试工具的一大痛点： 每当新增函数，算子，数据类型时，我们都需要更新 SQLsmith 和 SQLancer 等工具的源码，及时发现新功能 的 Bug。 所以我就试了一下 StarRocks 的 Json 函数，第一次 ChatGPT 回复 截止 2021年9月，StarRocks 不支持 Json 函数，然后我就给了 StarRocks 的 Json 文档，再让 ChatGPT 生成带 Json 函数 的SQL， ChatGPT 就可以生成了，展现了惊艳的学习能力。
+
+下图是 一开始 ChatGPT 说 StarRocks 不支持 Json 函数：
+
+![2 no json](media/16773072915576/2%20no%20json.png)
+
+下图是 我让 ChatGPT 学习 StarRocks 的 Json 函数：
+![3 json learn](media/16773072915576/3%20json%20learn.png)
+
+下图是 ChatGPT 成功生成带 Json 函数的 SQL ：
+
+![4 known json](media/16773072915576/4%20known%20json.png)
+
+## ChatGPT 代替 SQLancer
+知道了 ChatGPT 能代替 SQLsmith 后，我就想试试 ChatGPT 能不能代替 SQLancer。 主要试了 SQLancer 的 TLP 方法，
+
+![SQLancer TLP ](media/1677</description>
+      <link>chatgpt-bug</link>
+      <pubDate>2023-02-25</pubDate>
+    </item>
+    <item>
+      <title>The Query Observability Of StarRocks</title>
+      <description><!-- toc -->
+
+过去两年，我们开发了很多查询层的分析，诊断工具，加强了 StarRocks 查询层的可观测性，今天给大家简单介绍下，之后我们还会在可观测性方面继续加强。
+
+## StarRocks Explain + SQL
+
+参考 https://docs.starrocks.io/en-us/latest/administration/Query_planning#plan-analysis 可以看到每个 SQL 的执行计划
+```
+explain SELECT t2_126.c_2_0 FROM t2 AS t2_126 INNER JOIN   (SELECT v0_127.c_0_2,           v0_127.c_0_7    FROM v0 AS v0_127    WHE
+RE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0 AS v0_127) ) subv0 ON t2_126.c_2_5 = subv0.c_0_2;
+```
+
+### StarRocks Explain logical + SQL
+
+相比  Explain + SQL，信息更少，可以更方便地看到整个执行计划
+```
+mysql> Explain logical SELECT t2_126.c_2_0 FROM t2 AS t2_126 INNER JOIN   (SELECT v0_127.c_0_2,           v0_127.c_0_7    FROM v0 AS v0_127    WHERE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0 AS v0_127) ) subv0 ON t2_126.c_2_5 = subv0.c_0_2;
+
++-----------------------------------------------------------------------------------------------------------------------+
+| Expla</description>
+      <link>starrocks-observability</link>
+      <pubDate>2023-02-05</pubDate>
+    </item>
+    <item>
+      <title>最强开源 OLAP 数据库，你应该选择的 10 个理由</title>
+      <description><!-- toc -->
+
+2022 年即将结束，疫情持续了 3 年，StarRocks 也创立了快 3 年，今天就总结下 StarRocks 用户侧可以感知的十大 Fature 和 优化，也希望大家对 StarRocks 有一个更全面的认知。
+
+## 一 极速 OLAP
+
+![](media/16679811340710/16688670975989.jpg)
+
+图中是我们官网展示的 SSB 单表的查询性能对比，可以看到，相比业界其他优秀的 OLAP 数据库，我们 StarRcoks 在性能上有着明显的优势，不止是 SSB 单表查询，SSB 多表，TPC-H 查询，TPC-DS 等复杂的多表查询，我们同样拥有极致的性能。TPC-DS 查询在 100G 和 1T 规模下，StarRcoks 相比 Snowflake 有2到3倍的性能优势。
+
+极致的性能不仅可以带来更好的用户体验，让之前难以实现的需求可以实现，更重要的是，可以节省大量的机器，为企业降本增效。
+
+我们 StarRcoks 能拥有极致的 OLAP 分析性能，是因为2年多来，我们在以下几个方面做了大量持续深入的优化：
+
+1. **MPP 分布式执行**：StarRocks 拥有 MPP 的分布式执行框架，保证了 StarRocks 可以充分发挥多机 scale out 的能力
+2. **Pipeline 并行执行框架**：我们从零打造了 pipeline 并行框架，可以让  StarRocks 充分发挥多核 scale up 的能力
+3. **向量化执行**：我们从零打造了 StarRocks 的向量化执行引擎，让 StarRocks 单核可以拥有极致的执行性能
+4. **CBO 优化器**：通过 MPP 分布式执行， Pipeline 并行执行 和 向量化执行，我们拥有了世界领先的查询执行器，但是对于复杂的SQL，优化器产生的 Plan 好坏对查询性能影响更大，所以我们又从零打造了 CBO 优化器，让 StarRocks 对于复杂查询可以产生足够好的 Plan，进而对于复杂查询，StarRocks 也可以拥有极佳的查询性能
+5. **Global Runtime Filter** : Runtime Filter 对复杂的join 查询影响极大，开关 Runtime f</description>
+      <link>starrocks-10</link>
+      <pubDate>2022-12-13</pubDate>
+    </item>
+    <item>
+      <title>数据库之美 —— 查询自适应执行</title>
+      <description><!-- toc -->
+
+今天给大家分享下数据库领域比较重要的优化：查询自适应执行。
+
+## 为什么需要自适应执行
+
+![SQL 处理流程 ](media/16660847700843/olap%20%E6%9E%81%E9%80%9F.png)
+
+如图，大家都知道，传统数据库的用户接口一般是 SQL, 而 SQL 是声明式语言, 只描述了 What，没有描述 How, 所以数据库接收到 SQL，需要先通过查询优化器将 SQL 转为可执行的物理执行计划 （也就是 How），再将物理执行计划交给查询执行器执行。
+
+大家也都知道，同样一条 SQL 可能的执行计划可能有成千上万种，不同的执行计划执行效率可能相差成百上千倍，也就是说，如果执行计划选择错误，查询执行器的执行能力再强，性能再好，也无济于事。就相当于在一场战争中，如果大的战略决策错了，个体士兵的战斗能力再强，也无法改变整个战争的结果。
+
+而优化器能否生成尽可能优的执行计划的关键就是统计信息的准确与否，选择度的估计，基数估计的准确性，而残酷的现实是：
+
+1. 大多数时候，我们无法获取统计信息，或者获取的统计信息很不准确
+2. 在选择度估计，基数估计的时候，我们做了太多关于数据分布，数据特征的假设，但是大多数时候，这些假设都不成立
+3. 在流处理场景下，数据是源源不断的进来的，数据特点可能会不断变化，整个流处理任务，我们不可能只生成一个固定的执行计划
+4. 当查询复杂到涉及几十，几百张表时，执行计划的空间是指数级增长的，查询优化器已经不可能在有限的时间内给出足够好的执行计划
+
+综上，我们知道，传统的先 Plan 一次再执行的执行模式无法在所有查询场景下都适用，所以我们要引入自适应执行。
+
+## 什么是查询自适应执行
+改变之前的先 Plan 一次再执行的模式，在执行过程中收集更多统计信息，收集数据的分布和特征，收集集群的资源使用情况，然后重新优化和改变执行计划，或者局部及时调整执行策略。 几个重要的特点：
+
+1. 变静态决策为动态决策：根据运行时的真实信息调整执行计划
+2. 由一次 Plan 变为 多次 Plan
+3. 由一种执行策略 变为 多种执行策略
+4. Plan 由真实的数据本身在运行时决定，不同的数据会拥有不同的执行策略
+
+下面两张图是几种自适应策略</description>
+      <link>adaptive</link>
+      <pubDate>2022-12-03</pubDate>
+    </item>
+    <item>
+      <title>12 款日常生产力工具推荐</title>
+      <description>今天推荐下 12 款我日常使用的生产力工具，大家有其他高效的工具，也欢迎推荐。
+
+## Markdown 写作和 笔记软件 ———— MWeb
+https://zh.mweb.im/
+
+我已经使用 4 年多了，平时所有的知识笔记和博客写作都是使用 MWeb 完成的，感觉不错。功能亮点：强大的 Markdown 支持，文档库，高级搜索，多格式导出，一键文档发布等。
+
+![mweb](media/15436424734179/mweb.png)
+
+
+## 电子书阅读 ———— 得到
+https://www.dedao.cn/
+
+之前在得到上学习了吴军，刘润的很多课程，现在主要是用得到看电子书，主要是得到电子书会员看大多数电子书都是免费的。
+
+## 画图工具 ———— Processon
+https://www.processon.com/
+
+我用了很多年了，感觉画图比较方便，一开始吸引我的主要是大量模板，可以基于模板快速做图，然后就是做图本身比较简单。
+
+![Processon](media/15436424734179/Processon.png)
+
+## VPN 工具 ———— dlercloud
+https://dlercloud.com/
+
+客户端可以使用 Clash for Windows，使用很多年了，比较稳定。
+
+## 论文搜索软件 ———— Sci-Hub
+https://sci-hub.se/
+
+可以免费获取一些付费的学术论文，该网站的发起者崇尚学术自由，目标是免费并且不受限制地提供所有科学知识。
+
+![sci](media/15436424734179/sci.png)
+
+
+## 代码命名软件 ———— CODELF
+https://unbug.github.io/codelf/
+
+我使用的频率很低，主要是 Review 其他人代码看到奇怪的命名时，可以确认下某个命名用的多不多。
+
+![codeif](media/15436424734179/codeif.png)
+
+## 文件格式转换工具 ———— cloudconvert
+https://cloudconvert.com/
+
+可以支持多种文件格式的相互转换，之前用过几次。
+
+## Markdown ——</description>
+      <link>tools</link>
+      <pubDate>2022-11-20</pubDate>
+    </item>
+    <item>
+      <title>StarRocks 技术原理资料汇总</title>
+      <description><!-- toc -->
+
+
+本文主要整理下介绍 StarRocks 内部技术原理和源码分析的文章和视频，会持续更新，应用场景和案例的文章可以关注 StarRocks 官方微信公众号。
+
+## StarRocks 查询
+
+### StarRocks 查询整体介绍
+
+* [StarRocks 查询原理浅析](https://mp.weixin.qq.com/s/AkTAibnAaM29aC5JJT58YQ)
+* [StarRocks 源码导读一](https://blog.bcmeng.com/post/starrocks-source-code-1.html)
+* [如何打造一款极速分析型数据库](https://blog.bcmeng.com/post/fastest_database.html)
+
+### StarRocks CBO 优化器
+* [StarRocks 优化器代码导读](https://zhuanlan.zhihu.com/p/577956480)
+* [StarRocks 统计信息和 Cost 估算](https://zhuanlan.zhihu.com/p/582214743)
+* [StarRocks Join Reorder 源码解析](https://zhuanlan.zhihu.com/p/579978445)
+* [StarRocks Analyzer 源码解析](https://zhuanlan.zhihu.com/p/575973738)
+* [StarRocks Parser 源码解析](https://zhuanlan.zhihu.com/p/560685391)
+* [StarRocks 如何添加一个优化规则](https://zhuanlan.zhihu.com/p/583997914)
+* [StarRocks 如何添加一个 Operator](https://zhuanlan.zhihu.com/p/586331147)
+
+### StarRocks 查询调度
+
+* [StarRocks 查询调度源码解析](https://zhuanlan.zhihu.com/p/588406885)
+
+### StarRocks 数据类型
+
+* [StarRocks 如何新增一</description>
+      <link>starrocks-internal</link>
+      <pubDate>2022-11-18</pubDate>
+    </item>
+    <item>
+      <title>打造一款强大成熟的数据库有多难</title>
+      <description><!-- toc -->
+
+从 2015 年开始，我在美团先后维护和研发过 Apache HBase, Apache Kylin, Apache Druid 和 Apache Doris, 对大数据系统和 OLAP 数据库有了深入理解，2020 年开始，我加入了 StarRocks，我们先后打造了业界领先的向量化执行器，CBO 优化器，Pipeline 并行引擎，支持高效 Update 的存储引擎和极速的数据湖分析，支持存储分离的 Cloud Native 版本也即将面世，一路走来，随着我们攻克一个又一个技术难题，解决一个又一个用户需求和难题，服务着越来越多的客户，我对如何打造一个强大且成熟的数据库有了更深的理解，在前一篇文章 [如何快速打造一个高性能数据库原型 ](https://blog.bcmeng.com/post/database-prototype.html) 中，我们看到利用开源系统打造一个数据库原型是如此的简单，在这篇文章中，我会和大家介绍打造一个强大且成熟的数据库都有哪些难点，之后会再用几篇文章介绍我们如何解决这些难点。
+
+## 本质矛盾
+作为一家创业公司或者一家大公司的数据库部门，打造一款强大且成熟的数据库都会有下面两个本质矛盾：
+
+### 1 有限人力和无限工作之间的矛盾
+各种各样的用户需求，无止境的性能优化，永远也修不完的 Bug，一个又一个 Killer Feature 的打造，时刻不停的代码重构，增加不完的测试 Case，不间断的技术调研和系统设计，这些工作都需要大量人力，但无论哪家公司，人力总是不足的，优秀的数据库人才更是稀缺。
+
+### 2 飞速增长与成熟稳定的矛盾
+如果数据库的代码不大变，面对的应用场景不大变，我们让一个数据库变稳定会容易很多，但是如果一个数据库的代码在飞速变化和增长，应对的应用场景不断丰富和变化，让一个数据库稳定下来就会很难。
+
+## 1 定位和独特性之难
+一款数据库想要在产品和商业上取得成功，想在很多竞品中脱颖而出，就必须有清晰的定位和自己的独特性，一款数据库的独特性就是自己的卖点，比如目前 StarRocks 的卖点就是极速统一。 一旦定位和独特点定义清楚，也便意味着全公司产研资源的重心和方向的倾斜。 而一款数据库想要让自己的独特性成为 Killer Feature，就必须超越所有竞</description>
+      <link>database-hard</link>
+      <pubDate>2022-11-17</pubDate>
+    </item>
+    <item>
+      <title>如何快速打造一个高性能数据库原型</title>
+      <description><!-- toc -->
+
+在上篇博客 [Data-Parallel Actors：千行代码构建高性能 OLAP 数据库 ](https://blog.bcmeng.com/post/dpa.html) 中，我提出开源数据库会越来越模块化，打造一个高性能的数据库原型会越来越简单，下图是一个利用 DPA 和 一些开源系统打造的数据库架构示意，可能只需要 1 个或者几个人月，就可以打造出这个原型，并且在 SSB，TPC-H,TPC-DS 等标准测试集上取得不错的性能。下面会对图中的一些系统进行介绍。
+
+![Scratch Performance Database With Open Source](media/16620835915011/Scratch%20Performance%20Database%20With%20Open%20Source.png)
+
+## 查询优化 Apache Calcite
+Apache Calcite 网上相关的资料已经很多了，这里就不过多介绍了。 Calcite 相比 StarRocks 的优化器扩展性会更好，但是性能不及 StarRocks 的优化器。
+
+### 架构
+![calcite architecture and interaction](media/16620835915011/calcite%20architecture%20and%20interaction.png)
+
+Calcite 的核心是优化器，同时支持 RBO 和 CBO，包括 Catalog, SQL parser, SQL validator, Query Optimizer，JDBC Server 和 内置的执行器
+
+### 可扩展性
+Calcite 的目标是成为一个通用的查询优化器，可以被各种系统使用，所以在扩展性上做的比较好，开发者在使用 Calcite 时对下面的模块都可以进行扩展：
+
+* Relational operators
+* Planner rules
+* Cost model
+* Statistics
+* 元数据：支持 行数，基数，选择度，唯一性等，很多元数据都可以定义
+
+### Built-in SQL implementation
+Calcite 也内置了一套执行器，可以执行所有的算子</description>
+      <link>database-prototype</link>
+      <pubDate>2022-11-06</pubDate>
+    </item>
+    <item>
+      <title>Data-Parallel Actors：千行代码构建高性能 OLAP 数据库</title>
+      <description><!-- toc -->
+
+## What is Data-Parallel Actors
+
+![Screen Shot 2022-11-05 at 8.46.27 PM](media/16676395433430/Screen%20Shot%202022-11-05%20at%208.46.27%20PM.png)
+
+如上图，DPA 是一个 high-level 的编程模型：对分布式查询的相关功能进行了统一和抽象：数据复制，更新一致性，容错，查询负载均衡，弹性，持久化等。
+
+有了 DPA，开发者只实现单机的数据结构和算子，就可以获得一个可靠的，高性能的分布式分析型数据库。开发者使用 DPA 只需要专注自己的独特和核心的逻辑。
+
+论文中通过 Druid, Solr, and MongoDB 3 个系统论证了 DPA 的普适性和实际效果，利用 DPA 实现前面 3 个系统每个都不超过 1 千行代码。 并且在标准测试集的性能，不比之前的系统差，而且在有数据倾斜的场景，还有 3 倍的性能提升。
+
+开发者需要通过查询优化器将用户的请求转为 DPA 的并行算子。
+
+## Why need Data-Parallel Actors
+1. 分布式功能每个系统都大同小异，都需要耗费大量的人力，不应该也不需要重复实现。
+
+2. 当前的分布式系统（Erlang,Ray,Spark 等）不能满足分析型数据库的需求：数据并行的低延迟查询和高频的批量数据更新。
+
+
+## How Data-Parallel Actors
+
+### Actors 和数据模型的映射
+DPA 将一个数据库视为 stateful actors 的集合，每个 Actor 封装了一部分数据，同时负责这部分数据的状态和计算。 
+
+* 在 Solr 里，一个 Actor 封装了 Solr 的 inverted index
+* 在 Druid 里，一个 Actor 封装了 Druid 的 segment，一组 Actor 组成 Druid 的 data source
+* 在 MongoDB，一组 Actor 封装了 MongoDB 的 collections
+
+DPA 不关心每个系统的 actor 具体如何实现，只需要实现几个核心接口： create, destroy,</description>
+      <link>dpa</link>
+      <pubDate>2022-11-05</pubDate>
+    </item>
+    <item>
+      <title>我开通了知识星球</title>
+      <description>今天开通了知识星球：
+
+知识星球主要内容可能会包括：
+1. **数据库领域的专业知识**：会有深度，成系列。 之前有几个系列自己一直在准备中。
+2. **优秀的书籍和学习资料**：平时自己读过的不错的书籍，或者学习资料，会实时进行分享。
+3. **程序员通用技能&程序员成长**：之前一直想写一篇《如何快速成长为一位年薪百万的数据库技术专家》，之后会在星球发布出来。
+4. **面试经验**： 这两年面试过很多人，应届生或者换工作的同学可以进行心得交流。
+5. **创业心得**： 创业两年来，也有很多心得感悟，希望能分享给大家。
+
+开通知识星球的原因：
+1. 尝试下 知识付费 & 私域流量。
+2. 倒逼自己不断学习，总结输出，因为自己肯定会让大家的付费物有所值。
+3. 和大家的问答和交流可以进行积累沉淀。
+
+最后，欢迎大家加入。</description>
+      <link>zhishixingqiu</link>
+      <pubDate>2022-10-30</pubDate>
+    </item>
+    <item>
+      <title>如何打造一款极速分析型数据库</title>
+      <description><!-- toc -->
+
+在 [数据库从0到0.1 (二)： OLTP VS OLAP VS HTAP](https://blog.bcmeng.com/post/oltp-olap-htap.html) 一文中，我们知道，目前数据库主要分为两大类，一类是以事务为主的事务型数据库，一类是以分析为主的分析型数据库。而对于一款分析型数据库而言，性能至关重要，如何打造极致的性能，是分析型数据库永恒的主题，本文我就分享下如何打造一款基于 CPU 的极速分析型数据库。 （GPU，FPGA 等异构计算本文暂不讨论， RDMA, NVM 等新硬件加速本文暂不讨论）
+
+本文将从预计算 VS 现场计算，可扩展性，数据流，资源利用，调优，弹性，架构 VS 细节，近似 VS 精确 8个角度来论述如何打造一款基于 CPU 的极速分析型数据库：
+
+## 一 极速 OLAP 数据库：预计算 VS 现场计算
+![-w1748](media/16404977814611/16404998309202.jpg)
+
+数据库本质上来讲，就是在做两件事情： **数据的存储** 和 **数据的查询**，当数据写入数据库，数据库保证数据不会丢，当我们需要查询或者分析数据时，数据库可以快速，正确地返回我们想要的数据。  如上图所示，在数据库现场计算能力不变的情况，要提升查询性能，我们就有两种大的手段：1，在数据库导入过程，进行一些预处理，减少现场计算的成本； 2，在数据存储时，有空间换时间，减少现场计算的成本。 具体可以分为4类手段：
+
+### 1.1 Materialized View
+
+![-w1507](media/16404977814611/16405005754473.jpg)
+
+如上图所示：物化视图就是将某个或者某类SQL的查询结果提前计算出来，用导入时延，存储成本换取查询时的高性能。物化视图是 OLAP 数据库的常见加速手段，比如：
+
+* StarRocks 中的 物化视图
+* Google Mesa 中的 Rollup
+* Apache Kylin 中的 Cube
+* Apache Pinot 中的 Star-Tree Index
+* Apache Calcite 中的 Lattice
+* Dremio 中的 Reflections
+
+物化视图</description>
+      <link>fastest_database</link>
+      <pubDate>2021-12-26</pubDate>
+    </item>
+    <item>
+      <title>数据库学习资料（2022-03-18 更新）</title>
+      <description><!-- toc -->
+
+在 [StarRocks](https://github.com/StarRocks/starrocks) 将近两年的时间里面，我们查询团队从零实现了向量化执行器，CBO 查询优化器，Pipeline 并行查询引擎，刷新国产 OLAP 数据库性能的里程碑，本文整理了我平时参考和学习的一些数据库资料，希望对大家有所帮助，也欢迎大家参与 [StarRocks](https://github.com/StarRocks/starrocks) 开源社区。
+
+本文章会努力持续更新，也欢迎大家一起贡献和修改。
+
+TODO:
+* [ ] 系统综述部分进行分类
+* [ ] 每篇材料给出难度评级（入门，进阶，专业）
+* [ ] 每篇材料给出必要性评级 （可选，必读）
+* [ ] 每篇论文备注下核心观点，以及我们可以学习到什么
+* [ ] 每个数据库系统架构的优点，缺点，以及我们可以学习到什么
+
+## 数据库总览
+
+### 书籍
+* [Designing Data-Intensive Applications](https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/) ★★★★★
+* [Database Internals](https://www.oreilly.com/library/view/database-internals/9781492040330/)
+* [Streaming Systems: The What, Where, When, and How of Large-Scale Data Processing](https://www.oreilly.com/library/view/streaming-systems/9781491983867/)
+* [Architecture of a Database System](https://dsf.berkeley.edu/papers/fntdb07-architecture.pdf)
+
+### 大学课程
+* [CMU 15445 数据库基础课程](https://15445.courses.cs.cmu.edu/fa</description>
+      <link>database-learning</link>
+      <pubDate>2021-12-19</pubDate>
+    </item>
+    <item>
+      <title>StarRocks 源码导读一</title>
+      <description><!-- toc -->
+
+2021年9月8日，我司鼎石科技开放了核心数据库产品 StarRocks 源码：[https://github.com/StarRocks/starrocks](https://github.com/StarRocks/starrocks)，StarRocks 基于 [Apache Doris](https://github.com/apache/incubator-doris/) 开发，我们十分感谢 Apache Doris 社区贡献了这样一个优秀的OLAP数据库，也感谢所有[向 Apache Doris 贡献过的同学](https://github.com/apache/incubator-doris/graphs/contributors)，让我们可以站在巨人的肩膀上快速前进和迭代，不过 StarRocks 和 Apache Doris 已经有了很大的不同，我们新增和修改的代码行数达到了几十万行，我将分两篇文章对 StarRocks 的源码进行导读，这篇文章主要介绍 StarRocks 全新的 CBO 优化器和向量化执行器。
+
+## StarRocks CBO 优化器
+如果一条SQL的执行是一场旅程，查询执行器就是你的交通工具，你的交通工具性能越好，在相同的路径下，旅程的耗时自然越短。但是从旅程的出发点到终点可能有成千上万条路径，有康庄大道，也有林荫小路，而查询优化器的作用就是选择出最短，最合适的道路。 **一般 SQL 越复杂，数据量越大，查询优化器的意义就越大，因为不同执行方式的性能差别可能有成百上千倍**。
+
+一条 SQL 查询时会依次需要经过查询解析器，分析器, 优化器，查询执行层和存储层。 查询优化器的输入是一颗逻辑的抽象语法树，输出是一颗“最优的” 物理执行计划。 查询越复杂，数据量越大，物理执行计划的好坏对查询性能影响越大，所以一款成熟的商业数据库都需要一个强大的，成熟的查询优化器。
+
+StarRocks 全新的 CBO 优化器主要基于 Cascades，Columbia，ORCA 论文实现，也参考了 ORCA，Presto，Calcite，CMU Noisepage，CockroachDB 等项目，核心优化流程基本和 Columbia 一致，在具体工程实践中，我们进行了很多优化与创新。
+
+整个 </description>
+      <link>starrocks-source-code-1</link>
+      <pubDate>2021-09-12</pubDate>
+    </item>
+    <item>
+      <title>Apache Doris 查询原理</title>
+      <description><!-- toc -->
+
+### Doris 查询简介
+Doris 的查询和大多数数据库一样，需要经过 Parse,Analyze,Optimize,Plan, Schedule, Execute 等过程。 在 Doris 中，FE 负责查询的 Parse,Analyze,Optimize,Plan, Schedule，BE 负责查询的 Execute。Doris 查询的分布式执行是[MPP](https://databases.looker.com/analytical) 架构，相比于 Kylin 和 Druid 的 [Scatter-Gather](https://www.quora.com/What-is-the-Scatter-Gather-pattern-for-Distributed-Computing) 架构，可以很好地支持 Shuffle 操作，所以对大数据集的 Join 和聚合，处理效率会更高。 Doris 的单机查询执行模型是 Batch 模式的[Volcano](https://paperhub.s3.amazonaws.com/dace52a42c07f7f8348b08dc2b186061.pdf) 模型，相比于 tuple one time 的 Volcano 模型，解释执行的开销更低，CPU 利用效率更高。
+
+### Doris Query 接收
+Doris 兼容 Mysql 协议，用户可以通过 Mysql 客户端和绝大多数兼容 Mysql 协议的 BI 工具向 Doris 发送 查询。
+
+Doris 的 MysqlServer 接收用户的请求，每个请求都会封装成一个 ConnectContext, ConnectScheduler 会维护一个线程池，每个 ConnectContext 会在一个线程中由 ConnectProcessor 进程处理。 ConnectProcessor 负责查询的处理，审计和返回查询结果给客户端。
+
+### Doris Query Parse
+ConnectProcessor 会首先进行查询 SQL 的 Parse。
+
+Doris 使用的 Parse 是 [Java CUP Parser](http://www2.cs.tum.edu/projects/cup/)，语法规则 定义</description>
+      <link>apache-doris-query</link>
+      <pubDate>2020-03-31</pubDate>
+    </item>
+  </channel>
+</rss>
