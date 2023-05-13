@@ -83,6 +83,7 @@ exports.updateAll = function(req, res){
                     md.compilePosts(posts[i]);
                 }
                 md.compilePages(posts);
+                md.compileRss(posts);
             }
         })
         return res.sendStatus(200);
