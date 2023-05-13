@@ -4,13 +4,13 @@
     <title>编程小梦</title>
     <description>编程小梦|康凯森的技术博客</description>
     <link>https://blog.bcmeng.com/</link>
-    <lastBuildDate>Sat, 13 May 2023 04:33:52 GMT</lastBuildDate>
-    <pubDate>Sat, 13 May 2023 04:33:52 GMT</pubDate>
+    <lastBuildDate>Sat, 13 May 2023 05:46:31 GMT</lastBuildDate>
+    <pubDate>Sat, 13 May 2023 05:46:31 GMT</pubDate>
     <item>
       <title>康凯森的公开分享</title>
-      <description><!-- toc -->
+      <description>&lt;!-- toc --&gt;
 
-* 2017-01 InfoQ [《Apache Kylin 精确去重指标优化历程》](https://mp.weixin.qq.com/s?__biz=MzU1NDA4NjU2MA==&mid=2247486321&idx=1&sn=2e1bdc75914ab115b169a65c84acdfee)
+* 2017-01 InfoQ [《Apache Kylin 精确去重指标优化历程》](https://mp.weixin.qq.com/s?__biz=MzU1NDA4NjU2MA==&amp;mid=2247486321&amp;idx=1&amp;sn=2e1bdc75914ab115b169a65c84acdfee)
 * 2017-07 Kylin 社区官方 [《Improving Spark Cubing in Kylin 2.0》 ](https://kylin.apache.org/blog/2017/07/21/Improving-Spark-Cubing/)
 * 2018-07 InfoQ [《Apache Kylin VS Apache Doris》](https://mp.weixin.qq.com/s/e0nkJK927ANPCsoFzlBFsg) (全网阅读量 10万+)
 * 2018-08 Kylin MeetUp [《基于Druid的Kylin存储引擎实践》](https://blog.bcmeng.com/post/kylin-on-druid.html)
@@ -25,7 +25,7 @@
     </item>
     <item>
       <title>我 ChatGPT 网站一次微小升级的复盘</title>
-      <description><!-- toc -->
+      <description>&lt;!-- toc --&gt;
 
 ## 背景
 
@@ -67,7 +67,7 @@
     </item>
     <item>
       <title>MPP Pipeline VS Grouped Execution VS Stage By Stage</title>
-      <description><!-- toc -->
+      <description>&lt;!-- toc --&gt;
 
 Presto 最近发布了新的论文，[Presto: A Decade of SQL Analytics at Meta](https://research.facebook.com/publications/presto-a-decade-of-sql-analytics-at-meta/) 刚好 Presto 同时支持了 MPP Pipeline , Grouped Execution, Stage By Stage 3 种分布式执行模式，就想把这3种执行模式对比下。
 
@@ -94,7 +94,7 @@ Grouped Execution 其实很好理解，大家可以从 Colocate join 来理解�
     </item>
     <item>
       <title>OLAP 查询性能优化 10 问</title>
-      <description><!-- toc -->
+      <description>&lt;!-- toc --&gt;
 
 
 ## 1 查询性能优化的意义
@@ -137,7 +137,7 @@ Grouped Execution 其实很好理解，大家可以从 Colocate join 来理解�
     </item>
     <item>
       <title>ChatGPT 真的可以让流浪地球的丫丫 “复活”</title>
-      <description><!-- toc -->
+      <description>&lt;!-- toc --&gt;
 
 ## 一 流浪地球2中的YY
 ![yaya](media/16786259781472/yaya.png)
@@ -163,8 +163,8 @@ Whisper 将语音转换给文本， 输入给 ChatGPT，</description>
       <pubDate>2023-03-12</pubDate>
     </item>
     <item>
-      <title>ChatGPT  教程&资源&应用大全</title>
-      <description><!-- toc -->
+      <title>ChatGPT  教程&amp;资源&amp;应用大全</title>
+      <description>&lt;!-- toc --&gt;
 
 ## 1 如何注册 ChatGPT 账号
 可以直接使用 https://chat.bcmeng.com/   无需注册，响应极速，无需翻墙
@@ -204,7 +204,7 @@ https://writesonic.com/blog/chatgpt-chrome-extensions/
     </item>
     <item>
       <title>ChatGPT 自动为数据库找 Bug</title>
-      <description><!-- toc -->
+      <description>&lt;!-- toc --&gt;
 
 ## ChatGPT 代替 SQLsmith
 SQLsmith 是一款数据库自动化测试工具，主要原理是根据固定的 table schame，生成随机的 SQL，发送到数据库，看数据库会不会 crash。
@@ -236,7 +236,7 @@ SQLsmith 是一款数据库自动化测试工具，主要原理是根据固定�
     </item>
     <item>
       <title>The Query Observability Of StarRocks</title>
-      <description><!-- toc -->
+      <description>&lt;!-- toc --&gt;
 
 过去两年，我们开发了很多查询层的分析，诊断工具，加强了 StarRocks 查询层的可观测性，今天给大家简单介绍下，之后我们还会在可观测性方面继续加强。
 
@@ -252,7 +252,7 @@ RE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0
 
 相比  Explain + SQL，信息更少，可以更方便地看到整个执行计划
 ```
-mysql> Explain logical SELECT t2_126.c_2_0 FROM t2 AS t2_126 INNER JOIN   (SELECT v0_127.c_0_2,           v0_127.c_0_7    FROM v0 AS v0_127    WHERE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0 AS v0_127) ) subv0 ON t2_126.c_2_5 = subv0.c_0_2;
+mysql&gt; Explain logical SELECT t2_126.c_2_0 FROM t2 AS t2_126 INNER JOIN   (SELECT v0_127.c_0_2,           v0_127.c_0_7    FROM v0 AS v0_127    WHERE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0 AS v0_127) ) subv0 ON t2_126.c_2_5 = subv0.c_0_2;
 
 +-----------------------------------------------------------------------------------------------------------------------+
 | Expla</description>
@@ -261,7 +261,7 @@ mysql> Explain logical SELECT t2_126.c_2_0 FROM t2 AS t2_126 INNER JOIN   (SELEC
     </item>
     <item>
       <title>最强开源 OLAP 数据库，你应该选择的 10 个理由</title>
-      <description><!-- toc -->
+      <description>&lt;!-- toc --&gt;
 
 2022 年即将结束，疫情持续了 3 年，StarRocks 也创立了快 3 年，今天就总结下 StarRocks 用户侧可以感知的十大 Fature 和 优化，也希望大家对 StarRocks 有一个更全面的认知。
 
@@ -285,7 +285,7 @@ mysql> Explain logical SELECT t2_126.c_2_0 FROM t2 AS t2_126 INNER JOIN   (SELEC
     </item>
     <item>
       <title>数据库之美 —— 查询自适应执行</title>
-      <description><!-- toc -->
+      <description>&lt;!-- toc --&gt;
 
 今天给大家分享下数据库领域比较重要的优化：查询自适应执行。
 
@@ -373,7 +373,7 @@ https://cloudconvert.com/
     </item>
     <item>
       <title>StarRocks 技术原理资料汇总</title>
-      <description><!-- toc -->
+      <description>&lt;!-- toc --&gt;
 
 
 本文主要整理下介绍 StarRocks 内部技术原理和源码分析的文章和视频，会持续更新，应用场景和案例的文章可以关注 StarRocks 官方微信公众号。
@@ -407,7 +407,7 @@ https://cloudconvert.com/
     </item>
     <item>
       <title>打造一款强大成熟的数据库有多难</title>
-      <description><!-- toc -->
+      <description>&lt;!-- toc --&gt;
 
 从 2015 年开始，我在美团先后维护和研发过 Apache HBase, Apache Kylin, Apache Druid 和 Apache Doris, 对大数据系统和 OLAP 数据库有了深入理解，2020 年开始，我加入了 StarRocks，我们先后打造了业界领先的向量化执行器，CBO 优化器，Pipeline 并行引擎，支持高效 Update 的存储引擎和极速的数据湖分析，支持存储分离的 Cloud Native 版本也即将面世，一路走来，随着我们攻克一个又一个技术难题，解决一个又一个用户需求和难题，服务着越来越多的客户，我对如何打造一个强大且成熟的数据库有了更深的理解，在前一篇文章 [如何快速打造一个高性能数据库原型 ](https://blog.bcmeng.com/post/database-prototype.html) 中，我们看到利用开源系统打造一个数据库原型是如此的简单，在这篇文章中，我会和大家介绍打造一个强大且成熟的数据库都有哪些难点，之后会再用几篇文章介绍我们如何解决这些难点。
 
@@ -427,7 +427,7 @@ https://cloudconvert.com/
     </item>
     <item>
       <title>如何快速打造一个高性能数据库原型</title>
-      <description><!-- toc -->
+      <description>&lt;!-- toc --&gt;
 
 在上篇博客 [Data-Parallel Actors：千行代码构建高性能 OLAP 数据库 ](https://blog.bcmeng.com/post/dpa.html) 中，我提出开源数据库会越来越模块化，打造一个高性能的数据库原型会越来越简单，下图是一个利用 DPA 和 一些开源系统打造的数据库架构示意，可能只需要 1 个或者几个人月，就可以打造出这个原型，并且在 SSB，TPC-H,TPC-DS 等标准测试集上取得不错的性能。下面会对图中的一些系统进行介绍。
 
@@ -457,7 +457,7 @@ Calcite 也内置了一套执行器，可以执行所有的算子</description>
     </item>
     <item>
       <title>Data-Parallel Actors：千行代码构建高性能 OLAP 数据库</title>
-      <description><!-- toc -->
+      <description>&lt;!-- toc --&gt;
 
 ## What is Data-Parallel Actors
 
@@ -497,12 +497,12 @@ DPA 不关心每个系统的 actor 具体如何实现，只需要实现几个核
 知识星球主要内容可能会包括：
 1. **数据库领域的专业知识**：会有深度，成系列。 之前有几个系列自己一直在准备中。
 2. **优秀的书籍和学习资料**：平时自己读过的不错的书籍，或者学习资料，会实时进行分享。
-3. **程序员通用技能&程序员成长**：之前一直想写一篇《如何快速成长为一位年薪百万的数据库技术专家》，之后会在星球发布出来。
+3. **程序员通用技能&amp;程序员成长**：之前一直想写一篇《如何快速成长为一位年薪百万的数据库技术专家》，之后会在星球发布出来。
 4. **面试经验**： 这两年面试过很多人，应届生或者换工作的同学可以进行心得交流。
 5. **创业心得**： 创业两年来，也有很多心得感悟，希望能分享给大家。
 
 开通知识星球的原因：
-1. 尝试下 知识付费 & 私域流量。
+1. 尝试下 知识付费 &amp; 私域流量。
 2. 倒逼自己不断学习，总结输出，因为自己肯定会让大家的付费物有所值。
 3. 和大家的问答和交流可以进行积累沉淀。
 
@@ -512,7 +512,7 @@ DPA 不关心每个系统的 actor 具体如何实现，只需要实现几个核
     </item>
     <item>
       <title>如何打造一款极速分析型数据库</title>
-      <description><!-- toc -->
+      <description>&lt;!-- toc --&gt;
 
 在 [数据库从0到0.1 (二)： OLTP VS OLAP VS HTAP](https://blog.bcmeng.com/post/oltp-olap-htap.html) 一文中，我们知道，目前数据库主要分为两大类，一类是以事务为主的事务型数据库，一类是以分析为主的分析型数据库。而对于一款分析型数据库而言，性能至关重要，如何打造极致的性能，是分析型数据库永恒的主题，本文我就分享下如何打造一款基于 CPU 的极速分析型数据库。 （GPU，FPGA 等异构计算本文暂不讨论， RDMA, NVM 等新硬件加速本文暂不讨论）
 
@@ -542,7 +542,7 @@ DPA 不关心每个系统的 actor 具体如何实现，只需要实现几个核
     </item>
     <item>
       <title>数据库学习资料（2022-03-18 更新）</title>
-      <description><!-- toc -->
+      <description>&lt;!-- toc --&gt;
 
 在 [StarRocks](https://github.com/StarRocks/starrocks) 将近两年的时间里面，我们查询团队从零实现了向量化执行器，CBO 查询优化器，Pipeline 并行查询引擎，刷新国产 OLAP 数据库性能的里程碑，本文整理了我平时参考和学习的一些数据库资料，希望对大家有所帮助，也欢迎大家参与 [StarRocks](https://github.com/StarRocks/starrocks) 开源社区。
 
@@ -570,7 +570,7 @@ TODO:
     </item>
     <item>
       <title>StarRocks 源码导读一</title>
-      <description><!-- toc -->
+      <description>&lt;!-- toc --&gt;
 
 2021年9月8日，我司鼎石科技开放了核心数据库产品 StarRocks 源码：[https://github.com/StarRocks/starrocks](https://github.com/StarRocks/starrocks)，StarRocks 基于 [Apache Doris](https://github.com/apache/incubator-doris/) 开发，我们十分感谢 Apache Doris 社区贡献了这样一个优秀的OLAP数据库，也感谢所有[向 Apache Doris 贡献过的同学](https://github.com/apache/incubator-doris/graphs/contributors)，让我们可以站在巨人的肩膀上快速前进和迭代，不过 StarRocks 和 Apache Doris 已经有了很大的不同，我们新增和修改的代码行数达到了几十万行，我将分两篇文章对 StarRocks 的源码进行导读，这篇文章主要介绍 StarRocks 全新的 CBO 优化器和向量化执行器。
 
@@ -587,7 +587,7 @@ StarRocks 全新的 CBO 优化器主要基于 Cascades，Columbia，ORCA 论文�
     </item>
     <item>
       <title>Apache Doris 查询原理</title>
-      <description><!-- toc -->
+      <description>&lt;!-- toc --&gt;
 
 ### Doris 查询简介
 Doris 的查询和大多数数据库一样，需要经过 Parse,Analyze,Optimize,Plan, Schedule, Execute 等过程。 在 Doris 中，FE 负责查询的 Parse,Analyze,Optimize,Plan, Schedule，BE 负责查询的 Execute。Doris 查询的分布式执行是[MPP](https://databases.looker.com/analytical) 架构，相比于 Kylin 和 Druid 的 [Scatter-Gather](https://www.quora.com/What-is-the-Scatter-Gather-pattern-for-Distributed-Computing) 架构，可以很好地支持 Shuffle 操作，所以对大数据集的 Join 和聚合，处理效率会更高。 Doris 的单机查询执行模型是 Batch 模式的[Volcano](https://paperhub.s3.amazonaws.com/dace52a42c07f7f8348b08dc2b186061.pdf) 模型，相比于 tuple one time 的 Volcano 模型，解释执行的开销更低，CPU 利用效率更高。
