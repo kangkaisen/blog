@@ -2,11 +2,12 @@
 
 ## 编程小梦静态博客源码
 
-## Demo : http://blog.bcmeng.com/
+## Website : http://blog.bcmeng.com/
 
 ## 博客特点
 
-### 支持markdown写作
+### 支持 Markdown 写作
+### 支持 RSS 订阅
 ### 支持代码高亮
 ### 支持数学公式
 ### 支持文章分类
