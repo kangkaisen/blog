@@ -2,7 +2,7 @@
 
 ## 编程小梦静态博客源码
 
-## Website : http://blog.bcmeng.com/
+## Website : https://blog.bcmeng.com/
 
 ## RSS: https://blog.bcmeng.com/feed.xml
 
