@@ -4,6 +4,8 @@
 
 ## Website : http://blog.bcmeng.com/
 
+## RSS: https://blog.bcmeng.com/feed.xml
+
 ## 博客特点
 
 ### 支持 Markdown 写作
