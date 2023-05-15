@@ -4,8 +4,8 @@
     <title>编程小梦</title>
     <description>编程小梦|康凯森的技术博客</description>
     <link>https://blog.bcmeng.com/</link>
-    <lastBuildDate>Sat, 13 May 2023 23:54:29 GMT</lastBuildDate>
-    <pubDate>Sat, 13 May 2023 23:54:29 GMT</pubDate>
+    <lastBuildDate>Mon, 15 May 2023 05:58:53 GMT</lastBuildDate>
+    <pubDate>Mon, 15 May 2023 05:58:53 GMT</pubDate>
     <item>
       <title>康凯森的公开分享</title>
       <description>&lt;!-- toc --&gt;
@@ -516,7 +516,7 @@ DPA 不关心每个系统的 actor 具体如何实现，只需要实现几个核
 
 在 [数据库从0到0.1 (二)： OLTP VS OLAP VS HTAP](https://blog.bcmeng.com/post/oltp-olap-htap.html) 一文中，我们知道，目前数据库主要分为两大类，一类是以事务为主的事务型数据库，一类是以分析为主的分析型数据库。而对于一款分析型数据库而言，性能至关重要，如何打造极致的性能，是分析型数据库永恒的主题，本文我就分享下如何打造一款基于 CPU 的极速分析型数据库。 （GPU，FPGA 等异构计算本文暂不讨论， RDMA, NVM 等新硬件加速本文暂不讨论）
 
-本文将从预计算 VS 现场计算，可扩展性，数据流，资源利用，调优，弹性，架构 VS 细节，近似 VS 精确 8个角度来论述如何打造一款基于 CPU 的极速分析型数据库：
+本文将从预计算 VS 现场计算，可扩展性，数据流，资源利用，调优，弹性，架构 VS 细节，近似 VS 精确，性能测试 9个角度来论述如何打造一款基于 CPU 的极速分析型数据库：
 
 ## 一 极速 OLAP 数据库：预计算 VS 现场计算
 ![-w1748](media/16404977814611/16404998309202.jpg)
@@ -535,8 +535,7 @@ DPA 不关心每个系统的 actor 具体如何实现，只需要实现几个核
 * Apache Pinot 中的 Star-Tree Index
 * Apache Calcite 中的 Lattice
 * Dremio 中的 Reflections
-
-物化视图</description>
+</description>
       <link>https://blog.bcmeng.com/post/fastest_database.html</link>
       <pubDate>2021-12-26</pubDate>
     </item>
