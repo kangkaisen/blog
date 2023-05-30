@@ -43,26 +43,40 @@
             <hr/>
             <!-- toc -->
 <ul>
-<li><a href="#starrocks-explain-sql">StarRocks Explain + SQL</a><ul>
-<li><a href="#starrocks-explain-logical-sql">StarRocks Explain logical + SQL</a></li>
-<li><a href="#starrocks-explain-cost-sql">Starrocks Explain Cost + SQL</a></li>
+<li><a href="#1-starrocks-explain-sql">1 StarRocks Explain + SQL</a><ul>
+<li><a href="#11-starrocks-explain-logical-sql">1.1 StarRocks Explain logical + SQL</a></li>
+<li><a href="#12-starrocks-explain-cost-sql">1.2 Starrocks Explain Cost + SQL</a></li>
 </ul>
 </li>
-<li><a href="#starrocks-sql-optimizer-trace-performance">StarRocks SQL Optimizer Trace performance</a></li>
-<li><a href="#starrocks-sql-optimizer-detail-trace-log">StarRocks SQL Optimizer Detail Trace Log</a></li>
-<li><a href="#starrocks-execution-trace-visualization">StarRocks Execution Trace visualization</a></li>
-<li><a href="#starrocks-query-profile">StarRocks Query Profile</a></li>
-<li><a href="#starrocks-query-dump">StarRocks Query Dump</a></li>
-<li><a href="#starrocks-sql-audit-log">StarRocks SQL Audit Log</a></li>
-<li><a href="#starrocks-runtime-query-metrics">StarRocks Runtime Query metrics</a></li>
+<li><a href="#2-starrocks-sql-optimizer-trace-performance">2 StarRocks SQL Optimizer Trace performance</a></li>
+<li><a href="#3-starrocks-sql-optimizer-detail-trace-log">3 StarRocks SQL Optimizer Detail Trace Log</a></li>
+<li><a href="#4-starrocks-execution-trace-visualization">4 StarRocks Execution Trace visualization</a></li>
+<li><a href="#5-starrocks-query-profile">5 StarRocks Query Profile</a></li>
+<li><a href="#6-starrocks-query-dump">6 StarRocks Query Dump</a></li>
+<li><a href="#7-starrocks-sql-audit-log">7 StarRocks SQL Audit Log</a></li>
+<li><a href="#8-starrocks-runtime-query-metrics">8 StarRocks Runtime Query metrics</a></li>
+<li><a href="#9-starrocks-big-query">9 StarRocks Big Query</a></li>
+<li><a href="#10-starrocks-information-schema-table">10 StarRocks information schema table</a><ul>
+<li><a href="#becompactions-表">be_compactions 表</a></li>
+<li><a href="#beconfigs-表">be_configs 表</a></li>
+<li><a href="#belogs-表">be_logs 表</a></li>
+<li><a href="#bemetrics-表">be_metrics 表</a></li>
+<li><a href="#betxns-表">be_txns 表</a></li>
+<li><a href="#fetabletschedules-表">fe_tablet_schedules 表</a></li>
+<li><a href="#loadtrackinglogs-表">load_tracking_logs 表</a></li>
+</ul>
+</li>
+<li><a href="#11-starrocks-统计信息表">11 StarRocks 统计信息表</a></li>
+<li><a href="#12-fe-动态执行脚本">12 FE 动态执行脚本</a></li>
+<li><a href="#13-be-动态执行脚本">13 BE 动态执行脚本</a></li>
 </ul>
 <!-- toc stop -->
 <p>过去两年，我们开发了很多查询层的分析，诊断工具，加强了 StarRocks 查询层的可观测性，今天给大家简单介绍下，之后我们还会在可观测性方面继续加强。</p>
-<h2 id="starrocks-explain-sql">StarRocks Explain + SQL</h2>
+<h2 id="1-starrocks-explain-sql">1 StarRocks Explain + SQL</h2>
 <p>参考 <a href="https://docs.starrocks.io/en-us/latest/administration/Query_planning#plan-analysis">https://docs.starrocks.io/en-us/latest/administration/Query_planning#plan-analysis</a> 可以看到每个 SQL 的执行计划</p>
 <pre><code>explain SELECT t2_126.c_2_0 FROM t2 AS t2_126 INNER JOIN   (SELECT v0_127.c_0_2,           v0_127.c_0_7    FROM v0 AS v0_127    WHE
 RE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0 AS v0_127) ) subv0 ON t2_126.c_2_5 = subv0.c_0_2;
-</code></pre><h3 id="starrocks-explain-logical-sql">StarRocks Explain logical + SQL</h3>
+</code></pre><h3 id="11-starrocks-explain-logical-sql">1.1 StarRocks Explain logical + SQL</h3>
 <p>相比  Explain + SQL，信息更少，可以更方便地看到整个执行计划</p>
 <pre><code>mysql&gt; Explain logical SELECT t2_126.c_2_0 FROM t2 AS t2_126 INNER JOIN   (SELECT v0_127.c_0_2,           v0_127.c_0_7    FROM v0 AS v0_127    WHERE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0 AS v0_127) ) subv0 ON t2_126.c_2_5 = subv0.c_0_2;
 
@@ -110,7 +124,7 @@ RE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0
 |                     predicate: cast(6:c_2_5 as datetime) IS NOT NULL                                                  |
 +-----------------------------------------------------------------------------------------------------------------------+
 39 rows in set (0.04 sec)
-</code></pre><h3 id="starrocks-explain-cost-sql">Starrocks Explain Cost + SQL</h3>
+</code></pre><h3 id="12-starrocks-explain-cost-sql">1.2 Starrocks Explain Cost + SQL</h3>
 <p>相比  Explain + SQL，信息更多，有了列的统计信息，列的类型，Nullable 等信息</p>
 <pre><code>mysql&gt; Explain costs SELECT t2_126.c_2_0 FROM t2 AS t2_126 INNER JOIN   (SELECT v0_127.c_0_2,           v0_127.c_0_7    FROM v0 AS v0_127
    WHERE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0 AS v0_127) ) subv0 ON t2_126.c_2_5 = subv0.c_0_2;
@@ -345,7 +359,7 @@ RE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0
 |      * auto_fill_col--&gt;[1.0, 1.0, 0.0, 1.0, 1.0] ESTIMATE                            |
 +--------------------------------------------------------------------------------------+
 226 rows in set (0.04 sec)
-</code></pre><h2 id="starrocks-sql-optimizer-trace-performance">StarRocks SQL Optimizer Trace performance</h2>
+</code></pre><h2 id="2-starrocks-sql-optimizer-trace-performance">2 StarRocks SQL Optimizer Trace performance</h2>
 <p>功能： 可以详细看到 SQL Optimize 阶段每一步的具体函数，可以用来做 Optimizer 的性能分析</p>
 <pre><code>mysql&gt; TRACE OPTIMIZER SELECT t2_126.c_2_0 FROM t2 AS t2_126 INNER JOIN   (SELECT v0_127.c_0_2,           v0_127.c_0_7    FROM v0 AS v0_127    WHERE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0 AS v0_127) ) subv0 ON t2_126.c_2_5 = subv0.c_0_2;
 +-------------------------------------------------------------------------------------+
@@ -368,7 +382,7 @@ RE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0
 |  4229955ms|    -- ExecPlanBuild[1] 1ms                                              |
 +-------------------------------------------------------------------------------------+
 15 rows in set (0.05 sec)
-</code></pre><h2 id="starrocks-sql-optimizer-detail-trace-log">StarRocks SQL Optimizer Detail Trace Log</h2>
+</code></pre><h2 id="3-starrocks-sql-optimizer-detail-trace-log">3 StarRocks SQL Optimizer Detail Trace Log</h2>
 <p>功能： 可以详细看到 一个 SQL 在 Parse, Analyze, Optimize 每个阶段的详细变化，深入理解 Starrocks 优化器的执行过程</p>
 <p>用法： set enable_optimizer_trace_log first, then query the sql, and</p>
 <pre><code>set enable_optimizer_trace_log = true;
@@ -491,12 +505,12 @@ te=cast(10: c_0_2 as datetime) IS NOT NULL, limit=-1}
 <pre><code>[OptimizerTraceUtil.log():136] [TRACE QUERY e94c1073-a61a-11ed-a188-5254007b45e6] OptimizerTraceInfo
 Rules&#39; applied times
 {TF_JOIN_ASSOCIATIVITY_INNER 1=1, TF_PARTITION_PRUNE 8=4, TF_PUSH_DOWN_PREDICATE_AGG 28=1, TF_PRUNE_PROJECT 65=8, TF_JOIN_COMMUTATIVITY 3=10, TF_MERGE_PROJECT_WITH_CHILD 98=9, TF_PRUNE_AGG_COLUMNS 50=4, TF_PUSH_DOWN_LIMIT 20=3, IMP_LIMIT 146=1, TF_PUSH_DOWN_PREDICATE_SCAN 27=3, TF_REMOVE_AGGREGATION_BY_AGG_TABLE 92=2, IMP_EQ_JOIN_TO_HASH_JOIN 130=4, TF_MERGE_LIMIT_DIRECT 16=2, TF_PARTITION_PREDICATE_PRUNE 14=4, TF_PRUNE_PROJECT_COLUMNS 48=22, IMP_JOIN_TO_NESTLOOP_JOIN 132=6, TF_MERGE_TWO_FILTERS 42=1, TF_PUSH_DOWN_LIMIT_JOIN 24=1, TF_DISTRIBUTION_PRUNE 9=4, TF_PRUNE_JOIN_COLUMNS 53=6, TF_MERGE_TWO_PROJECT 66=9, TF_EXISTENTIAL_APPLY_TO_JOIN 71=1, TF_PUSH_DOWN_JOIN_CLAUSE 32=1, TF_PRUNE_OLAP_SCAN_COLUMNS 47=8, TF_SPLIT_LIMIT 15=1, TF_PRUNE_GROUP_BY_KEYS 62=4, TF_PUSH_DOWN_PREDICATE_PROJECT 33=6, IMP_OLAP_LSCAN_TO_PSCAN 119=5, TF_PUSH_DOWN_PREDICATE_JOIN 31=1, TF_PUSH_DOWN_JOIN_ON_EXPRESSION_TO_CHILD_PROJECT 99=1}
-</code></pre><h2 id="starrocks-execution-trace-visualization">StarRocks Execution Trace visualization</h2>
+</code></pre><h2 id="4-starrocks-execution-trace-visualization">4 StarRocks Execution Trace visualization</h2>
 <p>功能： 可以可视化整个 SQL 的执行过程, 用来做性能分析</p>
 <p>用法： 参考 <a href="https://github.com/StarRocks/starrocks/pull/7649，之后我们会补上文档">https://github.com/StarRocks/starrocks/pull/7649，之后我们会补上文档</a></p>
 <p>结果： 如下图所示：</p>
 <p><img src="media/16752556506730/16757800965388.jpg" alt=""></p>
-<h2 id="starrocks-query-profile">StarRocks Query Profile</h2>
+<h2 id="5-starrocks-query-profile">5 StarRocks Query Profile</h2>
 <p>功能： 包含整个 SQL plan, 调度，执行的关键指标，可以用来做性能分析</p>
 <p>用法： 参考 <a href="https://docs.starrocks.io/en-us/2.5/administration/query_profile">https://docs.starrocks.io/en-us/2.5/administration/query_profile</a></p>
 <p>结果： 如下所示：</p>
@@ -538,17 +552,17 @@ Rules&#39; applied times
        - PeakMemoryUsage: 28.81 KB
        - QueryMemoryLimit: 136.61 GB
       Pipeline (id=0):
-</code></pre><h2 id="starrocks-query-dump">StarRocks Query Dump</h2>
+</code></pre><h2 id="6-starrocks-query-dump">6 StarRocks Query Dump</h2>
 <p>功能： 将 SQL 执行时的整个集群，建表，统计信息等信息 一键 dump 出来，可以用来复现追查用户问题</p>
 <p>用法：参考 <a href="https://docs.starrocks.io/en-us/latest/faq/Dump_query#querydump-interface">https://docs.starrocks.io/en-us/latest/faq/Dump_query#querydump-interface</a></p>
 <p>结果： 可以参考 <a href="https://github.com/StarRocks/starrocks/blob/main/fe/fe-core/src/test/resources/sql/query_dump/tpcds02.json">https://github.com/StarRocks/starrocks/blob/main/fe/fe-core/src/test/resources/sql/query_dump/tpcds02.json</a></p>
-<h2 id="starrocks-sql-audit-log">StarRocks SQL Audit Log</h2>
+<h2 id="7-starrocks-sql-audit-log">7 StarRocks SQL Audit Log</h2>
 <p>For every query, you could find the audit log in log/fe.audit.log file</p>
 <p>功能：记录每个查询的 ScanRows，ScanBytes，CPU 消耗，内存消耗</p>
 <p>用法：log/fe.audit.log </p>
 <p>结果：如下所示</p>
 <pre><code>2023-02-06 20:54:44,550 [query] |Client=172.26.92.195:60684|User=root|AuthorizedUser=&#39;root&#39;@&#39;%&#39;|ResourceGroup=default_wg|Catalog=default_catalog|Db=test|State=EOF|ErrorCode=|Time=165|ScanBytes=0|ScanRows=0|ReturnRows=0|CpuCostNs=1765622|MemCostBytes=327328|StmtId=34|QueryId=6dbf01e8-a61d-11ed-a188-5254007b45e6|IsQuery=true|feIp=192.168.122.1|Stmt=SELECT t2_126.c_2_0 FROM t2 AS t2_126 INNER JOIN   (SELECT v0_127.c_0_2,           v0_127.c_0_7    FROM v0 AS v0_127    WHERE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0 AS v0_127) ) subv0 ON t2_126.c_2_5 = subv0.c_0_2|Digest=|PlanCpuCost=6.0|PlanMemCost=2.0
-</code></pre><h2 id="starrocks-runtime-query-metrics">StarRocks Runtime Query metrics</h2>
+</code></pre><h2 id="8-starrocks-runtime-query-metrics">8 StarRocks Runtime Query metrics</h2>
 <p>功能：统计每个 BE 节点的关键查询指标</p>
 <p>用法：curl -u root:<em>** IP:8040/metrics | grep -E &quot;^star.</em>pip_&quot;</p>
 <p>结果：如下所示</p>
@@ -557,6 +571,253 @@ starrocks_be_pip_exe_poller_block_queue_len 0
 starrocks_be_pip_query_ctx_cnt 2
 starrocks_be_wg_pip_exe_driver_queue_len 0
 starrocks_be_wg_pip_exe_poller_block_queue_len 0
+</code></pre><h2 id="9-starrocks-big-query">9 StarRocks Big Query</h2>
+<p>show proc &#39;/current_queries&#39;</p>
+<p>show proc &#39;/current_queries/${query_id}/hosts&#39;</p>
+<p>StarRocks 的慢查询会收集在 $log/slow_query.log 中。</p>
+<h2 id="10-starrocks-information-schema-table">10 StarRocks information schema table</h2>
+<p>StarRocks 在持续加强和晚上 information schema 的table信息，除了常规的 tablet schema 信息外，我们还加入以下增加可观测性的表：</p>
+<h3 id="be_compactions-表">be_compactions 表</h3>
+<p>可以通过 SQL 直接查询每个 BE 上 compaction 的关键信息</p>
+<pre><code>CREATE TABLE `be_compactions` (
+  `BE_ID` bigint(20) NULL COMMENT &quot;&quot;,
+  `CANDIDATES_NUM` bigint(20) NULL COMMENT &quot;&quot;,
+  `BASE_COMPACTION_CONCURRENCY` bigint(20) NULL COMMENT &quot;&quot;,
+  `CUMULATIVE_COMPACTION_CONCURRENCY` bigint(20) NULL COMMENT &quot;&quot;,
+  `LATEST_COMPACTION_SCORE` double NULL COMMENT &quot;&quot;,
+  `CANDIDATE_MAX_SCORE` double NULL COMMENT &quot;&quot;,
+  `MANUAL_COMPACTION_CONCURRENCY` bigint(20) NULL COMMENT &quot;&quot;,
+  `MANUAL_COMPACTION_CANDIDATES_NUM` bigint(20) NULL COMMENT &quot;&quot;
+) ENGINE=SCHEMA ;
+</code></pre><h3 id="be_configs-表">be_configs 表</h3>
+<p>可以通过 SQL 直接查询每个 BE 上的配置信息：</p>
+<pre><code>mysql&gt; select * from be_configs limit 2;
++-------+----------------------------------------+-------+
+| BE_ID | NAME                                   | VALUE |
++-------+----------------------------------------+-------+
+| 10002 | alter_tablet_worker_count              | 3     |
+| 10002 | auto_adjust_pagecache_interval_seconds | 10    |
++-------+----------------------------------------+-------+
+2 rows in set (0.02 sec)
+</code></pre><h3 id="be_logs-表">be_logs 表</h3>
+<p>可以通过 SQL 直接查询每个 BE 上相关事务的日志信息：</p>
+<pre><code>CREATE TABLE `be_logs` (
+  `BE_ID` bigint(20) NULL COMMENT &quot;&quot;,
+  `LEVEL` varchar(2048) NULL COMMENT &quot;&quot;,
+  `TIMESTAMP` bigint(20) NULL COMMENT &quot;&quot;,
+  `TID` bigint(20) NULL COMMENT &quot;&quot;,
+  `LOG` varchar(2048) NULL COMMENT &quot;&quot;
+) ENGINE=SCHEMA ;
+
+
+mysql&gt; select * from be_logs limit 1;
++-------+-------+------------+--------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| BE_ID | LEVEL | TIMESTAMP  | TID    | LOG                                                                                                                                                                                                                                                              |
++-------+-------+------------+--------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| 10002 | I     | 1685401899 | 214764 | I0530 07:11:39.266544 214764 daemon.cpp:201] Current memory statistics: process(17415544), query_pool(6080), load(0), metadata(1285032), compaction(0), schema_change(0), column_pool(0), page_cache(0), update(0), chunk_allocator(0), clone(0), consistency(0) |
++-------+-------+------------+--------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (4.00 sec)
+</code></pre><h3 id="be_metrics-表">be_metrics 表</h3>
+<p>可以通过 SQL 直接查询每个 BE 上的指标信息：</p>
+<pre><code>mysql&gt; select * from be_metrics limit 20;
++-------+-----------------------------------+--------+-------+
+| BE_ID | NAME                              | LABELS | VALUE |
++-------+-----------------------------------+--------+-------+
+| 10002 | active_scan_context_count         |        |     0 |
+| 10002 | binary_column_pool_bytes          |        |     0 |
+| 10002 | bitmap_index_mem_bytes            |        |     0 |
+| 10002 | blocks_created_total              |        |     0 |
+| 10002 | blocks_deleted_total              |        |     0 |
+| 10002 | blocks_open_reading               |        |     0 |
+| 10002 | blocks_open_writing               |        |     0 |
+| 10002 | bloom_filter_index_mem_bytes      |        |     0 |
+| 10002 | broker_count                      |        |     0 |
+| 10002 | brpc_endpoint_stub_count          |        |     1 |
+| 10002 | bytes_read_total                  |        |     0 |
+| 10002 | bytes_written_total               |        |     0 |
+| 10002 | central_column_pool_bytes         |        |     0 |
+| 10002 | chunk_allocator_mem_bytes         |        |     0 |
+| 10002 | chunk_pool_local_core_alloc_count |        |     0 |
+| 10002 | chunk_pool_other_core_alloc_count |        |     0 |
+| 10002 | chunk_pool_system_alloc_cost_ns   |        |     0 |
+| 10002 | chunk_pool_system_alloc_count     |        |     0 |
+| 10002 | chunk_pool_system_free_cost_ns    |        |     0 |
+| 10002 | chunk_pool_system_free_count      |        |     0 |
++-------+-----------------------------------+--------+-------+
+20 rows in set (0.02 sec)
+</code></pre><h3 id="be_txns-表">be_txns 表</h3>
+<p>可以通过 SQL 直接查询每个 BE 上每个导入事务的关键时间信息和统计信息</p>
+<pre><code>CREATE TABLE `be_txns` (
+  `BE_ID` bigint(20) NULL COMMENT &quot;&quot;,
+  `LOAD_ID` varchar(2048) NULL COMMENT &quot;&quot;,
+  `TXN_ID` bigint(20) NULL COMMENT &quot;&quot;,
+  `PARTITION_ID` bigint(20) NULL COMMENT &quot;&quot;,
+  `TABLET_ID` bigint(20) NULL COMMENT &quot;&quot;,
+  `CREATE_TIME` bigint(20) NULL COMMENT &quot;&quot;,
+  `COMMIT_TIME` bigint(20) NULL COMMENT &quot;&quot;,
+  `PUBLISH_TIME` bigint(20) NULL COMMENT &quot;&quot;,
+  `ROWSET_ID` varchar(2048) NULL COMMENT &quot;&quot;,
+  `NUM_SEGMENT` bigint(20) NULL COMMENT &quot;&quot;,
+  `NUM_DELFILE` bigint(20) NULL COMMENT &quot;&quot;,
+  `NUM_ROW` bigint(20) NULL COMMENT &quot;&quot;,
+  `DATA_SIZE` bigint(20) NULL COMMENT &quot;&quot;,
+  `VERSION` bigint(20) NULL COMMENT &quot;&quot;
+) ENGINE=SCHEMA ;
+</code></pre><h3 id="fe_tablet_schedules-表">fe_tablet_schedules 表</h3>
+<p>可以通过 SQL 直接查询 starrocks 集群 tablet 调度和 balance的状态</p>
+<pre><code>CREATE TABLE `fe_tablet_schedules` (
+  `TABLE_ID` bigint(20) NULL COMMENT &quot;&quot;,
+  `PARTITION_ID` bigint(20) NULL COMMENT &quot;&quot;,
+  `TABLET_ID` bigint(20) NULL COMMENT &quot;&quot;,
+  `TYPE` varchar(2048) NULL COMMENT &quot;&quot;,
+  `PRIORITY` varchar(2048) NULL COMMENT &quot;&quot;,
+  `STATE` varchar(2048) NULL COMMENT &quot;&quot;,
+  `TABLET_STATUS` varchar(2048) NULL COMMENT &quot;&quot;,
+  `CREATE_TIME` double NULL COMMENT &quot;&quot;,
+  `SCHEDULE_TIME` double NULL COMMENT &quot;&quot;,
+  `FINISH_TIME` double NULL COMMENT &quot;&quot;,
+  `CLONE_SRC` bigint(20) NULL COMMENT &quot;&quot;,
+  `CLONE_DEST` bigint(20) NULL COMMENT &quot;&quot;,
+  `CLONE_BYTES` bigint(20) NULL COMMENT &quot;&quot;,
+  `CLONE_DURATION` double NULL COMMENT &quot;&quot;,
+  `MSG` varchar(2048) NULL COMMENT &quot;&quot;
+) ENGINE=SCHEMA ;
+</code></pre><h3 id="load_tracking_logs-表">load_tracking_logs 表</h3>
+<p>可以查看 load 的 tracking_logs</p>
+<pre><code>CREATE TABLE `load_tracking_logs` (
+  `JOB_ID` bigint(20) NULL COMMENT &quot;&quot;,
+  `LABEL` varchar(2048) NULL COMMENT &quot;&quot;,
+  `DATABASE_NAME` varchar(2048) NULL COMMENT &quot;&quot;,
+  `TRACKING_LOG` varchar(65535) NULL COMMENT &quot;&quot;
+) ENGINE=SCHEMA ;
+</code></pre><h2 id="11-starrocks-统计信息表">11 StarRocks 统计信息表</h2>
+<p>可以通过 column_statistics 查看列的基础统计信息</p>
+<pre><code>CREATE TABLE `column_statistics` (
+  `table_id` bigint(20) NOT NULL COMMENT &quot;&quot;,
+  `partition_id` bigint(20) NOT NULL COMMENT &quot;&quot;,
+  `column_name` varchar(65530) NOT NULL COMMENT &quot;&quot;,
+  `db_id` bigint(20) NOT NULL COMMENT &quot;&quot;,
+  `table_name` varchar(65530) NOT NULL COMMENT &quot;&quot;,
+  `partition_name` varchar(65530) NOT NULL COMMENT &quot;&quot;,
+  `row_count` bigint(20) NOT NULL COMMENT &quot;&quot;,
+  `data_size` bigint(20) NOT NULL COMMENT &quot;&quot;,
+  `ndv` hll NOT NULL COMMENT &quot;&quot;,
+  `null_count` bigint(20) NOT NULL COMMENT &quot;&quot;,
+  `max` varchar(65530) NOT NULL COMMENT &quot;&quot;,
+  `min` varchar(65530) NOT NULL COMMENT &quot;&quot;,
+  `update_time` datetime NOT NULL COMMENT &quot;&quot;
+) ENGINE=OLAP
+PRIMARY KEY(`table_id`, `partition_id`, `column_name`)
+COMMENT &quot;OLAP&quot;
+DISTRIBUTED BY HASH(`table_id`, `partition_id`, `column_name`) BUCKETS 10
+PROPERTIES (
+&quot;replication_num&quot; = &quot;1&quot;,
+&quot;in_memory&quot; = &quot;false&quot;,
+&quot;storage_format&quot; = &quot;DEFAULT&quot;,
+&quot;enable_persistent_index&quot; = &quot;false&quot;,
+&quot;replicated_storage&quot; = &quot;true&quot;,
+&quot;compression&quot; = &quot;LZ4&quot;
+);
+</code></pre><p>可以通过 column_statistics 查看列的直方图统计信息</p>
+<pre><code>CREATE TABLE `histogram_statistics` (
+  `table_id` bigint(20) NOT NULL COMMENT &quot;&quot;,
+  `column_name` varchar(65530) NOT NULL COMMENT &quot;&quot;,
+  `db_id` bigint(20) NOT NULL COMMENT &quot;&quot;,
+  `table_name` varchar(65530) NOT NULL COMMENT &quot;&quot;,
+  `buckets` varchar(65530) NULL COMMENT &quot;&quot;,
+  `mcv` varchar(65530) NULL COMMENT &quot;&quot;,
+  `update_time` datetime NOT NULL COMMENT &quot;&quot;
+) ENGINE=OLAP
+PRIMARY KEY(`table_id`, `column_name`)
+COMMENT &quot;OLAP&quot;
+DISTRIBUTED BY HASH(`table_id`, `column_name`) BUCKETS 10
+PROPERTIES (
+&quot;replication_num&quot; = &quot;1&quot;,
+&quot;in_memory&quot; = &quot;false&quot;,
+&quot;storage_format&quot; = &quot;DEFAULT&quot;,
+&quot;enable_persistent_index&quot; = &quot;false&quot;,
+&quot;replicated_storage&quot; = &quot;true&quot;,
+&quot;compression&quot; = &quot;LZ4&quot;
+);
+</code></pre><h2 id="12-fe-动态执行脚本">12 FE 动态执行脚本</h2>
+<p>StarRocks 支持通过 SQL 命令行在 FE 执行 groovy 脚本，需要 admin 权限，这样获取 FE 进程的运行时信息就很方便，下面是个 获取 JVM 内存信息 和 获取线程堆栈的示例：</p>
+<pre><code>mysql&gt; admin execute on frontend &#39;
+import com.starrocks.monitor.jvm.JvmInfo;
+out.append(&quot;${JvmInfo.getMemoryStats()}&quot;)
+&#39;;
+Query OK, 0 rows affected (0.02 sec)
+Pool: Code Cache
+  - Initial: 2555904
+  - Used: 15780288
+  - Committed: 16121856
+  - Maximum: 251658240
+Pool: Metaspace
+  - Initial: 0
+  - Used: 62422232
+  - Committed: 63815680
+  - Maximum: -1
+Pool: Compressed Class Space
+  - Initial: 0
+  - Used: 7503856
+  - Committed: 7856128
+  - Maximum: 1073741824
+Pool: Par Eden Space
+  - Initial: 280756224
+  - Used: 253276208
+  - Committed: 280756224
+  - Maximum: 1145372672
+Pool: Par Survivor Space
+  - Initial: 35061760
+  - Used: 35061752
+  - Committed: 35061760
+  - Maximum: 143130624
+Pool: CMS Old Gen
+  - Initial: 701890560
+  - Used: 12659464
+  - Committed: 701890560
+  - Maximum: 2863333376
+
+
+mysql&gt; admin execute on frontend &#39;
+import com.starrocks.monitor.jvm.JvmInfo;
+out.append(&quot;${JvmInfo.getThreadDumpWithPattern(\&quot;PUBLISH\&quot;)}&quot;)
+&#39;;
+Query OK, 0 rows affected (0.05 sec)
+&quot;PUBLISH_VERSION&quot; Id=29 TIMED_WAITING
+    at java.lang.Thread.sleep(Native Method)
+    at com.starrocks.common.util.Daemon.run(Daemon.java:121)
+</code></pre><h2 id="13-be-动态执行脚本">13 BE 动态执行脚本</h2>
+<p>StarRocks 支持通过 SQL 命令行在 BE 执行 wren 脚本，需要 admin 权限，这样获取 BE 进程的运行时信息就很方便，下面是个获取 tablet 元数据的示例：</p>
+<pre><code>mysql&gt; admin execute on 10004 &#39;
+    &#39;&gt; var ts = StorageEngine.get_tablet_infos(-1,-1)
+    &#39;&gt; for (t in ts) {
+    &#39;&gt;     System.print(&quot;%(t.tablet_id) %(t.data_size)&quot;)
+    &#39;&gt; }
+    &#39;&gt; &#39;;
+Query OK, 0 rows affected (0.01 sec)
+10009 0
+10011 0
+10013 0
+...
+
+mysql&gt; admin execute on 10004 &#39;
+    &#39;&gt; var t = StorageEngine.get_tablet(11005)
+    &#39;&gt; System.print(&quot;info: %(t.updates().toPB().toString())&quot;)
+    &#39;&gt; &#39;;
+Query OK, 0 rows affected (0.00 sec)
+info: {&quot;versions&quot;:[{&quot;version&quot;:{&quot;major&quot;:&quot;3&quot;,&quot;minor&quot;:&quot;1&quot;},&quot;creationTime&quot;:&quot;1679897711&quot;,&quot;rowsets&quot;:[2],&quot;compaction&quot;:{&quot;startVersion&quot;:{&quot;major&quot;:&quot;3&quot;,&quot;minor&quot;:&quot;0&quot;},&quot;inputs&quot;:[0,1],&quot;outputs&quot;:[2]}},{&quot;version&quot;:{&quot;major&quot;:&quot;4&quot;,&quot;minor&quot;:&quot;0&quot;},&quot;creationTime&quot;:&quot;1679900665&quot;,&quot;rowsets&quot;:[2,3],&quot;deltas&quot;:[3]},{&quot;version&quot;:{&quot;major&quot;:&quot;5&quot;,&quot;minor&quot;:&quot;0&quot;},&quot;creationTime&quot;:&quot;1679900666&quot;,&quot;rowsets&quot;:[2,3,4],&quot;deltas&quot;:[4]},{&quot;version&quot;:{&quot;major&quot;:&quot;6&quot;,&quot;minor&quot;:&quot;0&quot;},&quot;creationTime&quot;:&quot;1679900667&quot;,&quot;rowsets&quot;:[2,3,4,5],&quot;deltas&quot;:[5]},{&quot;version&quot;:{&quot;major&quot;:&quot;7&quot;,&quot;minor&quot;:&quot;0&quot;},&quot;creationTime&quot;:&quot;1679900667&quot;,&quot;rowsets&quot;:[2,3,4,5,6],&quot;deltas&quot;:[6]},{&quot;version&quot;:{&quot;major&quot;:&quot;8&quot;,&quot;minor&quot;:&quot;0&quot;},&quot;creationTime&quot;:&quot;1679900667&quot;,&quot;rowsets&quot;:[2,3,4,5,6,7],&quot;deltas&quot;:[7]},{&quot;version&quot;:{&quot;major&quot;:&quot;9&quot;,&quot;minor&quot;:&quot;0&quot;},&quot;creationTime&quot;:&quot;1679900667&quot;,&quot;rowsets&quot;:[2,3,4,5,6,7,8],&quot;deltas&quot;:[8]},{&quot;version&quot;:{&quot;major&quot;:&quot;10&quot;,&quot;minor&quot;:&quot;0&quot;},&quot;creationTime&quot;:&quot;1679900668&quot;,&quot;rowsets&quot;:[2,3,4,5,6,7,8,9],&quot;deltas&quot;:[9]},{&quot;version&quot;:{&quot;major&quot;:&quot;11&quot;,&quot;minor&quot;:&quot;0&quot;},&quot;creationTime&quot;:&quot;1679900668&quot;,&quot;rowsets&quot;:[2,3,4,5,6,7,8,9,10],&quot;deltas&quot;:[10]},{&quot;version&quot;:{&quot;major&quot;:&quot;12&quot;,&quot;minor&quot;:&quot;0&quot;},&quot;creationTime&quot;:&quot;1679900668&quot;,&quot;rowsets&quot;:[2,3,4,5,6,7,8,9,10,11],&quot;deltas&quot;:[11]},{&quot;version&quot;:{&quot;major&quot;:&quot;13&quot;,&quot;minor&quot;:&quot;0&quot;},&quot;creationTime&quot;:&quot;1679900668&quot;,&quot;rowsets&quot;:[2,3,4,5,6,7,8,9,10,11,12],&quot;deltas&quot;:[12]},{&quot;version&quot;:{&quot;major&quot;:&quot;13&quot;,&quot;minor&quot;:&quot;1&quot;},&quot;creationTime&quot;:&quot;1679900708&quot;,&quot;rowsets&quot;:[13],&quot;compaction&quot;:{&quot;startVersion&quot;:{&quot;major&quot;:&quot;13&quot;,&quot;minor&quot;:&quot;0&quot;},&quot;inputs&quot;:[2,3,4,5,6,7,8,9,10,11,12],&quot;outputs&quot;:[13]}}],&quot;applyVersion&quot;:{&quot;major&quot;:&quot;13&quot;,&quot;minor&quot;:&quot;1&quot;},&quot;nextRowsetId&quot;:14,&quot;nextLogId&quot;:&quot;28&quot;}
+
+
+mysql&gt; admin execute on 10004 &#39;
+    &#39;&gt; for (dir in StorageEngine.get_data_dirs()) {
+    &#39;&gt;     System.print(&quot;dir: %(dir.path()) rocksdb: %(dir.get_meta().sst_file_size())&quot;)
+    &#39;&gt;     var result = dir.get_meta().compact().toString()
+    &#39;&gt;     System.print(&quot;compact %(result) size: %(dir.get_meta().sst_file_size())&quot;)
+    &#39;&gt; }
+    &#39;&gt; &#39;;
+Query OK, 0 rows affected (0.00 sec)
+dir: /home/decster/projects/starrocks/localrun/be/storage rocksdb: 156484
+compact OK size: 12708
 </code></pre>
             <hr/>
             <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>

@@ -4,8 +4,8 @@
     <title>编程小梦</title>
     <description>编程小梦|康凯森的技术博客</description>
     <link>https://blog.bcmeng.com/</link>
-    <lastBuildDate>Mon, 15 May 2023 05:58:53 GMT</lastBuildDate>
-    <pubDate>Mon, 15 May 2023 05:58:53 GMT</pubDate>
+    <lastBuildDate>Tue, 30 May 2023 00:17:41 GMT</lastBuildDate>
+    <pubDate>Tue, 30 May 2023 00:17:41 GMT</pubDate>
     <item>
       <title>康凯森的公开分享</title>
       <description>&lt;!-- toc --&gt;
@@ -240,7 +240,7 @@ SQLsmith 是一款数据库自动化测试工具，主要原理是根据固定�
 
 过去两年，我们开发了很多查询层的分析，诊断工具，加强了 StarRocks 查询层的可观测性，今天给大家简单介绍下，之后我们还会在可观测性方面继续加强。
 
-## StarRocks Explain + SQL
+## 1 StarRocks Explain + SQL
 
 参考 https://docs.starrocks.io/en-us/latest/administration/Query_planning#plan-analysis 可以看到每个 SQL 的执行计划
 ```
@@ -248,14 +248,14 @@ explain SELECT t2_126.c_2_0 FROM t2 AS t2_126 INNER JOIN   (SELECT v0_127.c_0_2,
 RE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0 AS v0_127) ) subv0 ON t2_126.c_2_5 = subv0.c_0_2;
 ```
 
-### StarRocks Explain logical + SQL
+### 1.1 StarRocks Explain logical + SQL
 
 相比  Explain + SQL，信息更少，可以更方便地看到整个执行计划
 ```
 mysql&gt; Explain logical SELECT t2_126.c_2_0 FROM t2 AS t2_126 INNER JOIN   (SELECT v0_127.c_0_2,           v0_127.c_0_7    FROM v0 AS v0_127    WHERE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0 AS v0_127) ) subv0 ON t2_126.c_2_5 = subv0.c_0_2;
 
 +-----------------------------------------------------------------------------------------------------------------------+
-| Expla</description>
+|</description>
       <link>https://blog.bcmeng.com/post/starrocks-observability.html</link>
       <pubDate>2023-02-05</pubDate>
     </item>
