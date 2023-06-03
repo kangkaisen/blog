@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|Beat SingleStore, StarRocks 数百亿数据毫秒级点查</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
+                <li class="active"><a href="/">Blog</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> Beat SingleStore, StarRocks 数百亿数据毫秒级点查</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2023-06-03</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#starrocks-bitmap-索引加速点查原理">StarRocks Bitmap 索引加速点查原理</a><ul>
+<li><a href="#starrocks-支持索引的-bitmap-索引">StarRocks 支持索引的 Bitmap 索引</a></li>
+<li><a href="#operation-on-encode-data">Operation On Encode Data</a></li>
+<li><a href="#or-谓词支持-bitmap-索引">Or 谓词支持 Bitmap 索引</a></li>
+<li><a href="#bitmap-索引内存缓存">Bitmap 索引内存缓存</a></li>
+<li><a href="#自适应-bitmap-索引">自适应 Bitmap 索引</a></li>
+</ul>
+</li>
+<li><a href="#starrocks-前缀索引加速点查">StarRocks 前缀索引加速点查</a></li>
+<li><a href="#starrocks-rollup-materialized-view-加速点查">StarRocks RollUp || Materialized View 加速点查</a></li>
+<li><a href="#starrocks-generated-column-加速点查">StarRocks Generated Column 加速点查</a></li>
+<li><a href="#结语">结语</a></li>
+</ul>
+<!-- toc stop -->
+<p>支持多个任意字段过滤点查是 TP 数据库的常见需求，常见解决方案是二级索引。在最近的用户实际场景测试中，我们发现 StarRocks 在拥有3台8核CPU，32G内存，4T AWS EBS盘的集群中，可以对几百亿数据提供几十毫秒的 Hot Query 性能，1秒左右的 Cold Query 性能。 </p>
+<p>本文简单分析下 StarRocks 如何做到数百亿数据毫秒级点查，StarRocks 对下面的非主键列点查加速的主要手段是 Bitmap 索引：</p>
+<pre><code>select * from table where A = 1
+select * from table where A = 1 and B = 2
+select * from table where A = 1 or  B = 2
+</code></pre><h2 id="starrocks-bitmap-索引加速点查原理">StarRocks Bitmap 索引加速点查原理</h2>
+<h3 id="starrocks-支持索引的-bitmap-索引">StarRocks 支持索引的 Bitmap 索引</h3>
+<h4 id="starrocks-segment-file">StarRocks Segment File</h4>
+<p><img src="media/16856655073291/segment.png" alt="segment"></p>
+<p>StarRocks 的 Segment 文件分为数据，索引，元数据三部分，数据和索引都是按照 Page 进行组织，一个 Page 的默认大小是 1M。</p>
+<h4 id="starrocks-bitmap-index-rationale">StarRocks Bitmap Index Rationale</h4>
+<p><img src="media/16856655073291/bitmap%20rationale%20.png" alt="bitmap rationale "></p>
+<p>StarRocks 的 Bitmap Index 主要包括两部分内容：字典 和 Bitmap 行号。 字典保存了原始值到编码 Id的映射，Bitmap 索引记录了每个编码 ID 到 Bitmap 行号的映射。</p>
+<h4 id="starrocks-bitmap-index-storage-format">StarRocks Bitmap Index Storage Format</h4>
+<p><img src="media/16856655073291/bitmap%20format.png" alt="bitmap format"></p>
+<p>如上图所示，StarRocks 的字典部分和 Bitmap 行号部分都是以 Page 的格式存储，同时为了减少内存占用和加速索引，StarRocks 对字典和 Bitmap 的 Page 都建立了索引。</p>
+<p>当然，如果建 Bitmap 索引列的基数很低，Dict Data Page 和 Bitmap Data Page 只有一个的话，我们就不需要 Dict Index Page 和 Bitmap Index Page。</p>
+<h3 id="operation-on-encode-data">Operation On Encode Data</h3>
+<p>当 StarRocks 利用 Bitmap Index 进行过滤的时候，只需要先加载 Dict Index Page 和部分 Dict Data Page 即可，按照字典值进行快速过滤，无需解码数据，也无需把所有 Bitmap Data Page 一次性加载进来。</p>
+<p><strong>综上，由于 StarRocks 支持Bitmap 索引的索引和支持按照字典值进行快速过滤，即使 Bitmap Index 列的基数很高，Bitmap Index 整体磁盘存储很大，但是内存占用却很小。</strong></p>
+<h3 id="or-谓词支持-bitmap-索引">Or 谓词支持 Bitmap 索引</h3>
+<p>由于历史原因， StarRocks 存储层的谓词下推只支持 CNF 合取范式，要求谓词是 And 连接的方式。比如对于下面的SQL：</p>
+<pre><code>select * from table where A = 1 and B =2
+</code></pre><p>StarRocks 会分别下推谓词 A = 1 和  B = 2，最终结果取两个谓词过滤后的交集就可以，A = 1 和 B = 2 可以分别利用 A 列和 B 列上的各种索引。</p>
+<p>但是对于下面的 Or 谓词:</p>
+<pre><code>select * from table where A = 1 or B =2
+</code></pre><p>StarRocks 之前存储层不能下推 OR 谓词，所以需要全表扫描后再用 A = 1 or B =2 谓词取过滤数据。 为了让 Or 谓词可以利用 Bitmap 索引，最理想的方式是存储层支持 Or 谓词， A = 1 和 B = 2 分别应用 Bitmap 索引，然后行号就并集就可以，但是代码修改稍复杂，所以实现了两步走，首先第一步在FE 侧通过 SQL 改写让 OR 谓词可以利用 Bitmap 索引，接着第二步会在存储层直接支持 OR 谓词。</p>
+<p>SQL 改写方式如下：</p>
+<p><img src="media/16856655073291/scan-or-union.png" alt="scan-or-union"></p>
+<h3 id="bitmap-索引内存缓存">Bitmap 索引内存缓存</h3>
+<p><img src="media/16856655073291/bitmap%20memory%20cache.png" alt="bitmap memory cache"></p>
+<p>StarRocks 会保证所有的 Dict Index Page 和 Bitmap Index Page 一定在内存，并让尽可能多的 Dict Data Page 和 Bitmap Data Page 在内存，并保证 Bitmap Index 相关的 Page Cache 不被 Column 的数据冲掉。</p>
+<p><strong>这样在点查结果集较小的情况下，即使是第一次 Cold Query，StarRocks 也可以做到只需要一次 Disk Seek。</strong></p>
+<h3 id="自适应-bitmap-索引">自适应 Bitmap 索引</h3>
+<p>当 StarRocks 发现 Bitmap 索引的选择度不高，需要 Seek 很多 Data Page 时，我们就会放弃使用 Bitmap 索引，直接顺序 Scan。</p>
+<h2 id="starrocks-前缀索引加速点查">StarRocks 前缀索引加速点查</h2>
+<p>如果某个表的过滤条件肯定包含某个列时，在StarRocks 中，就不需要使用 Bitmap 索引，将改列设置为 Sort Key，使用前缀索引过滤即可。</p>
+<p><img src="media/16856655073291/Predix%20Index%20Rationale%20.png" alt="Predix Index Rationale "></p>
+<h2 id="starrocks-rollup-materialized-view-加速点查">StarRocks RollUp || Materialized View 加速点查</h2>
+<p>当 Bitmap 索引的过滤度不大，需要 Seek 很多 Data Page 时，可以考虑进一步用空间换时间，利用 StarRocks 的 RollUp 和 Materialized View 将不同的过滤列都设置成 Sort Key，利用前缀索引加速点查。</p>
+<h2 id="starrocks-generated-column-加速点查">StarRocks Generated Column 加速点查</h2>
+<p>当过滤的列时 Json 或者 Map 类型的 Key 列时，在 StarRocks 中，我们可以为这个 Key 列新增一个Generated Column，然后对 Key 列建立 Bitmap 索引，然后通过 Bitmap 索引加速点查。</p>
+<p>当然，之后 StarRocks 支持了对 Json 或者 Map 类型的 Key 列直接建 Bitmap 索引，就不需要依靠 Generated Column 了。</p>
+<p><img src="media/16856655073291/genarated%20column%20rationale.png" alt="genarated column rationale"></p>
+<h2 id="结语">结语</h2>
+<p><strong>当你同时需要高性能点查，高性能 OLAP 查询，高性能 Adhoc 查询 和高性能数据湖分析时，StarRocks 是你的最佳选择。</strong></p>
+
+            <hr/>
+            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
+            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
+            <h3>欢迎关注微信公众号</h3>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=647bcaac9de7413dfa4ab000
+                 data-title=Beat SingleStore, StarRocks 数百亿数据毫秒级点查
+                 data-url=starrocks-look-up>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+</body>
+</html>

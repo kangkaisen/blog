@@ -4,8 +4,8 @@
     <title>编程小梦</title>
     <description>编程小梦|康凯森的技术博客</description>
     <link>https://blog.bcmeng.com/</link>
-    <lastBuildDate>Tue, 30 May 2023 00:17:41 GMT</lastBuildDate>
-    <pubDate>Tue, 30 May 2023 00:17:41 GMT</pubDate>
+    <lastBuildDate>Sat, 03 Jun 2023 23:29:46 GMT</lastBuildDate>
+    <pubDate>Sat, 03 Jun 2023 23:29:46 GMT</pubDate>
     <item>
       <title>康凯森的公开分享</title>
       <description>&lt;!-- toc --&gt;
@@ -22,6 +22,44 @@
 * 2021-05 DataFunTalk 《DorisDB —— 新一代极速 MP</description>
       <link>https://blog.bcmeng.com/post/kks-public.html</link>
       <pubDate>2023-01-04</pubDate>
+    </item>
+    <item>
+      <title>Beat SingleStore, StarRocks 数百亿数据毫秒级点查</title>
+      <description>&lt;!-- toc --&gt;
+
+支持多个任意字段过滤点查是 TP 数据库的常见需求，常见解决方案是二级索引。在最近的用户实际场景测试中，我们发现 StarRocks 在拥有3台8核CPU，32G内存，4T AWS EBS盘的集群中，可以对几百亿数据提供几十毫秒的 Hot Query 性能，1秒左右的 Cold Query 性能。 
+
+本文简单分析下 StarRocks 如何做到数百亿数据毫秒级点查，StarRocks 对下面的非主键列点查加速的主要手段是 Bitmap 索引：
+
+```
+select * from table where A = 1
+select * from table where A = 1 and B = 2
+select * from table where A = 1 or  B = 2
+```
+
+## StarRocks Bitmap 索引加速点查原理
+
+### StarRocks 支持索引的 Bitmap 索引
+
+#### StarRocks Segment File
+
+![segment](media/16856655073291/segment.png)
+
+StarRocks 的 Segment 文件分为数据，索引，元数据三部分，数据和索引都是按照 Page 进行组织，一个 Page 的默认大小是 1M。
+
+#### StarRocks Bitmap Index Rationale
+
+![bitmap rationale ](media/16856655073291/bitmap%20rationale%20.png)
+
+StarRocks 的 Bitmap Index 主要包括两部分内容：字典 和 Bitmap 行号。 字典保存了原始值到编码 Id的映射，Bitmap 索引记录了每个编码 ID 到 Bitmap 行号的映射。
+
+#### StarRocks Bitmap Index Storage Format
+
+![bitmap format](media/16856655073291/bitmap%20format.png)
+
+如上图所示，StarRocks 的字典部分和 Bitmap 行号部分都是以 Page 的格式存储，同时为了减少内存占用和加速索引，StarRo</description>
+      <link>https://blog.bcmeng.com/post/starrocks-look-up.html</link>
+      <pubDate>2023-06-03</pubDate>
     </item>
     <item>
       <title>我 ChatGPT 网站一次微小升级的复盘</title>
@@ -583,25 +621,6 @@ StarRocks 全新的 CBO 优化器主要基于 Cascades，Columbia，ORCA 论文�
 整个 </description>
       <link>https://blog.bcmeng.com/post/starrocks-source-code-1.html</link>
       <pubDate>2021-09-12</pubDate>
-    </item>
-    <item>
-      <title>Apache Doris 查询原理</title>
-      <description>&lt;!-- toc --&gt;
-
-### Doris 查询简介
-Doris 的查询和大多数数据库一样，需要经过 Parse,Analyze,Optimize,Plan, Schedule, Execute 等过程。 在 Doris 中，FE 负责查询的 Parse,Analyze,Optimize,Plan, Schedule，BE 负责查询的 Execute。Doris 查询的分布式执行是[MPP](https://databases.looker.com/analytical) 架构，相比于 Kylin 和 Druid 的 [Scatter-Gather](https://www.quora.com/What-is-the-Scatter-Gather-pattern-for-Distributed-Computing) 架构，可以很好地支持 Shuffle 操作，所以对大数据集的 Join 和聚合，处理效率会更高。 Doris 的单机查询执行模型是 Batch 模式的[Volcano](https://paperhub.s3.amazonaws.com/dace52a42c07f7f8348b08dc2b186061.pdf) 模型，相比于 tuple one time 的 Volcano 模型，解释执行的开销更低，CPU 利用效率更高。
-
-### Doris Query 接收
-Doris 兼容 Mysql 协议，用户可以通过 Mysql 客户端和绝大多数兼容 Mysql 协议的 BI 工具向 Doris 发送 查询。
-
-Doris 的 MysqlServer 接收用户的请求，每个请求都会封装成一个 ConnectContext, ConnectScheduler 会维护一个线程池，每个 ConnectContext 会在一个线程中由 ConnectProcessor 进程处理。 ConnectProcessor 负责查询的处理，审计和返回查询结果给客户端。
-
-### Doris Query Parse
-ConnectProcessor 会首先进行查询 SQL 的 Parse。
-
-Doris 使用的 Parse 是 [Java CUP Parser](http://www2.cs.tum.edu/projects/cup/)，语法规则 定义</description>
-      <link>https://blog.bcmeng.com/post/apache-doris-query.html</link>
-      <pubDate>2020-03-31</pubDate>
     </item>
   </channel>
 </rss>
