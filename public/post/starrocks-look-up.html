@@ -69,14 +69,14 @@ select * from table where A = 1 or  B = 2
 <p>StarRocks 的 Segment 文件分为数据，索引，元数据三部分，数据和索引都是按照 Page 进行组织，一个 Page 的默认大小是 1M。</p>
 <h4 id="starrocks-bitmap-index-rationale">StarRocks Bitmap Index Rationale</h4>
 <p><img src="media/16856655073291/bitmap%20rationale%20.png" alt="bitmap rationale "></p>
-<p>StarRocks 的 Bitmap Index 主要包括两部分内容：字典 和 Bitmap 行号。 字典保存了原始值到编码 Id的映射，Bitmap 索引记录了每个编码 ID 到 Bitmap 行号的映射。</p>
+<p>StarRocks 的 Bitmap Index 主要包括两部分内容：字典和 Bitmap 行号。 字典保存了原始值到编码 Id的映射，Bitmap 索引记录了每个编码 ID 到 Bitmap 行号的映射。</p>
 <h4 id="starrocks-bitmap-index-storage-format">StarRocks Bitmap Index Storage Format</h4>
 <p><img src="media/16856655073291/bitmap%20format.png" alt="bitmap format"></p>
 <p>如上图所示，StarRocks 的字典部分和 Bitmap 行号部分都是以 Page 的格式存储，同时为了减少内存占用和加速索引，StarRocks 对字典和 Bitmap 的 Page 都建立了索引。</p>
 <p>当然，如果建 Bitmap 索引列的基数很低，Dict Data Page 和 Bitmap Data Page 只有一个的话，我们就不需要 Dict Index Page 和 Bitmap Index Page。</p>
 <h3 id="operation-on-encode-data">Operation On Encode Data</h3>
 <p>当 StarRocks 利用 Bitmap Index 进行过滤的时候，只需要先加载 Dict Index Page 和部分 Dict Data Page 即可，按照字典值进行快速过滤，无需解码数据，也无需把所有 Bitmap Data Page 一次性加载进来。</p>
-<p><strong>综上，由于 StarRocks 支持Bitmap 索引的索引和支持按照字典值进行快速过滤，即使 Bitmap Index 列的基数很高，Bitmap Index 整体磁盘存储很大，但是内存占用却很小。</strong></p>
+<p><strong>综上，由于 StarRocks 支持Bitmap 索引的索引和支持按照字典值进行快速过滤，即使 Bitmap Index 列的基数很高，Bitmap Index 整体磁盘存储很大，内存占用也很小。</strong></p>
 <h3 id="or-谓词支持-bitmap-索引">Or 谓词支持 Bitmap 索引</h3>
 <p>由于历史原因， StarRocks 存储层的谓词下推只支持 CNF 合取范式，要求谓词是 And 连接的方式。比如对于下面的SQL：</p>
 <pre><code>select * from table where A = 1 and B =2
@@ -93,16 +93,16 @@ select * from table where A = 1 or  B = 2
 <h3 id="自适应-bitmap-索引">自适应 Bitmap 索引</h3>
 <p>当 StarRocks 发现 Bitmap 索引的选择度不高，需要 Seek 很多 Data Page 时，我们就会放弃使用 Bitmap 索引，直接顺序 Scan。</p>
 <h2 id="starrocks-前缀索引加速点查">StarRocks 前缀索引加速点查</h2>
-<p>如果某个表的过滤条件肯定包含某个列时，在StarRocks 中，就不需要使用 Bitmap 索引，将改列设置为 Sort Key，使用前缀索引过滤即可。</p>
+<p>如果某个表的过滤条件肯定包含某个列时，在StarRocks 中，就不需要使用 Bitmap 索引，将该列设置为 Sort Key，使用前缀索引过滤即可。</p>
 <p><img src="media/16856655073291/Predix%20Index%20Rationale%20.png" alt="Predix Index Rationale "></p>
 <h2 id="starrocks-rollup-materialized-view-加速点查">StarRocks RollUp || Materialized View 加速点查</h2>
 <p>当 Bitmap 索引的过滤度不大，需要 Seek 很多 Data Page 时，可以考虑进一步用空间换时间，利用 StarRocks 的 RollUp 和 Materialized View 将不同的过滤列都设置成 Sort Key，利用前缀索引加速点查。</p>
 <h2 id="starrocks-generated-column-加速点查">StarRocks Generated Column 加速点查</h2>
-<p>当过滤的列时 Json 或者 Map 类型的 Key 列时，在 StarRocks 中，我们可以为这个 Key 列新增一个Generated Column，然后对 Key 列建立 Bitmap 索引，然后通过 Bitmap 索引加速点查。</p>
-<p>当然，之后 StarRocks 支持了对 Json 或者 Map 类型的 Key 列直接建 Bitmap 索引，就不需要依靠 Generated Column 了。</p>
+<p>当过滤的列是 Json 或者 Map 类型的 Key 列时，在 StarRocks 中，我们可以为这个 Key 列新增一个Generated Column，然后对 Key 列建立 Bitmap 索引，通过 Bitmap 索引加速点查。</p>
+<p>当然，之后 StarRocks 支持了对 Json 或者 Map 类型的 Key 列直接建 Bitmap 索引时，就不需要依靠 Generated Column 了。</p>
 <p><img src="media/16856655073291/genarated%20column%20rationale.png" alt="genarated column rationale"></p>
 <h2 id="结语">结语</h2>
-<p><strong>当你同时需要高性能点查，高性能 OLAP 查询，高性能 Adhoc 查询 和高性能数据湖分析时，StarRocks 是你的最佳选择。</strong></p>
+<p><strong>当你同时需要高性能点查，高性能 OLAP 查询，高性能 Adhoc 查询和高性能数据湖分析时，StarRocks 是你的最佳选择。</strong></p>
 
             <hr/>
             <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>

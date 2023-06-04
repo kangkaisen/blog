@@ -4,8 +4,8 @@
     <title>编程小梦</title>
     <description>编程小梦|康凯森的技术博客</description>
     <link>https://blog.bcmeng.com/</link>
-    <lastBuildDate>Sat, 03 Jun 2023 23:29:46 GMT</lastBuildDate>
-    <pubDate>Sat, 03 Jun 2023 23:29:46 GMT</pubDate>
+    <lastBuildDate>Sun, 04 Jun 2023 00:13:14 GMT</lastBuildDate>
+    <pubDate>Sun, 04 Jun 2023 00:13:14 GMT</pubDate>
     <item>
       <title>康凯森的公开分享</title>
       <description>&lt;!-- toc --&gt;
@@ -51,13 +51,13 @@ StarRocks 的 Segment 文件分为数据，索引，元数据三部分，数据�
 
 ![bitmap rationale ](media/16856655073291/bitmap%20rationale%20.png)
 
-StarRocks 的 Bitmap Index 主要包括两部分内容：字典 和 Bitmap 行号。 字典保存了原始值到编码 Id的映射，Bitmap 索引记录了每个编码 ID 到 Bitmap 行号的映射。
+StarRocks 的 Bitmap Index 主要包括两部分内容：字典和 Bitmap 行号。 字典保存了原始值到编码 Id的映射，Bitmap 索引记录了每个编码 ID 到 Bitmap 行号的映射。
 
 #### StarRocks Bitmap Index Storage Format
 
 ![bitmap format](media/16856655073291/bitmap%20format.png)
 
-如上图所示，StarRocks 的字典部分和 Bitmap 行号部分都是以 Page 的格式存储，同时为了减少内存占用和加速索引，StarRo</description>
+如上图所示，StarRocks 的字典部分和 Bitmap 行号部分都是以 Page 的格式存储，同时为了减少内存占用和加速索引，StarRoc</description>
       <link>https://blog.bcmeng.com/post/starrocks-look-up.html</link>
       <pubDate>2023-06-03</pubDate>
     </item>
