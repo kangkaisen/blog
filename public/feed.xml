@@ -4,8 +4,8 @@
     <title>编程小梦</title>
     <description>编程小梦|康凯森的技术博客</description>
     <link>https://blog.bcmeng.com/</link>
-    <lastBuildDate>Sun, 04 Jun 2023 00:13:14 GMT</lastBuildDate>
-    <pubDate>Sun, 04 Jun 2023 00:13:14 GMT</pubDate>
+    <lastBuildDate>Sat, 17 Jun 2023 06:06:38 GMT</lastBuildDate>
+    <pubDate>Sat, 17 Jun 2023 06:06:38 GMT</pubDate>
     <item>
       <title>康凯森的公开分享</title>
       <description>&lt;!-- toc --&gt;
@@ -29,7 +29,7 @@
 
 支持多个任意字段过滤点查是 TP 数据库的常见需求，常见解决方案是二级索引。在最近的用户实际场景测试中，我们发现 StarRocks 在拥有3台8核CPU，32G内存，4T AWS EBS盘的集群中，可以对几百亿数据提供几十毫秒的 Hot Query 性能，1秒左右的 Cold Query 性能。 
 
-本文简单分析下 StarRocks 如何做到数百亿数据毫秒级点查，StarRocks 对下面的非主键列点查加速的主要手段是 Bitmap 索引：
+本文简单分析下 StarRocks 如何做到数百亿数据毫秒级点查，StarRocks 对前缀列点查加速的主要手段是前缀索引，对下面的非主键列点查加速的主要手段是 Bitmap 索引：
 
 ```
 select * from table where A = 1
@@ -51,13 +51,13 @@ StarRocks 的 Segment 文件分为数据，索引，元数据三部分，数据�
 
 ![bitmap rationale ](media/16856655073291/bitmap%20rationale%20.png)
 
-StarRocks 的 Bitmap Index 主要包括两部分内容：字典和 Bitmap 行号。 字典保存了原始值到编码 Id的映射，Bitmap 索引记录了每个编码 ID 到 Bitmap 行号的映射。
+StarRocks 的 Bitmap Index 主要包括两部分内容：字典和 Bitmap 索引本身。 字典保存了原始值到编码 Id的映射，Bitmap 索引记录了每个编码 ID 到 Bitmap 的映射。
 
 #### StarRocks Bitmap Index Storage Format
 
 ![bitmap format](media/16856655073291/bitmap%20format.png)
 
-如上图所示，StarRocks 的字典部分和 Bitmap 行号部分都是以 Page 的格式存储，同时为了减少内存占用和加速索引，StarRoc</description>
+如上图所示，StarRocks 的字典部分和 Bitmap index 部分都是以 Page 的格式存储，</description>
       <link>https://blog.bcmeng.com/post/starrocks-look-up.html</link>
       <pubDate>2023-06-03</pubDate>
     </item>
