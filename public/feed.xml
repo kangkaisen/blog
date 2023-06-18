@@ -4,8 +4,8 @@
     <title>编程小梦</title>
     <description>编程小梦|康凯森的技术博客</description>
     <link>https://blog.bcmeng.com/</link>
-    <lastBuildDate>Sat, 17 Jun 2023 06:24:33 GMT</lastBuildDate>
-    <pubDate>Sat, 17 Jun 2023 06:24:33 GMT</pubDate>
+    <lastBuildDate>Sun, 18 Jun 2023 23:38:28 GMT</lastBuildDate>
+    <pubDate>Sun, 18 Jun 2023 23:38:28 GMT</pubDate>
     <item>
       <title>康凯森的公开分享</title>
       <description>&lt;!-- toc --&gt;
@@ -22,6 +22,67 @@
 * 2021-05 DataFunTalk 《DorisDB —— 新一代极速 MP</description>
       <link>https://blog.bcmeng.com/post/kks-public.html</link>
       <pubDate>2023-01-04</pubDate>
+    </item>
+    <item>
+      <title>《OLAP 数据库性能优化指南》0.1 版本发布</title>
+      <description>&lt;!-- toc --&gt;
+
+## 1 这本书包括哪些内容
+1. 数据库性能优化的基本问题
+2. 计算机原理
+3. 数据库原理
+4. 数据库性能优化方法论
+5. 性能优化工具
+6. 数据库性能优化案例
+7. 数据库性能测试
+8. 数据库生产环境的性能难题
+9. 性能优化学习资料
+10. 技术创新和工程创新
+
+## 2 这本书的读者对象
+1. 数据库领域的从业者
+2. 热爱性能优化的工程师
+3. 计算机专业相关的大学生
+
+## 3 为什么写这本书
+
+1. 希望每个热爱数据库，热爱性能优化的工程师都能快速，系统地掌握 OLAP 数据库性能优化的关键要点
+2. 2025年将是我进入数据库领域的第十年，希望把自己十年内关于性能优化的经验总结分享下
+3. 我和我的团队从零打造了 StarRocks 向量化执行器，StarRocks CBO 优化器，StarRocks Pipeline 并发引擎，打造出了一个全球领先的数据库查询引擎，希望把 StarRocks 性能优化的工程经验分享下
+
+## 4 写作计划
+计划从今年开始，连续发布10个版本，最终在 2025 年发布 1.0 版本，1.0 版本期望可以达到以下几点：
+
+- 内容全面，系统，深入
+- 结构清晰
+- 通俗易懂
+- 实用性强
+- 案例丰富
+
+## 5 0.1 版本做了哪些事情
+
+1. https://perf.bcmeng.com/ 网站就绪
+2. 书籍大纲确认，目前共有10个章节，40多个个主题
+3. 初步完整了每个主题的段落标题和要点
+4. 完成了部分段落和要点的整理
+
+## 6 0.2 版本 的 Roadmap
+
+0.2 版本主要会将我本地已有的几十篇笔记和分享整理完成
+
+## 7 在线阅读地址
+
+https://perf.bcmeng.com/
+
+## 8 Github 地址
+
+https://github.com/kangkaisen/olap-performance
+
+## 9 欢迎 Star 和贡献
+
+欢迎大家给个 Star，也欢迎大家的贡献，给我点支持和动力。</description>
+      <link>https://blog.bcmeng.com/post/olap-book-1.html</link>
+      <pubDate>2023-06-19</pubDate>
     </item>
     <item>
       <title>Beat SingleStore, StarRocks 数百亿数据毫秒级点查</title>
@@ -604,23 +665,6 @@ TODO:
 * [CMU 15445 数据库基础课程](https://15445.courses.cs.cmu.edu/fa</description>
       <link>https://blog.bcmeng.com/post/database-learning.html</link>
       <pubDate>2021-12-19</pubDate>
-    </item>
-    <item>
-      <title>StarRocks 源码导读一</title>
-      <description>&lt;!-- toc --&gt;
-
-2021年9月8日，我司鼎石科技开放了核心数据库产品 StarRocks 源码：[https://github.com/StarRocks/starrocks](https://github.com/StarRocks/starrocks)，StarRocks 基于 [Apache Doris](https://github.com/apache/incubator-doris/) 开发，我们十分感谢 Apache Doris 社区贡献了这样一个优秀的OLAP数据库，也感谢所有[向 Apache Doris 贡献过的同学](https://github.com/apache/incubator-doris/graphs/contributors)，让我们可以站在巨人的肩膀上快速前进和迭代，不过 StarRocks 和 Apache Doris 已经有了很大的不同，我们新增和修改的代码行数达到了几十万行，我将分两篇文章对 StarRocks 的源码进行导读，这篇文章主要介绍 StarRocks 全新的 CBO 优化器和向量化执行器。
-
-## StarRocks CBO 优化器
-如果一条SQL的执行是一场旅程，查询执行器就是你的交通工具，你的交通工具性能越好，在相同的路径下，旅程的耗时自然越短。但是从旅程的出发点到终点可能有成千上万条路径，有康庄大道，也有林荫小路，而查询优化器的作用就是选择出最短，最合适的道路。 **一般 SQL 越复杂，数据量越大，查询优化器的意义就越大，因为不同执行方式的性能差别可能有成百上千倍**。
-
-一条 SQL 查询时会依次需要经过查询解析器，分析器, 优化器，查询执行层和存储层。 查询优化器的输入是一颗逻辑的抽象语法树，输出是一颗“最优的” 物理执行计划。 查询越复杂，数据量越大，物理执行计划的好坏对查询性能影响越大，所以一款成熟的商业数据库都需要一个强大的，成熟的查询优化器。
-
-StarRocks 全新的 CBO 优化器主要基于 Cascades，Columbia，ORCA 论文实现，也参考了 ORCA，Presto，Calcite，CMU Noisepage，CockroachDB 等项目，核心优化流程基本和 Columbia 一致，在具体工程实践中，我们进行了很多优化与创新。
-
-整个 </description>
-      <link>https://blog.bcmeng.com/post/starrocks-source-code-1.html</link>
-      <pubDate>2021-09-12</pubDate>
     </item>
   </channel>
 </rss>

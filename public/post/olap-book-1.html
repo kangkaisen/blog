@@ -1,0 +1,150 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|《OLAP 数据库性能优化指南》0.1 版本发布</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
+                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
+                <li class="active"><a href="/">Blog</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 《OLAP 数据库性能优化指南》0.1 版本发布</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2023-06-19</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#1-这本书包括哪些内容">1 这本书包括哪些内容</a></li>
+<li><a href="#2-这本书的读者对象">2 这本书的读者对象</a></li>
+<li><a href="#3-为什么写这本书">3 为什么写这本书</a></li>
+<li><a href="#4-写作计划">4 写作计划</a></li>
+<li><a href="#5-01-版本做了哪些事情">5 0.1 版本做了哪些事情</a></li>
+<li><a href="#6-02-版本-的-roadmap">6 0.2 版本 的 Roadmap</a></li>
+<li><a href="#7-在线阅读地址">7 在线阅读地址</a></li>
+<li><a href="#8-github-地址">8 Github 地址</a></li>
+<li><a href="#9-欢迎-star-和贡献">9 欢迎 Star 和贡献</a></li>
+</ul>
+<!-- toc stop -->
+<h2 id="1-这本书包括哪些内容">1 这本书包括哪些内容</h2>
+<ol>
+<li>数据库性能优化的基本问题</li>
+<li>计算机原理</li>
+<li>数据库原理</li>
+<li>数据库性能优化方法论</li>
+<li>性能优化工具</li>
+<li>数据库性能优化案例</li>
+<li>数据库性能测试</li>
+<li>数据库生产环境的性能难题</li>
+<li>性能优化学习资料</li>
+<li>技术创新和工程创新</li>
+</ol>
+<h2 id="2-这本书的读者对象">2 这本书的读者对象</h2>
+<ol>
+<li>数据库领域的从业者</li>
+<li>热爱性能优化的工程师</li>
+<li>计算机专业相关的大学生</li>
+</ol>
+<h2 id="3-为什么写这本书">3 为什么写这本书</h2>
+<ol>
+<li>希望每个热爱数据库，热爱性能优化的工程师都能快速，系统地掌握 OLAP 数据库性能优化的关键要点</li>
+<li>2025年将是我进入数据库领域的第十年，希望把自己十年内关于性能优化的经验总结分享下</li>
+<li>我和我的团队从零打造了 StarRocks 向量化执行器，StarRocks CBO 优化器，StarRocks Pipeline 并发引擎，打造出了一个全球领先的数据库查询引擎，希望把 StarRocks 性能优化的工程经验分享下</li>
+</ol>
+<h2 id="4-写作计划">4 写作计划</h2>
+<p>计划从今年开始，连续发布10个版本，最终在 2025 年发布 1.0 版本，1.0 版本期望可以达到以下几点：</p>
+<ul>
+<li>内容全面，系统，深入</li>
+<li>结构清晰</li>
+<li>通俗易懂</li>
+<li>实用性强</li>
+<li>案例丰富</li>
+</ul>
+<h2 id="5-01-版本做了哪些事情">5 0.1 版本做了哪些事情</h2>
+<ol>
+<li><a href="https://perf.bcmeng.com/">https://perf.bcmeng.com/</a> 网站就绪</li>
+<li>书籍大纲确认，目前共有10个章节，40多个个主题</li>
+<li>初步完整了每个主题的段落标题和要点</li>
+<li>完成了部分段落和要点的整理</li>
+</ol>
+<h2 id="6-02-版本-的-roadmap">6 0.2 版本 的 Roadmap</h2>
+<p>0.2 版本主要会将我本地已有的几十篇笔记和分享整理完成</p>
+<h2 id="7-在线阅读地址">7 在线阅读地址</h2>
+<p><a href="https://perf.bcmeng.com/">https://perf.bcmeng.com/</a></p>
+<h2 id="8-github-地址">8 Github 地址</h2>
+<p><a href="https://github.com/kangkaisen/olap-performance">https://github.com/kangkaisen/olap-performance</a></p>
+<h2 id="9-欢迎-star-和贡献">9 欢迎 Star 和贡献</h2>
+<p>欢迎大家给个 Star，也欢迎大家的贡献，给我点支持和动力。</p>
+
+            <hr/>
+            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
+            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
+            <h3>欢迎关注微信公众号</h3>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=648f95741588e9f60cffffcb
+                 data-title=《OLAP 数据库性能优化指南》0.1 版本发布
+                 data-url=olap-book-1>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+</body>
+</html>
