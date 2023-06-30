@@ -4,8 +4,8 @@
     <title>编程小梦</title>
     <description>编程小梦|康凯森的技术博客</description>
     <link>https://blog.bcmeng.com/</link>
-    <lastBuildDate>Sun, 18 Jun 2023 23:38:28 GMT</lastBuildDate>
-    <pubDate>Sun, 18 Jun 2023 23:38:28 GMT</pubDate>
+    <lastBuildDate>Fri, 30 Jun 2023 23:26:27 GMT</lastBuildDate>
+    <pubDate>Fri, 30 Jun 2023 23:26:27 GMT</pubDate>
     <item>
       <title>康凯森的公开分享</title>
       <description>&lt;!-- toc --&gt;
@@ -22,6 +22,43 @@
 * 2021-05 DataFunTalk 《DorisDB —— 新一代极速 MP</description>
       <link>https://blog.bcmeng.com/post/kks-public.html</link>
       <pubDate>2023-01-04</pubDate>
+    </item>
+    <item>
+      <title>被 DataBricks CEO 唯一提及的数据库：StarRocks</title>
+      <description>&lt;!-- toc --&gt;
+
+## DataBricks CEO Only Mentioned StarRocks
+
+![StarRocks-DataBricks-CEO](media/16881615305138/img_v2_11d770fc-edec-4d94-82b8-36d723fdf65g.jpg)
+
+在刚刚结束的 DataBricks Data + AI Summit 上，StarRocks 是 DataBricks CEO 在演讲中唯一提及的 DataBase, why? 
+
+你可以猜一猜。。。
+
+数据湖的元数据层统一是大势所趋，Delta Lake 3.0 和 Onetable 做的事情一样，都想统一数据湖的元数据层。 Onetable 的介绍可以参考 [onetable-hudi-delta-iceberg](https://www.onehouse.ai/blog/onetable-hudi-delta-iceberg)
+
+
+## DataBricks CEO Is Wrong! 
+
+DataBricks CEO 说 StarRocks 只能查询 Hudi, 不能查询 Delta Lake 和 IceBerg。事实上，StarRocks 可以同时查询 Hudi, Delta Lake 和 IceBerg，StarRocks 不仅可以查询，而且可以提供最极致的数据湖分析体验，而且绝对 Open，不会 Lock。
+
+无论数据湖上各种 Table Format 的元数据是否统一，你都可以使用 StarRocks 作为你数据湖上的查询引擎。 Because StarRocks Is Very Powerful! Why?
+
+## StarRocks Powerful DateLake Analysis
+
+### StarRocks 极致查询性能
+
+![starrocks-trino](media/16881615305138/starrocks-trino.png)
+
+关于 StarRocks 的极致性能已经有很多资料介绍了，这里就不赘述了
+
+1. MPP 分布式执行
+2. Pipeline 并行执行框架
+3. 向量化执行
+4. CBO 优化器
+5. Global Runtime Filter</description>
+      <link>https://blog.bcmeng.com/post/StarRocks-databricks.html</link>
+      <pubDate>2023-06-30</pubDate>
     </item>
     <item>
       <title>《OLAP 数据库性能优化指南》0.1 版本发布</title>
@@ -637,34 +674,6 @@ DPA 不关心每个系统的 actor 具体如何实现，只需要实现几个核
 </description>
       <link>https://blog.bcmeng.com/post/fastest_database.html</link>
       <pubDate>2021-12-26</pubDate>
-    </item>
-    <item>
-      <title>数据库学习资料（2022-03-18 更新）</title>
-      <description>&lt;!-- toc --&gt;
-
-在 [StarRocks](https://github.com/StarRocks/starrocks) 将近两年的时间里面，我们查询团队从零实现了向量化执行器，CBO 查询优化器，Pipeline 并行查询引擎，刷新国产 OLAP 数据库性能的里程碑，本文整理了我平时参考和学习的一些数据库资料，希望对大家有所帮助，也欢迎大家参与 [StarRocks](https://github.com/StarRocks/starrocks) 开源社区。
-
-本文章会努力持续更新，也欢迎大家一起贡献和修改。
-
-TODO:
-* [ ] 系统综述部分进行分类
-* [ ] 每篇材料给出难度评级（入门，进阶，专业）
-* [ ] 每篇材料给出必要性评级 （可选，必读）
-* [ ] 每篇论文备注下核心观点，以及我们可以学习到什么
-* [ ] 每个数据库系统架构的优点，缺点，以及我们可以学习到什么
-
-## 数据库总览
-
-### 书籍
-* [Designing Data-Intensive Applications](https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/) ★★★★★
-* [Database Internals](https://www.oreilly.com/library/view/database-internals/9781492040330/)
-* [Streaming Systems: The What, Where, When, and How of Large-Scale Data Processing](https://www.oreilly.com/library/view/streaming-systems/9781491983867/)
-* [Architecture of a Database System](https://dsf.berkeley.edu/papers/fntdb07-architecture.pdf)
-
-### 大学课程
-* [CMU 15445 数据库基础课程](https://15445.courses.cs.cmu.edu/fa</description>
-      <link>https://blog.bcmeng.com/post/database-learning.html</link>
-      <pubDate>2021-12-19</pubDate>
     </item>
   </channel>
 </rss>

@@ -1,0 +1,143 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+    <link rel="shortcut icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+    <title>编程小梦|被 DataBricks CEO 唯一提及的数据库：StarRocks</title>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
+                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
+                <li class="active"><a href="/">Blog</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <h1> 被 DataBricks CEO 唯一提及的数据库：StarRocks</h1>
+            <hr/>
+            <p>作者: 康凯森</p>
+            <p>日期: 2023-06-30</p>
+            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
+            <hr/>
+            <!-- toc -->
+<ul>
+<li><a href="#databricks-ceo-only-mentioned-starrocks">DataBricks CEO Only Mentioned StarRocks</a></li>
+<li><a href="#databricks-ceo-is-wrong">DataBricks CEO Is Wrong!</a></li>
+<li><a href="#starrocks-powerful-datelake-analysis">StarRocks Powerful DateLake Analysis</a><ul>
+<li><a href="#starrocks-极致查询性能">StarRocks 极致查询性能</a></li>
+<li><a href="#利用-starrocks-的-house-能力进一步提升性能">利用 StarRocks 的 House 能力进一步提升性能</a></li>
+<li><a href="#starrocks-冷热分离-自动查询改写">StarRocks 冷热分离 + 自动查询改写</a></li>
+<li><a href="#starrocks-是支持实时更新的-lakehouse">StarRocks 是支持实时更新的 LakeHouse</a></li>
+<li><a href="#starrocks-简单易用的-catalog-元数据管理">StarRocks 简单易用的 Catalog 元数据管理</a></li>
+<li><a href="#starrocks-弹性伸缩">StarRocks 弹性伸缩</a></li>
+</ul>
+</li>
+</ul>
+<!-- toc stop -->
+<h2 id="databricks-ceo-only-mentioned-starrocks">DataBricks CEO Only Mentioned StarRocks</h2>
+<p><img src="media/16881615305138/img_v2_11d770fc-edec-4d94-82b8-36d723fdf65g.jpg" alt="StarRocks-DataBricks-CEO"></p>
+<p>在刚刚结束的 DataBricks Data + AI Summit 上，StarRocks 是 DataBricks CEO 在演讲中唯一提及的 DataBase, why? </p>
+<p>你可以猜一猜。。。</p>
+<p>数据湖的元数据层统一是大势所趋，Delta Lake 3.0 和 Onetable 做的事情一样，都想统一数据湖的元数据层。 Onetable 的介绍可以参考 <a href="https://www.onehouse.ai/blog/onetable-hudi-delta-iceberg">onetable-hudi-delta-iceberg</a></p>
+<h2 id="databricks-ceo-is-wrong-">DataBricks CEO Is Wrong!</h2>
+<p>DataBricks CEO 说 StarRocks 只能查询 Hudi, 不能查询 Delta Lake 和 IceBerg。事实上，StarRocks 可以同时查询 Hudi, Delta Lake 和 IceBerg，StarRocks 不仅可以查询，而且可以提供最极致的数据湖分析体验，而且绝对 Open，不会 Lock。</p>
+<p>无论数据湖上各种 Table Format 的元数据是否统一，你都可以使用 StarRocks 作为你数据湖上的查询引擎。 Because StarRocks Is Very Powerful! Why?</p>
+<h2 id="starrocks-powerful-datelake-analysis">StarRocks Powerful DateLake Analysis</h2>
+<h3 id="starrocks-极致查询性能">StarRocks 极致查询性能</h3>
+<p><img src="media/16881615305138/starrocks-trino.png" alt="starrocks-trino"></p>
+<p>关于 StarRocks 的极致性能已经有很多资料介绍了，这里就不赘述了</p>
+<ol>
+<li>MPP 分布式执行</li>
+<li>Pipeline 并行执行框架</li>
+<li>向量化执行</li>
+<li>CBO 优化器</li>
+<li>Global Runtime Filter</li>
+<li>Metadata Cache</li>
+<li>Local Data Cache</li>
+<li>Materialized View</li>
+</ol>
+<h3 id="利用-starrocks-的-house-能力进一步提升性能">利用 StarRocks 的 House 能力进一步提升性能</h3>
+<p>StarRocks 不仅仅是一个查询引擎，同时也拥有一个强大的存储引擎，如果你希望进一步提升查询性能或者查询并发能力，你可以将数据导入到 StarRocks 中，StarRocks的本地存储会拥有丰富的索引能力，实时更新能力，多表 Colocate 能力。</p>
+<p>数据导入 StarRocks 中有两种方式：手动导入数据和 MV 自动导入数据。</p>
+<p><strong>StarRocks 支持对数据湖上的表创建物化视图，并且支持自动数据同步，自动查询改写</strong></p>
+<p><img src="media/16881615305138/starrocks-house-1.png" alt="starrocks-house"></p>
+<h3 id="starrocks-冷热分离-自动查询改写">StarRocks 冷热分离 + 自动查询改写</h3>
+<p>大多数情况下，我们希望最近一周或者一个月的热数据拥有更好的查询性能，在 StarRocks 中，MV 可以很方便很高效的帮你实现这一点：</p>
+<p><img src="media/16881615305138/starrocks-union.png" alt="starrocks-union"></p>
+<p>如上图所示，StarRocks 的 MV 可以只保存最近一个月的数据，当你查询 DataLake 上的数据时，StarRocks 会帮你自动改写，最新的数据从 StarRocks 查询，历史数据从 DataLake 查询，然后自动 Union。</p>
+<h3 id="starrocks-是支持实时更新的-lakehouse">StarRocks 是支持实时更新的 LakeHouse</h3>
+<p><img src="media/16881615305138/starrocks-upsert.png" alt="starrocks-upsert"></p>
+<p><strong>因为 StarRocks 同时支持实时高效更新和写出到 Iceberg，所以我们可以基于 StarRocks 构建实时更新的 LakeHouse。 当你同时需要实时更新，极致查询性能，开放的 Table Format，StarRocks 便是你的唯一选择。</strong></p>
+<h3 id="starrocks-简单易用的-catalog-元数据管理">StarRocks 简单易用的 Catalog 元数据管理</h3>
+<p>StarRocks 可以将外部 DB 下的所有表元数据可以一键同步，快速同步各种 DateLake 数据源</p>
+<p><img src="media/16881615305138/16881631200616.jpg" alt="StarRocks-Catalog"></p>
+<h3 id="starrocks-弹性伸缩">StarRocks 弹性伸缩</h3>
+<p>StarRocks 用于数据湖分析的计算节点是无状态的，可以结合 K8S 进行快速弹性伸缩</p>
+<p><img src="media/16881615305138/16881631746299.jpg" alt="StarRocks-k8s"></p>
+
+            <hr/>
+            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
+            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
+            <h3>欢迎关注微信公众号</h3>
+            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="row" style="padding-top: 60px">
+    <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+            <div class="ds-thread"
+                 data-thread-key=649f6331af925a65371acdc2
+                 data-title=被 DataBricks CEO 唯一提及的数据库：StarRocks
+                 data-url=StarRocks-databricks>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
+</div>
+
+<script src="../js/code.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.js"></script>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+</body>
+</html>
