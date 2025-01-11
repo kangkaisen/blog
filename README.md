@@ -13,5 +13,7 @@
 ### 支持代码高亮
 ### 支持数学公式
 ### 支持文章分类
-### 一键部署更新
+### 支持 Cloudflare Pages 一键部署
 ### 清新,简洁,急速
+
+![blog-Cloudflare-pages-performance](public/images/blog-performance.jpg)

@@ -2,6 +2,23 @@ body {
     font-family: STFangSong, Helvetica, Arial, Vernada, Tahoma, STXihei, "Microsoft YaHei", "Songti SC", SimSun, Heiti, sans-serif;
     font-size: 18px;
 }
+.navbar-default {
+    background-color: #ffffff;
+}
+.navbar-default .navbar-nav > li > a {
+    color: #1a1a1a;
+    font-weight: 500;
+}
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus {
+    color: #14b8a6;
+}
+.navbar-header a {
+    color: #1a1a1a;
+    font-weight: 500;
+    padding: 15px;
+    display: inline-block;
+}
 .title a {
     display: block;
 }
@@ -18,23 +35,14 @@ body {
     text-align: center;
     border-radius: 30px;
 }
-.panel-default > .panel-heading {
-    background-image: none;
-    background-color: #fff;
-}
-.navbar-default {
-    background-image: none;
-    background-color: #fff;
-    box-shadow: none;
-}
 .footer{
     text-align: center;
 }
 a:link, a:visited {
-    color:#666;
-    text-decoration:none;
+    color: #1a1a1a;
+    text-decoration: none;
 }
 a:hover, a:active {
-    color:#58D68D;
-    text-decoration:none;
+    color: #14b8a6;
+    text-decoration: none;
 }
