@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
+    <title>编程小梦|博客迁移到 Cloudflare Pages</title>
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+          <h1>博客迁移到 Cloudflare Pages</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2025-01-11</p>
+          <p>
+            分类:
+            <a href="../tag/个人.html" target="_blank"
+              >个人</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
+<ul>
+<li><a href="#1-迁移原因">1 迁移原因</a></li>
+<li><a href="#2-迁移过程">2 迁移过程</a><ul>
+<li><a href="#2-1-通过github-方式新建-cloudflare-pages">2.1 通过Github 方式新建 Cloudflare Pages</a></li>
+<li><a href="#2-2-配置-cache">2.2 配置 Cache</a></li>
+<li><a href="#2-3-域名dns-迁移到-cloudflare">2.3 域名DNS 迁移到 Cloudflare</a></li>
+<li><a href="#2-4-自定义域名">2.4 自定义域名</a></li>
+<li><a href="#2-5-bcmeng-com-重定向到-www-bcmeng-com">2.5 bcmeng.com 重定向到 www.bcmeng.com</a></li>
+</ul>
+<li><a href="#3-迁移到-cloudflare-pages-的好处">3 迁移到 Cloudflare Pages 的好处</a><ul>
+<li><a href="#3-1-自动-https-证书管理">3.1 自动 HTTPS 证书管理</a></li>
+<li><a href="#3-2-免费-全球-cdn-加速">3.2 免费 全球 CDN 加速</a></li>
+<li><a href="#3-3-github-自动部署">3.3 Github 自动部署</a></li>
+<li><a href="#3-4-省去-ec2-机器成本">3.4 省去 EC2 机器成本</a></li>
+</ul>
+<li><a href="#4-踩的小坑">4 踩的小坑</a></li>
+<li><a href="#5-ai-博客的未来形态">5 AI 博客的未来形态</a></li>
+</li>
+</li>
+</ul>
+<!-- toc stop -->
+<!-- toc -->
+<h2 id="1-迁移原因">1 迁移原因</h2>
+<p>编程小梦的博客是部署在阿里云的EC2机器上的，但是这次续费时因为我的机型太老，直接不让续费了。我的博客是大学时候部署了，也有十多年了。 正在最近在使用 Cloudflare pages，索性就决定直接迁移到 Cloudflare pages, 迁移过程比我预想的简单，也解决了之前部署在AWS EC2的好几个痛点。</p>
+<h2 id="2-迁移过程">2 迁移过程</h2>
+<h3 id="2-1-通过github-方式新建-cloudflare-pages">2.1 通过Github 方式新建 Cloudflare Pages</h3>
+<ol>
+<li>直接通过github 方式新建  Cloudflare Pages 项目就可以</li>
+<li>因为 <a href="https://github.com/kangkaisen/blog">https://github.com/kangkaisen/blog</a> 是个完全静态的博客，在部署到 Cloudflare Pages 时，指定 根目录 为 <code>/public</code> 就可以</li>
+</ol>
+<h3 id="2-2-配置-cache">2.2 配置 Cache</h3>
+<p>在 public 下添加 _headers 文件：</p>
+<pre><code>/*
+  Cache-Control: public, max-age=2592000
+</code></pre><h3 id="2-3-域名dns-迁移到-cloudflare">2.3 域名DNS 迁移到 Cloudflare</h3>
+<p>操作比较简单，基本上按照提示走就可以，核心是同步 DNS 记录，然后在阿里云修改域名的DNS 服务器为Cloudflare 的DNS 服务器。</p>
+<p>Cloudflare 自动扫描的DNS 记录可能不全，大家需要check一下，漏掉的需要手动添加。</p>
+<h3 id="2-4-自定义域名">2.4 自定义域名</h3>
+<ul>
+<li>配置 CNAME 类型记录，@ 名称，指向 xxx.pages.dev</li>
+<li>配置 CNAME 类型记录, www 名称，指向 xxx.pages.dev</li>
+<li>已经在Vercel 绑定的域名，迁移到Cloudflare 时，Cloudflare 的DNS 代理模式应该是为 仅DNS</li>
+</ul>
+<h3 id="2-5-bcmeng-com-重定向到-www-bcmeng-com">2.5 bcmeng.com 重定向到 www.bcmeng.com</h3>
+<p>在 Cloudflare 的规则中创建一个 从 WWW 重定向到根的重定向规则就可以：</p>
+<ol>
+<li>通配符模式</li>
+<li>请求 URL：<a href="https://www.*">https://www.*</a></li>
+<li>目标 URL：<a href="https://${1}">https://${1}</a></li>
+<li>状态码：301</li>
+</ol>
+<h2 id="3-迁移到-cloudflare-pages-的好处">3 迁移到 Cloudflare Pages 的好处</h2>
+<h3 id="3-1-自动-https-证书管理">3.1 自动 HTTPS 证书管理</h3>
+<p>之前的 HTPPS 证书 是基于 certbot 生成的，每3个月得刷新一次，十分麻烦。 Couldflare 自带免费 HTPPS 证书。</p>
+<h3 id="3-2-免费-全球-cdn-加速">3.2 免费 全球 CDN 加速</h3>
+<p>Cloudflare 对于静态资源也有CDN的全球加速，可以进一步提升网站性能。大家可以看到，更新的编程小梦博客在全球访问都是几百毫秒的延迟。</p>
+<p><img src="../images/blog-performance.jpg" alt="blog-Cloudflare-pages-performance"></p>
+<h3 id="3-3-github-自动部署">3.3 Github 自动部署</h3>
+<p>Github 自动部署 是现在开发过程的标配了，之前我每次更新博客到Github后，需要手动同步一次代码，比较古老。 现在 Github push 后Couldflare Pages 会自动部署。</p>
+<h3 id="3-4-省去-ec2-机器成本">3.4 省去 EC2 机器成本</h3>
+<p>Couldflare Pages 几乎是免费的，可以剩下一年几百多的阿里云的EC2 费用。</p>
+<h2 id="4-踩的小坑">4 踩的小坑</h2>
+<p>博客迁移完成，准备写篇博客，简单记录下时，遇到了这个报错：</p>
+<pre><code>/Users/kangkaisen/.nvm/versions/node/v18.17.0/bin/node /Users/kangkaisen/mygit/blog/app.js
+fs.js:43
+} = primordials;
+    ^
+
+ReferenceError: primordials is not defined
+    at fs.js:43:5
+    at req_ (/Users/kangkaisen/mygit/blog/node_modules/natives/index.js:143:24)
+    at Object.req [as require] (/Users/kangkaisen/mygit/blog/node_modules/natives/index.js:55:10)
+    at Object.&lt;anonymous&gt; (/Users/kangkaisen/mygit/blog/node_modules/graceful-fs/fs.js:1:37)
+    at Module._compile (node:internal/modules/cjs/loader:1256:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1310:10)
+    at Module.load (node:internal/modules/cjs/loader:1119:32)
+    at Module._load (node:internal/modules/cjs/loader:960:12)
+    at Module.require (node:internal/modules/cjs/loader:1143:19)
+    at require (node:internal/modules/cjs/helpers:110:18)
+
+Node.js v18.17.0
+
+Process finished with exit code 1
+</code></pre><p>核心原因是我15年写代码时用的依赖库marked-toc 太老了，这个库也10年没更新了。依赖版本更新了几次没解决后，我就决定直接换掉这个库。 然后用AI 写代码实现了生成toc的功能，换掉了这个库，AI 生成的代码可以参考  <a href="https://github.com/kangkaisen/blog/commit/34c9c468586eff8ebc6ebb56f1e7a118e6a45fb2#diff-e628fe9667884217c1445992e6224b8bbfca4f8ab7a3f8c1e623bb181da6226dR44">AI generateToc code</a></p>
+<p>AI 对于这种基础的代码，基本上1，2次就可以生成的差不多。但是要做到100%正确，就需要你给出很明确的输入，输出示例，否则对于算法相对复杂，且自定义的代码，AI 都是会百分之八九十正确，总差那么一丢丢。 </p>
+<p>AI Coding 目前很火热，的确可以大幅提升我们的生产力，但是在一次生成代码的成功率上还是需要提升。</p>
+<p>其实今天踩坑的过程，让我再一次意识到保持我们工作，开发环境稳定，一致的重要性。 如果我们的工作环境，开发环境 经常变化，我们就会花费精力折腾各种依赖，环境的问题，影响我们的效率。  从这一点讲：云端的开发环境也是有发展前景，它可以保证我们无论身在何处，采用什么设备，都可以获取一致的开发环境，唯一的问题可能就是网络环境是否稳定。</p>
+<h2 id="5-ai-博客的未来形态">5 AI 博客的未来形态</h2>
+<p>现在AGI的能力很强大了，AI写作已经十分成熟，所以下一个流行的博客框架必然是 AI Native 的。 应该具备以下标准功能：</p>
+<ul>
+<li>AI 生成： 根据关键字自动搜索网页，生成详细，逻辑清晰，表达清除的文章</li>
+<li>AI 扩展和润色： 人类完成基础大纲，AI 生成完整内容</li>
+<li>AI 生成图片：自动根据文章标题和核心内容生产封面图和内容插入</li>
+<li>AI 翻译：未来多语言也是 博客的标配，而AI 自动翻译也是必不可少的</li>
+<li>AI 搜索和问答： 内置基于整个博客内容的 AI 搜索和问答</li>
+<li>AI SEO： 自动利用 AI 进行 SEO 优化</li>
+<li>基于 md 或者mdx 格式：个人博客其实可以完全不需要数据库，基于md 或者mdx 格式 十分简单，而且容易AI 生成，AI 翻译</li>
+<li>基于 CND 加速的静态博客</li>
+<li>内置统计分析</li>
+<li>多终端适配</li>
+<li>明暗模式</li>
+</ul>
+
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
+        </div>
+        <div class="col-md-1"></div>
+      </div>
+    </div>
+
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 col-sm-12">
+          <div class="ds-thread" data-thread-key=67823cbe9b1f3a110eafbe18 data-title=博客迁移到 Cloudflare Pages data-url=cloudflare-pages-blog>
+          </div>
+        </div>
+        <div class="col-md-1"></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
+
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+  </body>
+</html>

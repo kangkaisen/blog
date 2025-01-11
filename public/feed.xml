@@ -4,8 +4,8 @@
     <title>编程小梦</title>
     <description>编程小梦|康凯森的技术博客</description>
     <link>https://blog.bcmeng.com/</link>
-    <lastBuildDate>Sat, 11 Jan 2025 08:45:35 GMT</lastBuildDate>
-    <pubDate>Sat, 11 Jan 2025 08:45:35 GMT</pubDate>
+    <lastBuildDate>Sat, 11 Jan 2025 10:03:36 GMT</lastBuildDate>
+    <pubDate>Sat, 11 Jan 2025 10:03:36 GMT</pubDate>
     <item>
       <title>康凯森的公开分享</title>
       <description>&lt;!-- toc --&gt;
@@ -22,6 +22,51 @@
 * 2021-05 DataFunTalk 《DorisDB —— 新一代极速 MP</description>
       <link>https://blog.bcmeng.com/post/kks-public.html</link>
       <pubDate>2023-01-04</pubDate>
+    </item>
+    <item>
+      <title>博客迁移到 Cloudflare Pages</title>
+      <description>
+&lt;!-- toc --&gt;
+## 1 迁移原因
+编程小梦的博客是部署在阿里云的EC2机器上的，但是这次续费时因为我的机型太老，直接不让续费了。我的博客是大学时候部署了，也有十多年了。 正在最近在使用 Cloudflare pages，索性就决定直接迁移到 Cloudflare pages, 迁移过程比我预想的简单，也解决了之前部署在AWS EC2的好几个痛点。
+
+## 2 迁移过程
+
+### 2.1 通过Github 方式新建 Cloudflare Pages
+1. 直接通过github 方式新建  Cloudflare Pages 项目就可以
+2. 因为 https://github.com/kangkaisen/blog 是个完全静态的博客，在部署到 Cloudflare Pages 时，指定 根目录 为 `/public` 就可以
+
+### 2.2 配置 Cache
+在 public 下添加 _headers 文件：
+
+```
+/*
+  Cache-Control: public, max-age=2592000
+```
+
+### 2.3 域名DNS 迁移到 Cloudflare
+操作比较简单，基本上按照提示走就可以，核心是同步 DNS 记录，然后在阿里云修改域名的DNS 服务器为Cloudflare 的DNS 服务器。
+
+Cloudflare 自动扫描的DNS 记录可能不全，大家需要check一下，漏掉的需要手动添加。
+
+### 2.4 自定义域名
+
+- 配置 CNAME 类型记录，@ 名称，指向 xxx.pages.dev
+- 配置 CNAME 类型记录, www 名称，指向 xxx.pages.dev
+- 已经在Vercel 绑定的域名，迁移到Cloudflare 时，Cloudflare 的DNS 代理模式应该是为 仅DNS
+
+### 2.5 bcmeng.com 重定向到 www.bcmeng.com
+
+在 Cloudflare 的规则中创建一个 从 WWW 重定向到根的重定向规则就可以：
+
+1. 通配符模式
+2. 请求 URL：https://www.*
+3. 目标 URL：https://${1}
+4. 状态码：301
+
+## 3 迁移到 Cloudflare Page</description>
+      <link>https://blog.bcmeng.com/post/cloudflare-pages-blog.html</link>
+      <pubDate>2025-01-11</pubDate>
     </item>
     <item>
       <title>被 DataBricks CEO 唯一提及的数据库：StarRocks</title>
@@ -643,35 +688,6 @@ DPA 不关心每个系统的 actor 具体如何实现，只需要实现几个核
 最后，欢迎大家加入。</description>
       <link>https://blog.bcmeng.com/post/zhishixingqiu.html</link>
       <pubDate>2022-10-30</pubDate>
-    </item>
-    <item>
-      <title>如何打造一款极速分析型数据库</title>
-      <description>&lt;!-- toc --&gt;
-
-在 [数据库从0到0.1 (二)： OLTP VS OLAP VS HTAP](https://blog.bcmeng.com/post/oltp-olap-htap.html) 一文中，我们知道，目前数据库主要分为两大类，一类是以事务为主的事务型数据库，一类是以分析为主的分析型数据库。而对于一款分析型数据库而言，性能至关重要，如何打造极致的性能，是分析型数据库永恒的主题，本文我就分享下如何打造一款基于 CPU 的极速分析型数据库。 （GPU，FPGA 等异构计算本文暂不讨论， RDMA, NVM 等新硬件加速本文暂不讨论）
-
-本文将从预计算 VS 现场计算，可扩展性，数据流，资源利用，调优，弹性，架构 VS 细节，近似 VS 精确，性能测试 9个角度来论述如何打造一款基于 CPU 的极速分析型数据库：
-
-## 一 极速 OLAP 数据库：预计算 VS 现场计算
-![-w1748](media/16404977814611/16404998309202.jpg)
-
-数据库本质上来讲，就是在做两件事情： **数据的存储** 和 **数据的查询**，当数据写入数据库，数据库保证数据不会丢，当我们需要查询或者分析数据时，数据库可以快速，正确地返回我们想要的数据。  如上图所示，在数据库现场计算能力不变的情况，要提升查询性能，我们就有两种大的手段：1，在数据库导入过程，进行一些预处理，减少现场计算的成本； 2，在数据存储时，有空间换时间，减少现场计算的成本。 具体可以分为4类手段：
-
-### 1.1 Materialized View
-
-![-w1507](media/16404977814611/16405005754473.jpg)
-
-如上图所示：物化视图就是将某个或者某类SQL的查询结果提前计算出来，用导入时延，存储成本换取查询时的高性能。物化视图是 OLAP 数据库的常见加速手段，比如：
-
-* StarRocks 中的 物化视图
-* Google Mesa 中的 Rollup
-* Apache Kylin 中的 Cube
-* Apache Pinot 中的 Star-Tree Index
-* Apache Calcite 中的 Lattice
-* Dremio 中的 Reflections
-</description>
-      <link>https://blog.bcmeng.com/post/fastest_database.html</link>
-      <pubDate>2021-12-26</pubDate>
     </item>
   </channel>
 </rss>
