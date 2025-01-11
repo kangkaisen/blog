@@ -1,48 +1,76 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|StarRocks 源码导读一</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> StarRocks 源码导读一</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2021-09-12</p>
-            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>StarRocks 源码导读一</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2021-09-12</p>
+          <p>
+            分类:
+            <a href="../tag/OLAP.html" target="_blank"
+              >OLAP</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
 <li><a href="#starrocks-cbo-优化器">StarRocks CBO 优化器</a><ul>
 <li><a href="#starrocks-analyzer">StarRocks Analyzer</a></li>
@@ -54,7 +82,6 @@
 <li><a href="#starrocks-如何优化搜索耗时">StarRocks 如何优化搜索耗时</a></li>
 <li><a href="#starrocks-cbo-优化器理论和实践的差别">StarRocks CBO 优化器理论和实践的差别</a></li>
 </ul>
-</li>
 <li><a href="#starrocks-向量化执行器">StarRocks 向量化执行器</a><ul>
 <li><a href="#starrocks-算子向量化">StarRocks 算子向量化</a></li>
 <li><a href="#starrocks-表达式向量化">StarRocks 表达式向量化</a></li>
@@ -63,10 +90,12 @@
 <li><a href="#starrocks-自适应优化">StarRocks 自适应优化</a></li>
 <li><a href="#starrocks-如何进行性能优化">StarRocks 如何进行性能优化</a></li>
 </ul>
-</li>
 <li><a href="#结语">结语</a></li>
+</li>
+</li>
 </ul>
 <!-- toc stop -->
+<!-- toc -->
 <p>2021年9月8日，我司鼎石科技开放了核心数据库产品 StarRocks 源码：<a href="https://github.com/StarRocks/starrocks">https://github.com/StarRocks/starrocks</a>，StarRocks 基于 <a href="https://github.com/apache/incubator-doris/">Apache Doris</a> 开发，我们十分感谢 Apache Doris 社区贡献了这样一个优秀的OLAP数据库，也感谢所有<a href="https://github.com/apache/incubator-doris/graphs/contributors">向 Apache Doris 贡献过的同学</a>，让我们可以站在巨人的肩膀上快速前进和迭代，不过 StarRocks 和 Apache Doris 已经有了很大的不同，我们新增和修改的代码行数达到了几十万行，我将分两篇文章对 StarRocks 的源码进行导读，这篇文章主要介绍 StarRocks 全新的 CBO 优化器和向量化执行器。</p>
 <h2 id="starrocks-cbo-优化器">StarRocks CBO 优化器</h2>
 <p>如果一条SQL的执行是一场旅程，查询执行器就是你的交通工具，你的交通工具性能越好，在相同的路径下，旅程的耗时自然越短。但是从旅程的出发点到终点可能有成千上万条路径，有康庄大道，也有林荫小路，而查询优化器的作用就是选择出最短，最合适的道路。 <strong>一般 SQL 越复杂，数据量越大，查询优化器的意义就越大，因为不同执行方式的性能差别可能有成百上千倍</strong>。</p>
@@ -210,46 +239,62 @@
 <p>本文主要进行了 StarRocks CBO 优化器和向量化执行器两个模块的源码导读，下一篇文章会进行 Pipeline 并行执行引擎，Update 存储引擎，导入和 Compaction 向量化，Hive 外表，Global Runtime filter, Lateral Join, Fast Decimal, Array 类型 等模块或者功能的源码导读。</p>
 <p>如果你对数据库研发，测试，解决方案，DBA，销售感兴趣，欢迎将你的简历发送到 kangkaisen@starrocks.com。</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=613dfb1fe2da18f32c6a4c9a
-                 data-title=StarRocks 源码导读一
-                 data-url=starrocks-source-code-1>
-            </div>
+          <div class="ds-thread" data-thread-key=613dfb1fe2da18f32c6a4c9a data-title=StarRocks 源码导读一 data-url=starrocks-source-code-1>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

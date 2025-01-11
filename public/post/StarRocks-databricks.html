@@ -1,48 +1,76 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|被 DataBricks CEO 唯一提及的数据库：StarRocks</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> 被 DataBricks CEO 唯一提及的数据库：StarRocks</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2023-06-30</p>
-            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>被 DataBricks CEO 唯一提及的数据库：StarRocks</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2023-06-30</p>
+          <p>
+            分类:
+            <a href="../tag/OLAP.html" target="_blank"
+              >OLAP</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
 <li><a href="#databricks-ceo-only-mentioned-starrocks">DataBricks CEO Only Mentioned StarRocks</a></li>
 <li><a href="#databricks-ceo-is-wrong">DataBricks CEO Is Wrong!</a></li>
@@ -57,12 +85,13 @@
 </li>
 </ul>
 <!-- toc stop -->
+<!-- toc -->
 <h2 id="databricks-ceo-only-mentioned-starrocks">DataBricks CEO Only Mentioned StarRocks</h2>
 <p><img src="media/16881615305138/img_v2_11d770fc-edec-4d94-82b8-36d723fdf65g.jpg" alt="StarRocks-DataBricks-CEO"></p>
 <p>在刚刚结束的 DataBricks Data + AI Summit 上，StarRocks 是 DataBricks CEO 在演讲中唯一提及的 DataBase, why? </p>
 <p>你可以猜一猜。。。</p>
 <p>数据湖的元数据层统一是大势所趋，Delta Lake 3.0 和 Onetable 做的事情一样，都想统一数据湖的元数据层。 Onetable 的介绍可以参考 <a href="https://www.onehouse.ai/blog/onetable-hudi-delta-iceberg">onetable-hudi-delta-iceberg</a></p>
-<h2 id="databricks-ceo-is-wrong-">DataBricks CEO Is Wrong!</h2>
+<h2 id="databricks-ceo-is-wrong">DataBricks CEO Is Wrong!</h2>
 <p>DataBricks CEO 说 StarRocks 只能查询 Hudi, 不能查询 Delta Lake 和 IceBerg。事实上，StarRocks 可以同时查询 Hudi, Delta Lake 和 IceBerg，StarRocks 不仅可以查询，而且可以提供最极致的数据湖分析体验，而且绝对 Open，不会 Lock。</p>
 <p>无论数据湖上各种 Table Format 的元数据是否统一，你都可以使用 StarRocks 作为你数据湖上的查询引擎。 Because StarRocks Is Very Powerful! Why?</p>
 <h2 id="starrocks-powerful-datelake-analysis">StarRocks Powerful DateLake Analysis</h2>
@@ -98,46 +127,62 @@
 <p>StarRocks 用于数据湖分析的计算节点是无状态的，可以结合 K8S 进行快速弹性伸缩</p>
 <p><img src="media/16881615305138/16881631746299.jpg" alt="StarRocks-k8s"></p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=649f6331af925a65371acdc2
-                 data-title=被 DataBricks CEO 唯一提及的数据库：StarRocks
-                 data-url=StarRocks-databricks>
-            </div>
+          <div class="ds-thread" data-thread-key=649f6331af925a65371acdc2 data-title=被 DataBricks CEO 唯一提及的数据库：StarRocks data-url=StarRocks-databricks>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

@@ -1,48 +1,77 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|读书笔记——《Effective Java》</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> 读书笔记——《Effective Java》</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2016-11-05</p>
-            <p>分类: <a href="../tag/Java.html" target="_blank" >Java</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>读书笔记——《Effective Java》</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2016-11-05</p>
+          <p>
+            分类:
+            <a href="../tag/Java.html" target="_blank"
+              >Java</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
+<ul>
 <ul>
 <li><a href="#服务提供者框架">服务提供者框架</a></li>
 <li><a href="#1-学习一门语言必须掌握3件事情">1 学习一门语言必须掌握3件事情</a></li>
@@ -61,7 +90,7 @@
 <li><a href="#14-在共有类中使用访问方法而非共有域">14 在共有类中使用访问方法而非共有域</a></li>
 <li><a href="#15-使可变性最小化">15 使可变性最小化</a></li>
 <li><a href="#16-复合优先于继承">16 复合优先于继承</a></li>
-<li><a href="#17-要么为继承而设计并提供文档说明要么就禁止继承">17 要么为继承而设计并提供文档说明，要么就禁止继承</a></li>
+<li><a href="#17-要么为继承而设计并提供文档说明-要么就禁止继承">17 要么为继承而设计并提供文档说明，要么就禁止继承</a></li>
 <li><a href="#18-接口优于抽象类">18 接口优于抽象类</a></li>
 <li><a href="#19-接口只用于定义类型">19 接口只用于定义类型</a></li>
 <li><a href="#20-类层次优于标签类">20 类层次优于标签类</a></li>
@@ -83,14 +112,14 @@
 <li><a href="#40-谨慎的设计方法签名">40 谨慎的设计方法签名</a></li>
 <li><a href="#41-慎用重载">41 慎用重载</a></li>
 <li><a href="#42-慎用可变参数">42 慎用可变参数</a></li>
-<li><a href="#43-返回零长度的数组或者集合而不是null">43 返回零长度的数组或者集合，而不是null</a></li>
+<li><a href="#43-返回零长度的数组或者集合-而不是null">43 返回零长度的数组或者集合，而不是null</a></li>
 <li><a href="#44-为所有导出的api元素编写文档注释">44 为所有导出的API元素编写文档注释</a></li>
 <li><a href="#45-将局部变量的作用域最小化">45 将局部变量的作用域最小化</a></li>
 <li><a href="#46-for-each-优于-for循环">46 for each 优于 for循环</a></li>
 <li><a href="#47-了解和使用类库">47 了解和使用类库</a></li>
 <li><a href="#48-float-和-double-是非精确的">48 float 和 double 是非精确的</a></li>
 <li><a href="#49-基本类型优先于装箱基本类型">49 基本类型优先于装箱基本类型</a></li>
-<li><a href="#50-如果其他类型更合适则尽量避免使用字符串">50 如果其他类型更合适，则尽量避免使用字符串</a></li>
+<li><a href="#50-如果其他类型更合适-则尽量避免使用字符串">50 如果其他类型更合适，则尽量避免使用字符串</a></li>
 <li><a href="#51-当心字符串连接的性能">51 当心字符串连接的性能</a></li>
 <li><a href="#52-通过接口引用对象">52 通过接口引用对象</a></li>
 <li><a href="#53-接口优先于反射机制">53 接口优先于反射机制</a></li>
@@ -98,7 +127,7 @@
 <li><a href="#55-谨慎地进行优化">55 谨慎地进行优化</a></li>
 <li><a href="#56-遵守普遍接受的命名惯例">56 遵守普遍接受的命名惯例</a></li>
 <li><a href="#57-只针对异常的情况才使用异常">57 只针对异常的情况才使用异常</a></li>
-<li><a href="#58-可恢复的情况使用受检异常编程错误使用运行时异常">58 可恢复的情况使用受检异常，编程错误使用运行时异常</a></li>
+<li><a href="#58-可恢复的情况使用受检异常-编程错误使用运行时异常">58 可恢复的情况使用受检异常，编程错误使用运行时异常</a></li>
 <li><a href="#59-避免不必要的使用受检的异常">59 避免不必要的使用受检的异常</a></li>
 <li><a href="#60-优先使用标准的异常">60 优先使用标准的异常</a></li>
 <li><a href="#61-抛出与抽象相对应的异常">61 抛出与抽象相对应的异常</a></li>
@@ -119,7 +148,9 @@
 <li><a href="#对象初始化顺序">对象初始化顺序</a></li>
 <li><a href="#参考资料">参考资料</a></li>
 </ul>
+</ul>
 <!-- toc stop -->
+<!-- toc -->
 <h3 id="服务提供者框架">服务提供者框架</h3>
 <p>多个服务提供者实现一个服务，系统为多个服务提供者的客户端提供多个实现，并把他们从多个实现中解耦出来。</p>
 <p>服务提供者框架有3个重要组件：</p>
@@ -217,7 +248,7 @@ else return false;
 <p>不可变对象本质上是线程安全的，不要求同步，可以自由共享。</p>
 <p>不可变类的真正唯一缺点，对于每个不同的值都需要一个单独的对象。</p>
 <h3 id="16-复合优先于继承">16 复合优先于继承</h3>
-<h3 id="17-要么为继承而设计并提供文档说明，要么就禁止继承">17 要么为继承而设计并提供文档说明，要么就禁止继承</h3>
+<h3 id="17-要么为继承而设计并提供文档说明-要么就禁止继承">17 要么为继承而设计并提供文档说明，要么就禁止继承</h3>
 <p><strong>好的API文档应该描述了一个给定的方法做了什么工作，而不是如何做到的。</strong></p>
 <h3 id="18-接口优于抽象类">18 接口优于抽象类</h3>
 <p>抽象类允许包含某些方法的实现，但是接口不可以。</p>
@@ -258,7 +289,7 @@ else return false;
 <code>List&lt;? extend E&gt;</code></p>
 <p><code>Collection&lt;? super E&gt;</code></p>
 <pre><code>PECS producer-extends consumer-super
-</code></pre><h3 id="29-优先考虑类型安全的异构容器-？？">29 优先考虑类型安全的异构容器 ？？</h3>
+</code></pre><h3 id="29-优先考虑类型安全的异构容器">29 优先考虑类型安全的异构容器 ？？</h3>
 <h3 id="30-用枚举代替int常量">30 用枚举代替int常量</h3>
 <h3 id="31-用enumset-代理位域">31 用EnumSet 代理位域</h3>
 <h3 id="32-用enummap-代替序数索引">32 用EnumMap 代替序数索引</h3>
@@ -279,7 +310,7 @@ else return false;
 <p>覆盖方法 代码例子</p>
 <h3 id="42-慎用可变参数">42 慎用可变参数</h3>
 <p>可变参数的每次调用都会导致进行一次数组分配和初始化。</p>
-<h3 id="43-返回零长度的数组或者集合，而不是null">43 返回零长度的数组或者集合，而不是null</h3>
+<h3 id="43-返回零长度的数组或者集合-而不是null">43 返回零长度的数组或者集合，而不是null</h3>
 <pre><code>Collections.EMPTY_SET;
 Collections.EMPTY_LIST;
 Collections.EMPTY_MAP;
@@ -322,7 +353,7 @@ Collections.EMPTY_MAP;
 <li>类型参数</li>
 <li>反射调用</li>
 </ol>
-<h3 id="50-如果其他类型更合适，则尽量避免使用字符串">50 如果其他类型更合适，则尽量避免使用字符串</h3>
+<h3 id="50-如果其他类型更合适-则尽量避免使用字符串">50 如果其他类型更合适，则尽量避免使用字符串</h3>
 <h3 id="51-当心字符串连接的性能">51 当心字符串连接的性能</h3>
 <p>使用StringBuilder</p>
 <h3 id="52-通过接口引用对象">52 通过接口引用对象</h3>
@@ -341,7 +372,7 @@ Collections.EMPTY_MAP;
 <p>设计良好的API不应该强迫它的客户端为了正常的控制流而使用异常</p>
 <p>如果类有状态相关的方法，则也应该有状态测试的方法或者可识别的返回值：
 next()方法 和 hasNext() 方法</p>
-<h3 id="58-可恢复的情况使用受检异常，编程错误使用运行时异常">58 可恢复的情况使用受检异常，编程错误使用运行时异常</h3>
+<h3 id="58-可恢复的情况使用受检异常-编程错误使用运行时异常">58 可恢复的情况使用受检异常，编程错误使用运行时异常</h3>
 <p>受检异常
 运行时异常
 错误</p>
@@ -403,46 +434,62 @@ next()方法 和 hasNext() 方法</p>
 <h3 id="参考资料">参考资料</h3>
 <p>本文是《Effective Java》读书笔记，代码会持续完善补充。</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5871f76ad2f092c392ca4d5a
-                 data-title=读书笔记——《Effective Java》
-                 data-url=java-effective-java>
-            </div>
+          <div class="ds-thread" data-thread-key=5871f76ad2f092c392ca4d5a data-title=读书笔记——《Effective Java》 data-url=java-effective-java>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

@@ -1,48 +1,120 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|读书笔记——《七周七并发模型》</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> 读书笔记——《七周七并发模型》</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2016-03-30</p>
-            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
-            <hr/>
-            <h2 id="概述">概述</h2>
+          <h1>读书笔记——《七周七并发模型》</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2016-03-30</p>
+          <p>
+            分类:
+            <a href="../tag/笔记.html" target="_blank"
+              >笔记</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
+<ul>
+<li><a href="#概述">概述</a><ul>
+<li><a href="#并发和并行的区别">并发和并行的区别</a></li>
+<li><a href="#并行架构">并行架构</a></li>
+</ul>
+<li><a href="#线程和锁">线程和锁</a><ul>
+<li><a href="#互斥和内存模型">互斥和内存模型</a><li><a href="#超越内置锁">超越内置锁</a></li>
+<li><a href="#函数式编程-clojure">函数式编程 Clojure</a><ul>
+<li><a href="#抛弃可变状态">抛弃可变状态</a><li><a href="#函数式并行">函数式并行</a></li>
+<li><a href="#函数式并发">函数式并发</a></li>
+<li><a href="#clojure之道-分离标识与状态">Clojure之道——分离标识与状态</a><ul>
+<li><a href="#原子变量与持久数据结构">原子变量与持久数据结构</a><li><a href="#代理和软件事务内存">代理和软件事务内存</a></li>
+<li><a href="#actor">Actor</a></li>
+<li><a href="#通信顺序进程">通信顺序进程</a><ul>
+<li><a href="#channel">Channel</a></li>
+<li><a href="#go块">go块</a></li>
+<li><a href="#异步io">异步IO</a></li>
+</ul>
+<li><a href="#数据并行">数据并行</a><ul>
+<li><a href="#流水线">流水线</a></li>
+<li><a href="#多alu">多ALU</a></li>
+</ul>
+<li><a href="#lambda架构">Lambda架构</a><ul>
+<li><a href="#mapreduce">MapReduce</a></li>
+<li><a href="#批处理层">批处理层</a></li>
+<li><a href="#加速层">加速层</a></li>
+</ul>
+<li><a href="#结语">结语</a></li>
+</li>
+</li>
+</li>
+</li>
+</ul>
+</li>
+</li>
+</ul>
+</li>
+</li>
+</ul>
+</li>
+</li>
+</ul>
+<!-- toc stop -->
+<h2 id="概述">概述</h2>
 <p>并发的代码的关键是 独立性 和 故障检测
 并发编程中如果某事可能会发生，那么不论多么艰难就一定会发生，而且可能发生在最不利的时刻</p>
 <h3 id="并发和并行的区别">并发和并行的区别</h3>
@@ -116,7 +188,7 @@ IO密集型 线程池大小可以设置的更大些</p>
 <h4 id="引用透明性">引用透明性</h4>
 <p>在函数式编程中，函数都具有引用透明性：在任何调用函数的地方，都可以用函数运行的结果来替换函数的调用，而不会对程序产生副作用。</p>
 <p>引用透明性是可以安全调整函数求值顺序的关键所在。</p>
-<h2 id="clojure之道——分离标识与状态">Clojure之道——分离标识与状态</h2>
+<h2 id="clojure之道-分离标识与状态">Clojure之道——分离标识与状态</h2>
 <h3 id="原子变量与持久数据结构">原子变量与持久数据结构</h3>
 <h4 id="原子变量">原子变量</h4>
 <p>基于 java.util.concurrent.atomic 基础上建立的
@@ -186,46 +258,62 @@ IO密集型 线程池大小可以设置的更大些</p>
 <p>不变性在代码中的应用汇越来越广泛</p>
 <p>未来是分布式的</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5871e92dd2f092c392ca4d3e
-                 data-title=读书笔记——《七周七并发模型》
-                 data-url=qizhouqibingfa>
-            </div>
+          <div class="ds-thread" data-thread-key=5871e92dd2f092c392ca4d3e data-title=读书笔记——《七周七并发模型》 data-url=qizhouqibingfa>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

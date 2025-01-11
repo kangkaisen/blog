@@ -1,48 +1,76 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|我 ChatGPT 网站一次微小升级的复盘</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> 我 ChatGPT 网站一次微小升级的复盘</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2023-04-09</p>
-            <p>分类: <a href="../tag/chatgpt.html" target="_blank" >chatgpt</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>我 ChatGPT 网站一次微小升级的复盘</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2023-04-09</p>
+          <p>
+            分类:
+            <a href="../tag/chatgpt.html" target="_blank"
+              >chatgpt</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
 <li><a href="#背景">背景</a></li>
 <li><a href="#问题">问题</a><ul>
@@ -51,17 +79,18 @@
 <li><a href="#3-多余选项的误导">3 多余选项的误导</a></li>
 <li><a href="#4-客户端网页缓存">4 客户端网页缓存</a></li>
 </ul>
-</li>
 <li><a href="#感悟">感悟</a><ul>
 <li><a href="#1-能及时主动获取用户反馈很重要">1 能及时主动获取用户反馈很重要</a></li>
 <li><a href="#2-云服务的运维成本显著降低">2 云服务的运维成本显著降低</a></li>
 <li><a href="#3-chatgpt-vercel-微创业时代真的已经到来">3 ChatGPT + Vercel ———— 微创业时代真的已经到来</a></li>
 </ul>
-</li>
 <li><a href="#再想想数据库">再想想数据库</a></li>
 <li><a href="#升级的目的是否达到">升级的目的是否达到</a></li>
+</li>
+</li>
 </ul>
 <!-- toc stop -->
+<!-- toc -->
 <h2 id="背景">背景</h2>
 <p>我自己部署的免费 ChatGPT 网站，已经稳定运行一个多月，无需翻墙，响应极速，<strong>已累计服务上万名用户</strong>。 由于自己很忙，一个多月也一直没有更新网站，昨天周六，感觉能抽出一些时间，就心血来潮想给网站加个密码访问的功能，即用户需要关注我的微信公众号，获取到密码后，才可以继续免费使用  ChatGPT。</p>
 <p>这个功能很简单，我几分钟改完就直接推上线了，不过上线后，还是暴露了几个小问题，感觉可以以小见大，延伸总结下。</p>
@@ -90,7 +119,7 @@
 <p>依赖 Vercel，昨天两个需要改代码的小问题，从我动手改代码到线上服务更新，都只需要 1，2分钟，让 Hot Fix 的成本极低。</p>
 <p>如果是短时间无法修复的问题，或者是收费产品的服务，一旦发现异常，Vercel 可以回滚到任意代码的版本，如下图所示，你只需要在某个代码版本点个按钮就行。</p>
 <p><img src="media/16810185464952/vercel.png" alt="vercel"></p>
-<h3 id="3-chatgpt-vercel-————-微创业时代真的已经到来">3 ChatGPT + Vercel ———— 微创业时代真的已经到来</h3>
+<h3 id="3-chatgpt-vercel-微创业时代真的已经到来">3 ChatGPT + Vercel ———— 微创业时代真的已经到来</h3>
 <p>有了 Vercel 这种云服务商，个人开发者发布一款产品的成本极低，流程极短，开发者只需要开发好代码，之后的编译，打包，部署，域名，监控报警，Vercel 都可以帮你统统搞定，关键是 Vercel 还有很高的免费额度，当你没有一款很火的产品之前，免费额度几乎是够用的。</p>
 <p>然后再加上 ChatGPT 强大的编码能力，只要你有一个想法，就可以先让 ChatGPT 快速帮你开发出代码，然后让 Vercel 发布到线上。 整个过程，你要付出的时间和金钱成本都极低极低。</p>
 <p>强烈推荐大家试一下，利用 ChatGPT + Vercel，相信大家可以很快搞出很多有意思的小应用</p>
@@ -99,46 +128,62 @@
 <h2 id="升级的目的是否达到">升级的目的是否达到</h2>
 <p>从实际效果来看，我此次升级的目的应该是达到了，因为公众号粉丝数一天内涨粉了1百多，同时 ChaTGPT 的 API 使用费用还降低了。</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=643262dbe14977565a6f7215
-                 data-title=我 ChatGPT 网站一次微小升级的复盘
-                 data-url=chatgpt-case>
-            </div>
+          <div class="ds-thread" data-thread-key=643262dbe14977565a6f7215 data-title=我 ChatGPT 网站一次微小升级的复盘 data-url=chatgpt-case>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

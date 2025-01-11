@@ -1,48 +1,104 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|读书笔记——《硅谷之谜》</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> 读书笔记——《硅谷之谜》</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2016-02-28</p>
-            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
-            <hr/>
-            <h2 id="一-硅谷的独特之处">一 硅谷的独特之处</h2>
+          <h1>读书笔记——《硅谷之谜》</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2016-02-28</p>
+          <p>
+            分类:
+            <a href="../tag/笔记.html" target="_blank"
+              >笔记</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
+<ul>
+<li><a href="#一-硅谷的独特之处">一 硅谷的独特之处</a><ul>
+<li><a href="#1-叛逆以及对叛逆的宽容">1 叛逆以及对叛逆的宽容</a></li>
+<li><a href="#2-多元化">2 多元化</a></li>
+<li><a href="#3-拒绝平庸">3 拒绝平庸</a></li>
+<li><a href="#4-宽容失败的文化">4 宽容失败的文化</a></li>
+<li><a href="#5-工程师文化">5 工程师文化</a></li>
+<li><a href="#6-不迷信权威">6 不迷信权威</a><li><a href="#7-扁平式管理">7 扁平式管理</a><li><a href="#8-世界的情怀">8 世界的情怀</a></li>
+</li>
+<li><a href="#二-工业时代的科学基础">二 工业时代的科学基础</a><ul>
+<li><a href="#1-泰勒管理理论">1 泰勒管理理论</a><li><a href="#2-现代工业企业管理制度剖析">2 现代工业企业管理制度剖析</a></li>
+<li><a href="#三-信息时代的科学基础">三 信息时代的科学基础</a><ul>
+<li><a href="#1-三论和管理">1 三论和管理</a></li>
+<li><a href="#2-从预测到反应-从局部到整体-从控制到通信">2 从预测到反应，从局部到整体，从控制到通信</a><li><a href="#3-信息时代的企业制度剖析">3 信息时代的企业制度剖析</a><li><a href="#4-大数据思维和互联网思维的本质">4 大数据思维和互联网思维的本质</a></li>
+<li><a href="#5-三论概述">5 三论概述</a></li>
+</li>
+</li>
+</ul>
+</li>
+</li>
+</ul>
+</li>
+</li>
+</ul>
+</li>
+</ul>
+<!-- toc stop -->
+<h2 id="一-硅谷的独特之处">一 硅谷的独特之处</h2>
 <h3 id="1-叛逆以及对叛逆的宽容">1 叛逆以及对叛逆的宽容</h3>
 <h3 id="2-多元化">2 多元化</h3>
 <p>一个真正意义的全球化产品，靠的是满足人类最基本的需求</p>
@@ -71,7 +127,7 @@
 <p>敢于挑战权威的闯劲更是创业成功的保障</p>
 <h3 id="7-扁平式管理">7 扁平式管理</h3>
 <h4 id="减少层级和分权">减少层级和分权</h4>
-<h4 id="扁平式管理的本质——契约精神">扁平式管理的本质——契约精神</h4>
+<h4 id="扁平式管理的本质-契约精神">扁平式管理的本质——契约精神</h4>
 <p>每个员工和公司都是一种契约关系</p>
 <h3 id="8-世界的情怀">8 世界的情怀</h3>
 <ul>
@@ -114,7 +170,7 @@
 <p><strong>霍夫曼编码的本质</strong>：把最好的资源分配给最有可能成功的事情上，把比较少的资源分配给不太可能成功的事情上，但是必须给后者分配资源，因为没有人事先知道结果。</p>
 <p>做生意要靠人脉，其实这个人脉就是人与人交往的带宽。如果人脉不够，发出的信息和获得的信息都有限，生意一定做不大。</p>
 <p>整体的性能未必能够通过局部性能的优化而实现。</p>
-<h3 id="2-从预测到反应，从局部到整体，从控制到通信">2 从预测到反应，从局部到整体，从控制到通信</h3>
+<h3 id="2-从预测到反应-从局部到整体-从控制到通信">2 从预测到反应，从局部到整体，从控制到通信</h3>
 <h4 id="预测和反应">预测和反应</h4>
 <p>管理者根据自己的经验和项目进展的情况对这些项目不断做出反应</p>
 <p>确保最好的公司和行业获得最多的资源</p>
@@ -180,46 +236,62 @@
 <p><strong>今天是一个变化非常快的时代，能够保持影响力的企业家，不再是那些创办百年老店的，而是能够不断站在浪潮之巅的。</strong></p>
 <p><strong>过去我们讲铁打的营盘流水的兵，但是在信息时代则是流水的营盘铁打的兵。过去我们追求基业常青，今天我们懂得基业未必会长青，但是机会对于那些站在浪潮之巅的人永远会有的。</strong></p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5871e810d2f092c392ca4d3a
-                 data-title=读书笔记——《硅谷之谜》
-                 data-url=guiguzhimi>
-            </div>
+          <div class="ds-thread" data-thread-key=5871e810d2f092c392ca4d3a data-title=读书笔记——《硅谷之谜》 data-url=guiguzhimi>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

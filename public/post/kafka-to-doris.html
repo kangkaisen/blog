@@ -1,55 +1,81 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|Apache Doris Stream Load &amp; Kakfa To Doris</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> Apache Doris Stream Load &amp; Kakfa To Doris</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2019-01-01</p>
-            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
-            <hr/>
-            <p>Doris 最新版本已经支持 Stream Load，本文简介下 Doris Stream Load 的核心原理以及我如何在 Doris 外围实现 Exactly Once 的 Kafka To Doris 实时数据同步。</p>
-<!-- toc -->
+          <h1>Apache Doris Stream Load &amp; Kakfa To Doris</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2019-01-01</p>
+          <p>
+            分类:
+            <a href="../tag/OLAP.html" target="_blank"
+              >OLAP</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
 <li><a href="#doris-stream-load-原理">Doris Stream Load 原理</a><ul>
 <li><a href="#doris-stream-load-流程">Doris Stream Load 流程</a></li>
 <li><a href="#doris-stream-load-faq">Doris Stream Load FAQ</a></li>
 </ul>
-</li>
 <li><a href="#kafka-to-doris">Kafka To Doris</a><ul>
 <li><a href="#方案设计">方案设计</a></li>
 <li><a href="#mysql-meta-schema">Mysql Meta Schema</a></li>
@@ -59,10 +85,13 @@
 <li><a href="#初始化过程">初始化过程</a></li>
 <li><a href="#实现细节">实现细节</a></li>
 </ul>
-</li>
 <li><a href="#总结">总结</a></li>
+</li>
+</li>
 </ul>
 <!-- toc stop -->
+<p>Doris 最新版本已经支持 Stream Load，本文简介下 Doris Stream Load 的核心原理以及我如何在 Doris 外围实现 Exactly Once 的 Kafka To Doris 实时数据同步。
+<!-- toc --></p>
 <h2 id="doris-stream-load-原理">Doris Stream Load 原理</h2>
 <p><img src="media/15436477918196/doris-stream-load.png" alt="doris-stream-load"></p>
 <p>Doris Stream Load 实现的核心思想和 HBase，Druid 比较类似：在内存中实现一个面向写优化的 MemTable(MemStore)，当 MemTable 的大小超过一定阈值时，进行 flush，将 MemTable 转为带有前缀索引的 SSTable（HBase 中是将 MemStore 转为 HFile, Druid 中是将 Map 转为带倒排索引的 Segment）</p>
@@ -198,46 +227,62 @@
 <h2 id="总结">总结</h2>
 <p>Kafka To Doris 在我司12月6号已上线，目前线上已运行了10多个同步流程，期间也完善了一些异常处理，监控报警。后续会参考 Druid Kafka Indexing Service 启动一个 Service，暴露以下 API： 管理 Doris-Laod 进程的启动，关闭和重启；查看每个 Doris-Load 进程的存活状态，消费状态。</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5c2b4ff6df5dd7c720398f76
-                 data-title=Apache Doris Stream Load &amp; Kakfa To Doris
-                 data-url=kafka-to-doris>
-            </div>
+          <div class="ds-thread" data-thread-key=5c2b4ff6df5dd7c720398f76 data-title=Apache Doris Stream Load &amp; Kakfa To Doris data-url=kafka-to-doris>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

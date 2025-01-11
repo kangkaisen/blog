@@ -1,54 +1,81 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|打造一款强大成熟的数据库有多难</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> 打造一款强大成熟的数据库有多难</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2022-11-17</p>
-            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>打造一款强大成熟的数据库有多难</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2022-11-17</p>
+          <p>
+            分类:
+            <a href="../tag/OLAP.html" target="_blank"
+              >OLAP</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
 <li><a href="#本质矛盾">本质矛盾</a><ul>
 <li><a href="#1-有限人力和无限工作之间的矛盾">1 有限人力和无限工作之间的矛盾</a></li>
 <li><a href="#2-飞速增长与成熟稳定的矛盾">2 飞速增长与成熟稳定的矛盾</a></li>
 </ul>
-</li>
 <li><a href="#1-定位和独特性之难">1 定位和独特性之难</a></li>
 <li><a href="#2-架构之难">2 架构之难</a></li>
 <li><a href="#3-功能之难">3 功能之难</a><ul>
@@ -57,9 +84,8 @@
 <li><a href="#杂七杂八的认证">杂七杂八的认证</a></li>
 <li><a href="#用户迁移时的功能对齐">用户迁移时的功能对齐</a></li>
 <li><a href="#系统越强大会越复杂">系统越强大会越复杂</a></li>
-<li><a href="#系统越成熟新的功能和优化要求越高大规模使用周期越长">系统越成熟，新的功能和优化要求越高，大规模使用周期越长</a></li>
+<li><a href="#系统越成熟-新的功能和优化要求越高-大规模使用周期越长">系统越成熟，新的功能和优化要求越高，大规模使用周期越长</a></li>
 </ul>
-</li>
 <li><a href="#4-性能之难">4 性能之难</a><ul>
 <li><a href="#cbo-优化器-plan-的稳定性和正确性">CBO 优化器 Plan 的稳定性和正确性</a></li>
 <li><a href="#单核性能优化">单核性能优化</a></li>
@@ -70,7 +96,6 @@
 <li><a href="#如何保证性能不退化">如何保证性能不退化</a></li>
 <li><a href="#如何能-cover-不同的硬件环境">如何能 Cover 不同的硬件环境</a></li>
 </ul>
-</li>
 <li><a href="#5-稳定性之难">5 稳定性之难</a><ul>
 <li><a href="#sql-是声明式的">SQL 是声明式的</a></li>
 <li><a href="#成百上千的用户场景">成百上千的用户场景</a></li>
@@ -84,19 +109,23 @@
 <li><a href="#分布式相关的问题">分布式相关的问题</a></li>
 <li><a href="#硬件故障">硬件故障</a></li>
 </ul>
-</li>
 <li><a href="#6-生态之难">6 生态之难</a><ul>
 <li><a href="#数据导入">数据导入</a></li>
 <li><a href="#数据导出">数据导出</a></li>
-<li><a href="#bi-工具数据可视化">BI 工具：数据可视化</a></li>
+<li><a href="#bi-工具-数据可视化">BI 工具：数据可视化</a></li>
 <li><a href="#数据迁移">数据迁移</a></li>
 </ul>
-</li>
 <li><a href="#7-安全之难">7 安全之难</a></li>
 <li><a href="#8-易用性之难">8 易用性之难</a></li>
 <li><a href="#难点如何解决">难点如何解决</a></li>
+</li>
+</li>
+</li>
+</li>
+</li>
 </ul>
 <!-- toc stop -->
+<!-- toc -->
 <p>从 2015 年开始，我在美团先后维护和研发过 Apache HBase, Apache Kylin, Apache Druid 和 Apache Doris, 对大数据系统和 OLAP 数据库有了深入理解，2020 年开始，我加入了 StarRocks，我们先后打造了业界领先的向量化执行器，CBO 优化器，Pipeline 并行引擎，支持高效 Update 的存储引擎和极速的数据湖分析，支持存储分离的 Cloud Native 版本也即将面世，一路走来，随着我们攻克一个又一个技术难题，解决一个又一个用户需求和难题，服务着越来越多的客户，我对如何打造一个强大且成熟的数据库有了更深的理解，在前一篇文章 <a href="https://blog.bcmeng.com/post/database-prototype.html">如何快速打造一个高性能数据库原型 </a> 中，我们看到利用开源系统打造一个数据库原型是如此的简单，在这篇文章中，我会和大家介绍打造一个强大且成熟的数据库都有哪些难点，之后会再用几篇文章介绍我们如何解决这些难点。</p>
 <h2 id="本质矛盾">本质矛盾</h2>
 <p>作为一家创业公司或者一家大公司的数据库部门，打造一款强大且成熟的数据库都会有下面两个本质矛盾：</p>
@@ -122,7 +151,7 @@
 <li>越强大的优化可能跨模块越多：比如 StarRocks 的低基数优化和导入，查询，Delete，Update，Compaction，Schema Change， MVCC 等很多模块都有关系，所以这类功能的测试本身就会很复杂</li>
 <li>一个新的功能或者优化可能会打破旧的功能或者优化的假设：比如 Tablet 并行可能和 Local exchange 有冲突，比如 Query Cache 可能和 Shared Scan 有冲突</li>
 </ul>
-<h3 id="系统越成熟，新的功能和优化要求越高，大规模使用周期越长">系统越成熟，新的功能和优化要求越高，大规模使用周期越长</h3>
+<h3 id="系统越成熟-新的功能和优化要求越高-大规模使用周期越长">系统越成熟，新的功能和优化要求越高，大规模使用周期越长</h3>
 <ul>
 <li>新系统的第一个版本往往会给用户建立一个 Baseline，之后的版本做的功能和优化就必须考虑所有用户的场景，在自己的用户场景下没有或者很少有 Bad Case</li>
 <li>用户使用一个系统稳定后，升级的动力会越来越弱，所以越靠后的版本得到用户大规模验证的周期也会更长</li>
@@ -223,7 +252,7 @@
 <li>导出位置的多样性：客户端，本地，分布式存储等</li>
 <li>全量导出和部分导出</li>
 </ul>
-<h3 id="bi-工具：数据可视化">BI 工具：数据可视化</h3>
+<h3 id="bi-工具-数据可视化">BI 工具：数据可视化</h3>
 <p>市面上流行的 BI 工具多达几十种，每种 BI 工具深入使用后都或多或少会有些兼容性问题：Session 变量的兼容性；数据类型的兼容性；函数的兼容性等，要都完美兼容，必然有大量的人力投入。</p>
 <h3 id="数据迁移">数据迁移</h3>
 <p>要支持用户从传统数据库和各种竞品数据库顺滑迁移，我们就必须和各种数据库进行对接，这里面有大量琐碎的工作。</p>
@@ -241,46 +270,62 @@
 <h2 id="难点如何解决">难点如何解决</h2>
 <p>当你将这些点一个一个深入思考下去，你肯定会理解打造一个强大且成熟的数据库是多么困难，那么这些难题如何解呢？我之后会用几篇文章讲讲我的一些思考，欢迎关注我的微信公众号，第一时间获取文章推送。</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=637651b5712a4dd355c0dc43
-                 data-title=打造一款强大成熟的数据库有多难
-                 data-url=database-hard>
-            </div>
+          <div class="ds-thread" data-thread-key=637651b5712a4dd355c0dc43 data-title=打造一款强大成熟的数据库有多难 data-url=database-hard>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

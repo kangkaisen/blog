@@ -1,78 +1,109 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|算法之美——数组和数</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> 算法之美——数组和数</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2016-11-19</p>
-            <p>分类: <a href="../tag/算法.html" target="_blank" >算法</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>算法之美——数组和数</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2016-11-19</p>
+          <p>
+            分类:
+            <a href="../tag/算法.html" target="_blank"
+              >算法</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
-<li><a href="#single-number-落单的数">single-number 落单的数</a></li>
-<li><a href="#single-number-ii-落单的数-ii">single-number-ii 落单的数 II</a></li>
-<li><a href="#single-number-iii">single-number-iii</a></li>
-<li><a href="#majority-number">majority-number</a></li>
-<li><a href="#majority-number-ii-主元素-ii">majority-number-ii 主元素 II</a></li>
-<li><a href="#majority-number-iii-主元素-iii">majority-number-iii 主元素 III</a></li>
-<li><a href="#best-time-to-buy-and-sell-stock-买卖股票的最佳时机">best-time-to-buy-and-sell-stock 买卖股票的最佳时机</a></li>
-<li><a href="#best-time-to-buy-and-sell-stock-ii-买卖股票的最佳时机-ii">best-time-to-buy-and-sell-stock-ii 买卖股票的最佳时机 II</a></li>
-<li><a href="#买卖股票的最佳时机-iii">买卖股票的最佳时机 III</a></li>
-<li><a href="#买卖股票的最佳时机-iv">买卖股票的最佳时机 IV</a></li>
-<li><a href="#最大子数组">最大子数组</a></li>
-<li><a href="#最大子数组-ii">最大子数组 II</a></li>
-<li><a href="#maximum-subarray-iii-最大子数组iii">maximum-subarray-iii 最大子数组iii</a></li>
-<li><a href="#minimum-subarray-最小子数组">minimum-subarray 最小子数组</a></li>
-<li><a href="#maximum-subarray-difference-最大子数组差">maximum-subarray-difference 最大子数组差</a></li>
-<li><a href="#subarray-sum-子数组之和">subarray-sum 子数组之和</a></li>
-<li><a href="#subarray-sum-closest-最接近零的子数组和">subarray-sum-closest 最接近零的子数组和</a></li>
-<li><a href="#2-sum-两数之和">2-sum 两数之和</a></li>
-<li><a href="#3-sum-三数之和">3-sum 三数之和</a></li>
-<li><a href="#3-sum-closest-三数之和-ii">3-sum-closest 三数之和 II</a></li>
+<ul>
+<li><a href="#single-number-落单的数">single-number 落单的数</a><li><a href="#single-number-ii-落单的数-ii">single-number-ii 落单的数 II</a><li><a href="#single-number-iii">single-number-iii</a><li><a href="#majority-number">majority-number</a><li><a href="#majority-number-ii-主元素-ii">majority-number-ii 主元素 II</a><li><a href="#majority-number-iii-主元素-iii">majority-number-iii 主元素 III</a><li><a href="#best-time-to-buy-and-sell-stock-买卖股票的最佳时机">best-time-to-buy-and-sell-stock 买卖股票的最佳时机</a><li><a href="#best-time-to-buy-and-sell-stock-ii-买卖股票的最佳时机-ii">best-time-to-buy-and-sell-stock-ii 买卖股票的最佳时机 II</a><li><a href="#买卖股票的最佳时机-iii">买卖股票的最佳时机 III</a><li><a href="#买卖股票的最佳时机-iv">买卖股票的最佳时机 IV</a><li><a href="#最大子数组">最大子数组</a><li><a href="#最大子数组-ii">最大子数组 II</a><li><a href="#maximum-subarray-iii-最大子数组iii">maximum-subarray-iii 最大子数组iii</a><li><a href="#minimum-subarray-最小子数组">minimum-subarray 最小子数组</a><li><a href="#maximum-subarray-difference-最大子数组差">maximum-subarray-difference 最大子数组差</a><li><a href="#subarray-sum-子数组之和">subarray-sum 子数组之和</a><li><a href="#subarray-sum-closest-最接近零的子数组和">subarray-sum-closest 最接近零的子数组和</a><li><a href="#2-sum-两数之和">2-sum 两数之和</a><li><a href="#3-sum-三数之和">3-sum 三数之和</a><li><a href="#3-sum-closest-三数之和-ii">3-sum-closest 三数之和 II</a></li>
 <li><a href="#4-sum-四数之和">4-sum 四数之和</a></li>
 <li><a href="#k-sum-k数和">k-sum k数和</a></li>
 <li><a href="#fast-power-快速幂">fast-power 快速幂</a></li>
 <li><a href="#sqrtx-x的平方根">sqrtx x的平方根</a></li>
-<li><a href="#trailing-zeros-n尾部0的个数">Trailing Zeros n!尾部0的个数</a></li>
+<li><a href="#trailing-zeros-n-尾部0的个数">Trailing Zeros n!尾部0的个数</a></li>
 <li><a href="#o1-check-power-of-2-o1时间检查是否是2的幂">o1-check-power-of-2 o1时间检查是否是2的幂</a></li>
 <li><a href="#参考资料">参考资料</a></li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</ul>
 </ul>
 <!-- toc stop -->
+<!-- toc -->
 <h3 id="single-number-落单的数">single-number 落单的数</h3>
 <p><a href="http://www.lintcode.com/zh-cn/problem/single-number/">原题</a>
 给出2*n + 1 个的数字，除其中一个数字之外其他每个数字均出现两次，找到这个数字。</p>
@@ -1047,46 +1078,62 @@ public class Solution {
 </code></pre><h3 id="参考资料">参考资料</h3>
 <p><a href="http://www.jiuzhang.com/?referer=38beb6">九章算法</a></p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5871f87dd2f092c392ca4d5c
-                 data-title=算法之美——数组和数
-                 data-url=array>
-            </div>
+          <div class="ds-thread" data-thread-key=5871f87dd2f092c392ca4d5c data-title=算法之美——数组和数 data-url=array>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

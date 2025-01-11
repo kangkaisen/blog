@@ -1,55 +1,86 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|Mapreduce导入导出Hbase0.98代码示例</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> Mapreduce导入导出Hbase0.98代码示例</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2016-04-10</p>
-            <p>分类: <a href="../tag/HBase.html" target="_blank" >HBase</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>Mapreduce导入导出Hbase0.98代码示例</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2016-04-10</p>
+          <p>
+            分类:
+            <a href="../tag/HBase.html" target="_blank"
+              >HBase</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
-<li><a href="#1mapreduce从hdfs导入hbase098代码示例">1：Mapreduce从HDFS导入Hbase0.98代码示例</a></li>
-<li><a href="#2mapreduce从hbase导入hbase代码示例">2：Mapreduce从Hbase导入Hbase代码示例</a></li>
-<li><a href="#3mapreduce导入hbase时去重">3:Mapreduce导入Hbase时去重</a></li>
+<ul>
+<li><a href="#1-mapreduce从hdfs导入hbase0-98代码示例">1：Mapreduce从HDFS导入Hbase0.98代码示例</a></li>
+<li><a href="#2-mapreduce从hbase导入hbase代码示例">2：Mapreduce从Hbase导入Hbase代码示例</a></li>
+<li><a href="#3-mapreduce导入hbase时去重">3:Mapreduce导入Hbase时去重</a></li>
+</ul>
 </ul>
 <!-- toc stop -->
-<h3 id="1：mapreduce从hdfs导入hbase098代码示例">1：Mapreduce从HDFS导入Hbase0.98代码示例</h3>
+<!-- toc -->
+<h3 id="1-mapreduce从hdfs导入hbase0-98代码示例">1：Mapreduce从HDFS导入Hbase0.98代码示例</h3>
 <p>源文件格式：</p>
 <pre><code>175.44.30.93 - - [29/Sep/2013:00:10:15 +0800] &quot;GET /structure/heap HTTP/1.1&quot; 301 406 &quot;-&quot; &quot;Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1;)&quot;
 </code></pre><p>Java代码：</p>
@@ -113,7 +144,7 @@ public class HbaseMr {
 }
 </code></pre><p>导入效果如下：
 <img src="http://img02.taobaocdn.com/imextra/i2/1576560244/TB25YnEdpXXXXarXXXXXXXXXXXX_!!1576560244.png" alt="此处输入图片的描述"></p>
-<h3 id="2：mapreduce从hbase导入hbase代码示例">2：Mapreduce从Hbase导入Hbase代码示例</h3>
+<h3 id="2-mapreduce从hbase导入hbase代码示例">2：Mapreduce从Hbase导入Hbase代码示例</h3>
 <p>统计上张图中的同一IP的目录总数，代码如下：</p>
 <pre><code>package hbase;
 
@@ -197,7 +228,7 @@ public class HbaseMR {
 <img src="http://img01.taobaocdn.com/imgextra/i1/1576560244/TB2aG6AdpXXXXbDXXXXXXXXXXXX_!!1576560244.png" alt="此处输入图片的描述"></p>
 <h3 id="3-mapreduce导入hbase时去重">3:Mapreduce导入Hbase时去重</h3>
 <p>在上面的导入hbase过程中我们并没有考虑同一IP访问的子目录重复问题，所以我们应该去重。</p>
-<h4 id="一般的mapreduce去重思路：">一般的Mapreduce去重思路：</h4>
+<h4 id="一般的mapreduce去重思路">一般的Mapreduce去重思路：</h4>
 <p><strong>利用经过shuffle之后输入到reduce中key的唯一性直接输出key即可。</strong></p>
 <p><code>具体就是map的输出的key为map输入的value,value为null。自然reduce的输入就是map的输出。当reduce接收到一个&lt;key，value-list&gt;时，其中value-list为null，就直接将key复制到输出的key中，并将value设置成空值</code></p>
 <p>map端的输出：</p>
@@ -230,46 +261,62 @@ public class HbaseMR {
 <img src="http://img04.taobaocdn.com/imgextra/i4/1576560244/TB2xcD4dpXXXXXtXpXXXXXXXXXX_!!1576560244.png" alt="此处输入图片的描述">
 大家可以发现，统计的值明显减少。</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5871f09dd2f092c392ca4d4b
-                 data-title=Mapreduce导入导出Hbase0.98代码示例
-                 data-url=hbase-mr>
-            </div>
+          <div class="ds-thread" data-thread-key=5871f09dd2f092c392ca4d4b data-title=Mapreduce导入导出Hbase0.98代码示例 data-url=hbase-mr>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

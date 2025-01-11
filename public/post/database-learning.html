@@ -1,48 +1,76 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|数据库学习资料（2022-03-18 更新）</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> 数据库学习资料（2022-03-18 更新）</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2021-12-19</p>
-            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>数据库学习资料（2022-03-18 更新）</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2021-12-19</p>
+          <p>
+            分类:
+            <a href="../tag/OLAP.html" target="_blank"
+              >OLAP</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
 <li><a href="#数据库总览">数据库总览</a><ul>
 <li><a href="#书籍">书籍</a></li>
@@ -50,7 +78,6 @@
 <li><a href="#系列教程">系列教程</a></li>
 <li><a href="#文章">文章</a></li>
 </ul>
-</li>
 <li><a href="#数据库领域博客专栏">数据库领域博客专栏</a></li>
 <li><a href="#数据库系统综述">数据库系统综述</a><ul>
 <li><a href="#数据库系统简介">数据库系统简介</a></li>
@@ -105,35 +132,29 @@
 <li><a href="#x-engine">X-Engine</a></li>
 <li><a href="#hologres">Hologres</a></li>
 </ul>
-</li>
 <li><a href="#c-语言">C++ 语言</a></li>
 <li><a href="#查询优化器">查询优化器</a><ul>
 <li><a href="#论文">论文</a></li>
 <li><a href="#文章">文章</a></li>
 </ul>
-</li>
 <li><a href="#查询执行">查询执行</a><ul>
 <li><a href="#论文">论文</a></li>
 <li><a href="#ppt">PPT</a></li>
 </ul>
-</li>
 <li><a href="#向量化">向量化</a><ul>
 <li><a href="#论文">论文</a></li>
 <li><a href="#课程">课程</a></li>
-<li><a href="#文章-ppt">文章 &amp; PPT</a></li>
+<li><a href="#文章-amp-ppt">文章 &amp; PPT</a></li>
 </ul>
-</li>
 <li><a href="#查询编译">查询编译</a><ul>
 <li><a href="#论文">论文</a></li>
 <li><a href="#课程">课程</a></li>
-<li><a href="#文章-ppt">文章 &amp; PPT</a></li>
+<li><a href="#文章-amp-ppt">文章 &amp; PPT</a></li>
 </ul>
-</li>
 <li><a href="#存储">存储</a><ul>
 <li><a href="#论文">论文</a></li>
 <li><a href="#文章">文章</a></li>
 </ul>
-</li>
 <li><a href="#数据导入">数据导入</a></li>
 <li><a href="#测试">测试</a></li>
 <li><a href="#事务">事务</a></li>
@@ -144,8 +165,16 @@
 <li><a href="#cpu-cache">CPU Cache</a></li>
 </ul>
 </li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
 </ul>
 <!-- toc stop -->
+<!-- toc -->
 <p>在 <a href="https://github.com/StarRocks/starrocks">StarRocks</a> 将近两年的时间里面，我们查询团队从零实现了向量化执行器，CBO 查询优化器，Pipeline 并行查询引擎，刷新国产 OLAP 数据库性能的里程碑，本文整理了我平时参考和学习的一些数据库资料，希望对大家有所帮助，也欢迎大家参与 <a href="https://github.com/StarRocks/starrocks">StarRocks</a> 开源社区。</p>
 <p>本文章会努力持续更新，也欢迎大家一起贡献和修改。</p>
 <p>TODO:</p>
@@ -551,46 +580,62 @@
 </ul>
 <p>如果学习了某部分理论，却不知如何实践，欢迎参与 <a href="https://github.com/StarRocks/starrocks">StarRocks</a> 开源社区，上面所有的理论在 <a href="https://github.com/StarRocks/starrocks">StarRocks</a> 中都有可以实践的地方，欢迎大家的 Star, Issue 和 PR。</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=61bf02f1577c0425e809311e
-                 data-title=数据库学习资料（2022-03-18 更新）
-                 data-url=database-learning>
-            </div>
+          <div class="ds-thread" data-thread-key=61bf02f1577c0425e809311e data-title=数据库学习资料（2022-03-18 更新） data-url=database-learning>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

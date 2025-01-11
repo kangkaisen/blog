@@ -1,48 +1,76 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|Apache Kylin On Druid Storage 原理与实践</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> Apache Kylin On Druid Storage 原理与实践</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2017-11-04</p>
-            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>Apache Kylin On Druid Storage 原理与实践</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2017-11-04</p>
+          <p>
+            分类:
+            <a href="../tag/OLAP.html" target="_blank"
+              >OLAP</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
 <li><a href="#预备知识">预备知识</a><ul>
 <li><a href="#what-is-kylin">What is Kylin</a></li>
@@ -50,7 +78,6 @@
 <li><a href="#kylin-查询时的数据格式流转">Kylin 查询时的数据格式流转</a></li>
 <li><a href="#what-is-druid-storage">What is Druid Storage</a></li>
 </ul>
-</li>
 <li><a href="#why-kylin-on-druid-storage">Why Kylin on Druid Storage</a></li>
 <li><a href="#how-kylin-on-druid-storage">How Kylin on Druid Storage</a><ul>
 <li><a href="#1-druid新增binary指标">1 Druid新增Binary指标</a></li>
@@ -58,17 +85,19 @@
 <li><a href="#3-查询侧修改">3 查询侧修改</a></li>
 <li><a href="#4-移除kylin查询时的核心数据结构gtrecord">4  移除Kylin查询时的核心数据结构GTRecord</a></li>
 </ul>
-</li>
 <li><a href="#kylin-on-druid-storage-vs-kylin-on-hbase">Kylin on Druid Storage VS Kylin on HBase</a></li>
 <li><a href="#the-roadmap-for-kylin-on-druid-storage">The roadmap for Kylin on Druid Storage</a><ul>
 <li><a href="#整合kylin和druid">整合Kylin和Druid</a></li>
-<li><a href="#整合kylindruid-storage和spark">整合Kylin，Druid Storage和Spark</a></li>
+<li><a href="#整合kylin-druid-storage和spark">整合Kylin，Druid Storage和Spark</a></li>
 </ul>
-</li>
 <li><a href="#总结">总结</a></li>
 <li><a href="#参考资料">参考资料</a></li>
+</li>
+</li>
+</li>
 </ul>
 <!-- toc stop -->
+<!-- toc -->
 <p>本文主要介绍Apache Kylin On Druid Storage 的原理与实践，读完本文，你将get以下几点：</p>
 <ol>
 <li>如何为Kylin新增一种存储引擎</li>
@@ -186,7 +215,7 @@ Reducer：将Kylin的Cuboid转为Druid的Segment：
 <h2 id="the-roadmap-for-kylin-on-druid-storage">The roadmap for Kylin on Druid Storage</h2>
 <h3 id="整合kylin和druid">整合Kylin和Druid</h3>
 <p>Kylin和Druid作为两款优秀的OLAP系统，各有优劣，Kylin在SQL接口，Web UI， 离线导入， 权限等做的更好，Druid在存储层，实时摄入做的更好，所以我们可以将两者的优点结合。 我们在实现Kylin on Druid Storage 单机版后，借助或参考 Druid的Historical，Coordinator， Broker服务，不难实现分布式版本。</p>
-<h3 id="整合kylin，druid-storage和spark">整合Kylin，Druid Storage和Spark</h3>
+<h3 id="整合kylin-druid-storage和spark">整合Kylin，Druid Storage和Spark</h3>
 <p>我们可以仅仅只使用Druid的Storage部分，然后可以参考 <a href="https://zhuanlan.zhihu.com/p/29052313">When TiDB Meets Spark</a> 整合Kylin，Druid Storage和Spark。</p>
 <h2 id="总结">总结</h2>
 <p>本文主要介绍了Kylin On Druid Storage的What，Why 和How，显然，我忽略了很多细节和期间踩过的坑，因为这不重要，重要的是大家通过阅读本文能够知道如何为Kylin新增一种存储引擎。</p>
@@ -194,46 +223,62 @@ Reducer：将Kylin的Cuboid转为Druid的Segment：
 <p><a href="https://github.com/apache/kylin">Apache Kylin 源码</a></p>
 <p><a href="https://github.com/druid-io/druid">Druid 源码</a></p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=59fd964838a6125a14a91bd9
-                 data-title=Apache Kylin On Druid Storage 原理与实践
-                 data-url=kylin-on-druid-storage>
-            </div>
+          <div class="ds-thread" data-thread-key=59fd964838a6125a14a91bd9 data-title=Apache Kylin On Druid Storage 原理与实践 data-url=kylin-on-druid-storage>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

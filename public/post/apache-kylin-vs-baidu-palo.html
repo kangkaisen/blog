@@ -1,61 +1,87 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|Apache Kylin VS Apache Doris</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> Apache Kylin VS Apache Doris</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2018-04-17</p>
-            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>Apache Kylin VS Apache Doris</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2018-04-17</p>
+          <p>
+            分类:
+            <a href="../tag/OLAP.html" target="_blank"
+              >OLAP</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
 <li><a href="#1-系统架构">1 系统架构</a><ul>
-<li><a href="#11-what-is-kylin">1.1 What is Kylin</a></li>
-<li><a href="#12-what-is-doris">1.2 What is Doris</a></li>
+<li><a href="#1-1-what-is-kylin">1.1 What is Kylin</a></li>
+<li><a href="#1-2-what-is-doris">1.2 What is Doris</a></li>
 </ul>
-</li>
 <li><a href="#2-数据模型">2 数据模型</a><ul>
-<li><a href="#21-kylin的聚合模型">2.1 Kylin的聚合模型</a></li>
-<li><a href="#22-doris的聚合模型">2.2 Doris的聚合模型</a></li>
-<li><a href="#23-kylin-cuboid-vs-doris-rollup">2.3 Kylin Cuboid VS Doris RollUp</a></li>
-<li><a href="#24-doris的明细模型">2.4 Doris的明细模型</a></li>
+<li><a href="#2-1-kylin的聚合模型">2.1 Kylin的聚合模型</a></li>
+<li><a href="#2-2-doris的聚合模型">2.2 Doris的聚合模型</a></li>
+<li><a href="#2-3-kylin-cuboid-vs-doris-rollup">2.3 Kylin Cuboid VS Doris RollUp</a></li>
+<li><a href="#2-4-doris的明细模型">2.4 Doris的明细模型</a></li>
 </ul>
-</li>
 <li><a href="#3-存储引擎">3 存储引擎</a></li>
 <li><a href="#4-数据导入">4 数据导入</a></li>
 <li><a href="#5-查询">5 查询</a></li>
@@ -64,29 +90,32 @@
 <li><a href="#8-高性能">8 高性能</a></li>
 <li><a href="#9-高可用">9 高可用</a></li>
 <li><a href="#10-可维护性">10 可维护性</a><ul>
-<li><a href="#101-部署">10.1 部署</a></li>
-<li><a href="#102-运维">10.2 运维</a></li>
-<li><a href="#103-客服">10.3 客服</a></li>
+<li><a href="#10-1-部署">10.1 部署</a></li>
+<li><a href="#10-2-运维">10.2 运维</a></li>
+<li><a href="#10-3-客服">10.3 客服</a></li>
 </ul>
-</li>
 <li><a href="#11-易用性">11 易用性</a><ul>
-<li><a href="#111-查询接入">11.1 查询接入</a></li>
-<li><a href="#112-学习成本">11.2 学习成本</a></li>
-<li><a href="#113-schema-change">11.3 Schema Change</a></li>
+<li><a href="#11-1-查询接入">11.1 查询接入</a></li>
+<li><a href="#11-2-学习成本">11.2 学习成本</a></li>
+<li><a href="#11-3-schema-change">11.3 Schema Change</a></li>
 </ul>
-</li>
 <li><a href="#12-功能">12 功能</a></li>
 <li><a href="#13-社区和生态">13 社区和生态</a></li>
 <li><a href="#14-总结">14 总结</a></li>
 <li><a href="#15-参考资料">15 参考资料</a></li>
+</li>
+</li>
+</li>
+</li>
 </ul>
 <!-- toc stop -->
+<!-- toc -->
 <p>Apache Kylin 和 Apache Doris 都是优秀的开源OLAP系统，本文将全方位地对比Kylin和Doris。Kylin和Doris分别是MOALP和ROLAP的代表，对比这两个系统的目的不是为了说明哪个系统更好，<strong>只是为了明确每个系统的设计思想和架构原理，让大家可以根据自己的实际需求去选择合适的系统，也可以进一步去思考我们如何去设计出更优秀的OLAP系统</strong>。</p>
 <p>本文对Apache Kylin的理解基于近两年来在生产环境大规模地使用，运维和深度开发，我已向Kylin社区贡献了98次Commit，包含多项新功能和深度优化。</p>
 <p>本文对Apache Doris的理解基于官方文档和论文的阅读，代码的粗浅阅读和较深入地测试。</p>
 <p><strong>注： 本文的对比基于Apache Kylin 2.0.0 和Apache Doris 0.9.0。</strong></p>
 <h2 id="1-系统架构">1 系统架构</h2>
-<h3 id="11-what-is-kylin">1.1 What is Kylin</h3>
+<h3 id="1-1-what-is-kylin">1.1 What is Kylin</h3>
 <p>Kylin的核心思想是<strong>预计算</strong>，<strong>利用空间换时间来加速查询模式固定的OLAP查询</strong>。</p>
 <p>Kylin的理论基础是Cube理论，每一种维度组合称之为Cuboid，所有Cuboid的集合是Cube。 其中由所有维度组成的Cuboid称为Base Cuboid，图中(A,B,C,D)即为Base Cuboid，所有的Cuboid都可以基于Base Cuboid计算出来。 在查询时，Kylin会自动选择满足条件的最“小”Cuboid，比如下面的SQL就会对应Cuboid（A,B）:</p>
 <blockquote>
@@ -97,17 +126,17 @@
 <img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202017-11-04%2520%25E4%25B8%258B%25E5%258D%25882.05.57.png" alt="kylin-data"></p>
 <p>下图是Kylin可插拔的架构图, 在架构设计上，Kylin的<strong>数据源</strong>，构建Cube的<strong>计算引擎</strong>，<strong>存储引擎</strong>都是可插拔的。Kylin的核心就是这套可插拔架构，Cube数据模型和Cuboid的算法。</p>
 <p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-14%2520%25E4%25B8%258B%25E5%258D%25886.29.42.png" alt="Kylin"></p>
-<h3 id="12-what-is-doris">1.2 What is Doris</h3>
+<h3 id="1-2-what-is-doris">1.2 What is Doris</h3>
 <p>Doris是一个MPP的OLAP系统，主要整合了<strong>Google Mesa</strong>（数据模型），<strong>Apache Impala</strong>（MPP Query Engine)和<strong>Apache ORCFile</strong> (存储格式，编码和压缩) 的技术。</p>
 <p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-14%2520%25E4%25B8%258B%25E5%258D%25886.43.15.png" alt="apache-doris"></p>
 <p>Doris的系统架构如下，Doris主要分为FE和BE两个组件，FE主要负责查询的编译，分发和元数据管理（基于内存，类似HDFS NN）；BE主要负责查询的执行和存储系统。</p>
 <p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-18%2520%25E4%25B8%258B%25E5%258D%258811.09.33.png" alt="apache-doris"></p>
 <h2 id="2-数据模型">2 数据模型</h2>
-<h3 id="21-kylin的聚合模型">2.1 Kylin的聚合模型</h3>
+<h3 id="2-1-kylin的聚合模型">2.1 Kylin的聚合模型</h3>
 <p>Kylin将表中的列分为维度列和指标列。在数据导入和查询时相同维度列中的指标会按照对应的聚合函数(Sum, Count, Min, Max, 精确去重，近似去重，百分位数，TOPN)进行聚合。</p>
 <p>在存储到HBase时，<strong>Cuboid+维度 会作为HBase的Rowkey, 指标会作为HBase的Value</strong>，一般所有指标会在HBase的一个列族，每列对应一个指标，但对于较大的去重指标会单独拆分到第2个列族。</p>
 <p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-14%2520%25E4%25B8%258B%25E5%258D%25887.03.57.png" alt="Kylin-model"></p>
-<h3 id="22-doris的聚合模型">2.2 Doris的聚合模型</h3>
+<h3 id="2-2-doris的聚合模型">2.2 Doris的聚合模型</h3>
 <p>Doris的聚合模型借鉴自Mesa，但本质上和Kylin的聚合模型一样，只不过Doris中将维度称作Key，指标称作Value。</p>
 <p><img src="https://pic.bcmeng.com/%25E5%25B1%258F%25E5%25B9%2595%25E5%25BF%25AB%25E7%2585%25A7%25202018-04-14%2520%25E4%25B8%258B%25E5%258D%25887.21.25.png" alt="doris-data-model"></p>
 <p>Doris中比较独特的聚合函数是Replace函数，这个聚合函数能够<strong>保证相同Keys的记录只保留最新的Value</strong>，可以借助这个Replace函数来实现<strong>点更新</strong>。一般OLAP系统的数据都是只支持Append的，但是像电商中交易的退款，广告点击中的无效点击处理，都需要去更新之前写入的单条数据，在Kylin这种没有Relpace函数的系统中我们必须把包含对应更新记录的整个Segment数据全部重刷，但是有了Relpace函数，我们只需要再追加1条新的记录即可。 但是Doris中的Repalce函数有个缺点：<strong>无法支持预聚合</strong>，就是说只要你的SQL中包含了Repalce函数，即使有其他可以已经预聚合的Sum，Max指标，也必须现场计算。 </p>
@@ -124,9 +153,9 @@
 <li>行数最小的</li>
 <li>列数最小的</li>
 </ol>
-<h3 id="23-kylin-cuboid-vs-doris-rollup">2.3 Kylin Cuboid VS Doris RollUp</h3>
+<h3 id="2-3-kylin-cuboid-vs-doris-rollup">2.3 Kylin Cuboid VS Doris RollUp</h3>
 <p><img src="https://pic.bcmeng.com/Kylin%2520cuboid%2520vs%2520Doris%2520rollup.png" alt="Kylin cuboid vs Doris rollup"></p>
-<h3 id="24-doris的明细模型">2.4 Doris的明细模型</h3>
+<h3 id="2-4-doris的明细模型">2.4 Doris的明细模型</h3>
 <p>由于Doris的聚合模型存在下面的缺陷，Doris引入了明细模型。</p>
 <ul>
 <li>必须区分维度列和指标列</li>
@@ -239,20 +268,20 @@ select count(*) from (select count(*) from ssb_sf20.v2_lineorder group by lo_ord
 <p><strong>Doris FE的高可用</strong>： Doris FE的高可用主要基于BerkeleyDB java version实现，BDB-JE实现了<strong>类Paxos一致性协议算法</strong>。</p>
 <p><strong>Doris BE的高可用：</strong> Doris会保证每个Tablet的多个副本分配到不同的BE上，所以一个BE down掉，不会影响查询的可用性。</p>
 <h2 id="10-可维护性">10 可维护性</h2>
-<h3 id="101-部署">10.1 部署</h3>
+<h3 id="10-1-部署">10.1 部署</h3>
 <p><strong>Kylin部署</strong>：如果完全从零开始，你就需要部署1个Hadoop集群和HBase集群。 即使公司已经有了比较完整的Hadoop生态，在部署Kylin前，你也必须先部署Hadoop客户端，HBase客户端，Hive客户端，Spark客户端。</p>
 <p><strong>Doris部署</strong>： 直接部署FE和BE组件即可。</p>
-<h3 id="102-运维">10.2 运维</h3>
+<h3 id="10-2-运维">10.2 运维</h3>
 <p><strong>Kylin运维：</strong> 运维Kylin对Admin有较高的要求，首先必须了解HBase，Hive，MapReduce，Spark，HDFS，Yarn的原理；其次对MapReduce Job和Spark Job的问题排查和调优经验要丰富；然后必须掌握对Cube复杂调优的方法；最后出现问题时排查的链路较长，复杂度较高。</p>
 <p><strong>Doris运维：</strong> Doris只需要理解和掌握系统本身即可。</p>
-<h3 id="103-客服">10.3 客服</h3>
+<h3 id="10-3-客服">10.3 客服</h3>
 <p><strong>Kylin 客服：</strong> 需要向用户讲清Hadoop相关的一堆概念；需要教会用户Kylin Web的使用；需要教会用户如何进行Cube优化（没有统一，简洁的优化原则）；需要教会用户怎么查看MR和Spark日志；需要教会用户怎么查询；</p>
 <p><strong>Doris 客服：</strong> 需要教会用户聚合模型，明细模型，前缀索引，RollUp表这些概念。</p>
 <h2 id="11-易用性">11 易用性</h2>
-<h3 id="111-查询接入">11.1 查询接入</h3>
+<h3 id="11-1-查询接入">11.1 查询接入</h3>
 <p><strong>Kylin查询接入</strong>：Kylin支持Htpp,JDBC,ODBC 3种查询方式。</p>
 <p><strong>Doris查询接入：</strong> Doris支持Mysql协议，现有的大量Mysql工具都可以直接使用，用户的学习和迁移成本较低。</p>
-<h3 id="112-学习成本">11.2 学习成本</h3>
+<h3 id="11-2-学习成本">11.2 学习成本</h3>
 <p><strong>Kylin学习成本</strong>：用户要用好Kylin，需要理解以下概念：</p>
 <ul>
 <li>Cuboid</li>
@@ -266,7 +295,7 @@ select count(*) from (select count(*) from ssb_sf20.v2_lineorder group by lo_ord
 </ul>
 <p>此外，前面提到过，用户还需要学会怎么看Mapreduce Job和Spark Job日志。</p>
 <p><strong>Doris学习成本</strong>：用户需要理解聚合模型，明细模型，前缀索引，RollUp表这些概念。</p>
-<h3 id="113-schema-change">11.3 Schema Change</h3>
+<h3 id="11-3-schema-change">11.3 Schema Change</h3>
 <p>Schema在线变更是一个十分重要的feature，因为在实际业务中，Schema的变更会十分频繁。</p>
 <p><strong>Kylin Schema Change</strong>： Kylin中用户对Cube Schema的任何改变，都需要在Staging环境重刷所有数据，然后切到Prod环境。<strong>整个过程周期很长，资源浪费比较严重</strong>。</p>
 <p><strong>Doris Schema Change</strong>：Doris支持Online Schema Change。</p>
@@ -290,46 +319,62 @@ select count(*) from (select count(*) from ssb_sf20.v2_lineorder group by lo_ord
 <p><a href="https://www.slideshare.net/YangLi43/apache-kylin-20-from-classic-olap-to-realtime-data-warehouse">3 Apache kylin 2.0: from classic olap to real-time data warehouse</a> 在Kylin高性能部分引用了第4页PPT的截图</p>
 <p><a href="https://myslide.cn/slides/6392">4 百度MPP数据仓库Palo开源架构解读与应用</a> 在Doris查询部分引用了第31页PPT的截图</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5ad60dfd204bdbac0bdcee0b
-                 data-title=Apache Kylin VS Apache Doris
-                 data-url=apache-kylin-vs-baidu-palo>
-            </div>
+          <div class="ds-thread" data-thread-key=5ad60dfd204bdbac0bdcee0b data-title=Apache Kylin VS Apache Doris data-url=apache-kylin-vs-baidu-palo>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

@@ -1,48 +1,77 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|Apache Kylin Hadoop队列拆分方案设计与反思</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> Apache Kylin Hadoop队列拆分方案设计与反思</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2016-12-11</p>
-            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>Apache Kylin Hadoop队列拆分方案设计与反思</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2016-12-11</p>
+          <p>
+            分类:
+            <a href="../tag/OLAP.html" target="_blank"
+              >OLAP</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
+<ul>
 <ul>
 <li><a href="#背景">背景</a></li>
 <li><a href="#需求分析">需求分析</a></li>
@@ -52,13 +81,15 @@
 <li><a href="#需求1实现-在yarn中为hadoop-kylin用户赋予其他队列的提交权限">需求1实现 在Yarn中为Hadoop-kylin用户赋予其他队列的提交权限</a></li>
 <li><a href="#需求2实现-增加project粒度配置并实现配置优先级">需求2实现 增加project粒度配置并实现配置优先级。</a></li>
 <li><a href="#反思1-凡事一定要先搞清概念">反思1 凡事一定要先搞清概念</a></li>
-<li><a href="#反思2-勿忘初心时刻不忘记最初目标">反思2 勿忘初心(时刻不忘记最初目标)</a></li>
+<li><a href="#反思2-勿忘初心-时刻不忘记最初目标">反思2 勿忘初心(时刻不忘记最初目标)</a></li>
 <li><a href="#反思3-跳出思维定式">反思3 跳出思维定式</a></li>
 <li><a href="#反思4-避免沉没成本的影响">反思4 避免沉没成本的影响</a></li>
 <li><a href="#总结">总结</a></li>
 <li><a href="#致谢和相关资料">致谢和相关资料</a></li>
 </ul>
+</ul>
 <!-- toc stop -->
+<!-- toc -->
 <p>本文首先叙述了我实现Kylin的Hadoop队列拆分的整个过程，所有的反思和总结都在最后。</p>
 <h3 id="背景">背景</h3>
 <p>Kylin已经在美团点评的各大业务线广泛使用，目前已有<code>20+</code> Project,<code>200+</code> Cube。为了便于资源统计和成本计算，我们需要将目前构建cube使用的单一<code>hadoop-kylin</code>队列拆分为各业务线的Hadoop队列。
@@ -88,7 +119,7 @@
 所以这个方案在要上线前被小伙伴否决了，<strong>当时我的内心当然是拒绝的</strong>。</p>
 <p>之后小伙伴提醒到我们的目标只是实现hadoop队列拆分，所以<strong>只需要在Yarn中为hadoop-kylin用户赋予其他队列的提交权限</strong>就可以了。当时听到这个建议我愣了一下，和Yarn的小伙伴确认后<strong>我的内心更是崩溃的</strong>。</p>
 <p>此方案的实现是十分简单的，因为kylin本身支持cube粒度覆盖MR作业配置参数，所以我只需要实现支持cube粒度覆盖Hive参数。我在半天内就实现了此方案的开发，测试。</p>
-<h3 id="需求2实现-增加project粒度配置并实现配置优先级。">需求2实现 增加project粒度配置并实现配置优先级。</h3>
+<h3 id="需求2实现-增加project粒度配置并实现配置优先级">需求2实现 增加project粒度配置并实现配置优先级。</h3>
 <p>首先给project本身增加配置是十分简单的。至于实现<code>cube &gt; project &gt; server</code>的配置优先级思考了几种方案，可行的两种方案是：</p>
 <ol>
 <li>在cube初始化时就获取project的配置。</li>
@@ -106,7 +137,7 @@
 
 2. 看他的操作系统里那些必要、正确、清晰的概念之间，有多少必要、正确、清晰的关联。
 </code></pre><p>显然基于李笑来的理论，<code>每个人的聪明显然是可以习得的，而不是天生的</code>。</p>
-<h3 id="反思2-勿忘初心-时刻不忘记最初目标-">反思2 勿忘初心(时刻不忘记最初目标)</h3>
+<h3 id="反思2-勿忘初心-时刻不忘记最初目标">反思2 勿忘初心(时刻不忘记最初目标)</h3>
 <p>在我们工作生活中，经常会有这样的情况：我们的目标是解决问题A，然而我们发现解决问题A需要先解决问题B，解决问题B需要先解决问题C·····</p>
 <p>有时间需要先解决2，3个问题可能是比较正常的，但是如果我们的目标问题本身只是个小问题，我们的方案却需要先解决2，3个甚至更多问题的时候，我们就需要反思我们的思路或方案是否合理，是不是我们走远了，有没有更简洁的方案能够直接解决我们的目标问题。</p>
 <h3 id="反思3-跳出思维定式">反思3 跳出思维定式</h3>
@@ -125,46 +156,62 @@
 <p><a href="https://issues.apache.org/jira/browse/KYLIN-2180">KYLIN-2180：Add project config and make config priority become &quot;cube &gt; project &gt; server&quot;</a></p>
 <p><a href="https://issues.apache.org/jira/browse/KYLIN-2095">KYLIN-2095: Hive mr job use overrided MR job configuration by cube properties</a> 在我改变需求1的方案后，发现社区已经实现了这个功能，但是个人感觉cube的HiveJob覆盖Hive的相关配置在<code>JoinedFlatTable</code>的<code>generateHiveSetStatements</code>中实现更简单和更合理。</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5871fb7bd2f092c392ca4d64
-                 data-title=Apache Kylin Hadoop队列拆分方案设计与反思
-                 data-url=kylin-hadoop-queue>
-            </div>
+          <div class="ds-thread" data-thread-key=5871fb7bd2f092c392ca4d64 data-title=Apache Kylin Hadoop队列拆分方案设计与反思 data-url=kylin-hadoop-queue>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

@@ -1,48 +1,77 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|如何编写易读的代码</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> 如何编写易读的代码</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2016-12-03</p>
-            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>如何编写易读的代码</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2016-12-03</p>
+          <p>
+            分类:
+            <a href="../tag/笔记.html" target="_blank"
+              >笔记</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
+<ul>
 <ul>
 <li><a href="#1-易读的变量命名">1 易读的变量命名</a></li>
 <li><a href="#2-易读的代码布局">2 易读的代码布局</a></li>
@@ -51,13 +80,15 @@
 <li><a href="#5-易读的表达式">5 易读的表达式</a></li>
 <li><a href="#6-易读的变量使用">6 易读的变量使用</a></li>
 <li><a href="#7-抽取不相关的子问题">7 抽取不相关的子问题</a></li>
-<li><a href="#8-单一原则一次只做好一件事">8 单一原则：一次只做好一件事</a></li>
+<li><a href="#8-单一原则-一次只做好一件事">8 单一原则：一次只做好一件事</a></li>
 <li><a href="#9-用自然语言将想法变成代码">9 用自然语言将想法变成代码</a></li>
 <li><a href="#10-少写代码">10 少写代码</a></li>
 <li><a href="#11-易读的测试">11 易读的测试</a></li>
 <li><a href="#12-参考资料">12 参考资料</a></li>
 </ul>
+</ul>
 <!-- toc stop -->
+<!-- toc -->
 <p><strong>提升编程水平最有效的方法就是反反复复地修改和推敲代码。</strong></p>
 <p><strong>写出的代码能让人快速理解、轻松维护、容易扩展的程序员才是专业的程序员。</strong></p>
 <p><strong>代码的写法应当使别人理解它所需的时间最小化。</strong></p>
@@ -161,7 +192,7 @@
 <li>简化已有的接口。</li>
 <li>按需重塑接口。</li>
 </ul>
-<h3 id="8-单一原则：一次只做好一件事">8 单一原则：一次只做好一件事</h3>
+<h3 id="8-单一原则-一次只做好一件事">8 单一原则：一次只做好一件事</h3>
 <h3 id="9-用自然语言将想法变成代码">9 用自然语言将想法变成代码</h3>
 <p><strong>如果你不能把一件事解释给你祖母听的话说明你还没有真正理解它。</strong>
                                                 阿尔伯特·爱因斯坦</p>
@@ -195,46 +226,62 @@
 <h3 id="12-参考资料">12 参考资料</h3>
 <p>本文是《编写可读代码的艺术》的笔记。</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5871fb36d2f092c392ca4d63
-                 data-title=如何编写易读的代码
-                 data-url=coding-style>
-            </div>
+          <div class="ds-thread" data-thread-key=5871fb36d2f092c392ca4d63 data-title=如何编写易读的代码 data-url=coding-style>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

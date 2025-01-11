@@ -1,49 +1,76 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|HBase 基本概念</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> HBase 基本概念</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2016-04-08</p>
-            <p>分类: <a href="../tag/HBase.html" target="_blank" >HBase</a></p>
-            <hr/>
-            <p>注：以下图片均来自互联网</p>
-<!-- toc -->
+          <h1>HBase 基本概念</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2016-04-08</p>
+          <p>
+            分类:
+            <a href="../tag/HBase.html" target="_blank"
+              >HBase</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
 <li><a href="#hbase是什么">HBase是什么</a></li>
 <li><a href="#hbase-vs-hdfs">HBase VS HDFS</a></li>
@@ -52,7 +79,6 @@
 <li><a href="#rdbms的缺陷">RDBMS的缺陷</a></li>
 <li><a href="#列式存储">列式存储</a></li>
 </ul>
-</li>
 <li><a href="#hbase-特性">Hbase 特性</a></li>
 <li><a href="#hbase架构">Hbase架构</a><ul>
 <li><a href="#client">Client</a></li>
@@ -60,7 +86,6 @@
 <li><a href="#master">Master</a></li>
 <li><a href="#region-server">Region Server</a></li>
 </ul>
-</li>
 <li><a href="#hbase数据模型">HBase数据模型</a><ul>
 <li><a href="#row-key">Row Key</a></li>
 <li><a href="#column-family">Column Family</a></li>
@@ -68,27 +93,22 @@
 <li><a href="#version-number">Version Number</a></li>
 <li><a href="#value-cell">Value (Cell)</a></li>
 </ul>
-</li>
 <li><a href="#hbase物理模型">Hbase物理模型</a><ul>
 <li><a href="#keyvalue格式">KeyValue格式</a></li>
 <li><a href="#hfile格式">HFile格式</a></li>
 </ul>
-</li>
 <li><a href="#hbase-一致性模型">HBase 一致性模型</a></li>
 <li><a href="#hbase-容错性">HBase 容错性</a><ul>
 <li><a href="#master容错">Master容错</a></li>
 <li><a href="#regionserver容错">RegionServer容错</a></li>
 <li><a href="#zookeeper容错">Zookeeper容错</a></li>
 </ul>
-</li>
 <li><a href="#hbase支持的操作">HBase支持的操作</a></li>
-<li><a href="#write-ahead-log-wal">Write-Ahead-Log （WAL）</a></li>
-<li><a href="#hbase应用">Hbase应用</a><ul>
+<li><a href="#write-ahead-log-wal">Write-Ahead-Log （WAL）</a><ul>
 <li><a href="#何时使用hbase">何时使用Hbase</a></li>
 <li><a href="#hbase-不适用场景">Hbase 不适用场景</a></li>
 <li><a href="#hbase应用场景">Hbase应用场景</a></li>
 </ul>
-</li>
 <li><a href="#hbase编程">HBase编程</a></li>
 <li><a href="#hbase-schema-设计">HBase Schema 设计</a></li>
 <li><a href="#高级特性">高级特性</a><ul>
@@ -96,18 +116,26 @@
 <li><a href="#计数器">计数器</a></li>
 <li><a href="#协处理器">协处理器</a></li>
 </ul>
-</li>
 <li><a href="#hbase-核心概念">Hbase 核心概念</a><ul>
 <li><a href="#lsm-树">LSM 树</a></li>
 <li><a href="#split">split</a></li>
 <li><a href="#compaction">compaction</a></li>
 <li><a href="#flush">flush</a></li>
 </ul>
-</li>
 <li><a href="#region-定位">Region 定位</a></li>
 <li><a href="#meta-表">META 表</a></li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
 </ul>
 <!-- toc stop -->
+<p>注：以下图片均来自互联网</p>
+<!-- toc -->
 <h2 id="hbase是什么">HBase是什么</h2>
 <p>HBase构建在 HDFS 之上的分布式列式键值存储系统。
 HBase内部管理的文件全部存储在HDFS中。</p>
@@ -232,7 +260,7 @@ HStore:</p>
 不同的cell可以拥有不同的列。</p>
 <h3 id="version-number">Version Number</h3>
 <p>版本号。默认值是系统时间戳。类型为long</p>
-<h3 id="value-cell-">Value (Cell)</h3>
+<h3 id="value-cell">Value (Cell)</h3>
 <p>具体的值。类型为Byte array </p>
 <h2 id="hbase物理模型">Hbase物理模型</h2>
 <h3 id="keyvalue格式">KeyValue格式</h3>
@@ -349,7 +377,7 @@ Delete Family Bloom filter:
 <li>支持CRUD 和SCAN</li>
 <li>没有内置join操作，可以使用MapReduce解决。</li>
 </ul>
-<h2 id="write-ahead-log-（wal）">Write-Ahead-Log （WAL）</h2>
+<h2 id="write-ahead-log-wal">Write-Ahead-Log （WAL）</h2>
 <ul>
 <li>用户每次写入 MemStore 的同时，也会写一份数据到HLOG文件中。只有当写入成功后才通知客户端该操作成功。</li>
 <li>每个RegionServer只有一个HLOG文件</li>
@@ -454,46 +482,62 @@ majar compaction
 <p>当我们从客户端读取，写入数据的时候，我们需要知道数据的 Rowkey是在哪个Region以及我们需要的Region是在哪个RegionServer上。
 而这正是HBase Meta表所记录的信息。</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5871eee8d2f092c392ca4d47
-                 data-title=HBase 基本概念
-                 data-url=hbase-note>
-            </div>
+          <div class="ds-thread" data-thread-key=5871eee8d2f092c392ca4d47 data-title=HBase 基本概念 data-url=hbase-note>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

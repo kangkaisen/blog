@@ -1,54 +1,104 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|HBase Schema 设计</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> HBase Schema 设计</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2016-04-09</p>
-            <p>分类: <a href="../tag/HBase.html" target="_blank" >HBase</a></p>
-            <hr/>
-            <h2 id="基本概念">基本概念</h2>
-<h3 id="每张表只有一个索引：rowkey-没有二级索引">每张表只有一个索引：rowkey 没有二级索引</h3>
-<h3 id="行按照rowkey-排序：rowkey-按照字典序排序">行按照rowkey 排序：rowkey 按照字典序排序</h3>
+          <h1>HBase Schema 设计</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2016-04-09</p>
+          <p>
+            分类:
+            <a href="../tag/HBase.html" target="_blank"
+              >HBase</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
+<ul>
+<li><a href="#基本概念">基本概念</a><ul>
+<li><a href="#每张表只有一个索引-rowkey-没有二级索引">每张表只有一个索引：rowkey 没有二级索引</a></li>
+<li><a href="#行按照rowkey-排序-rowkey-按照字典序排序">行按照rowkey 排序：rowkey 按照字典序排序</a></li>
+<li><a href="#行级别的操作都是原子的">行级别的操作都是原子的</a></li>
+<li><a href="#读写应该均匀分布到整个表">读写应该均匀分布到整个表</a></li>
+<li><a href="#通常-应该把单个实体的所有信息保存在单行中">通常，应该把单个实体的所有信息保存在单行中</a></li>
+<li><a href="#相关的实体应该存储在邻近的行">相关的实体应该存储在邻近的行</a></li>
+<li><a href="#hbase表是稀疏的">HBase表是稀疏的</a></li>
+</ul>
+<li><a href="#确定-rowkey">确定 rowkey</a><ul>
+<li><a href="#rowkey-的类型">rowkey 的类型</a><li><a href="#单行中存储多个值">单行中存储多个值</a></li>
+<li><a href="#避免这样的rowkey">避免这样的rowkey</a></li>
+<li><a href="#列">列</a></li>
+<li><a href="#高表还是宽表">高表还是宽表</a></li>
+</li>
+</ul>
+</li>
+</li>
+</ul>
+<!-- toc stop -->
+<h2 id="基本概念">基本概念</h2>
+<h3 id="每张表只有一个索引-rowkey-没有二级索引">每张表只有一个索引：rowkey 没有二级索引</h3>
+<h3 id="行按照rowkey-排序-rowkey-按照字典序排序">行按照rowkey 排序：rowkey 按照字典序排序</h3>
 <h3 id="行级别的操作都是原子的">行级别的操作都是原子的</h3>
 <p>例如：你要更新表中的俩行，可能出现一行更新成功，一行更新失败的情况。Schema 设计中应该避免跨行的原子性请求。</p>
 <h3 id="读写应该均匀分布到整个表">读写应该均匀分布到整个表</h3>
-<h3 id="通常，应该把单个实体的所有信息保存在单行中">通常，应该把单个实体的所有信息保存在单行中</h3>
+<h3 id="通常-应该把单个实体的所有信息保存在单行中">通常，应该把单个实体的所有信息保存在单行中</h3>
 <p>如果一个实体需要存储大量信息（数百MB），你可以考虑用多行来存储每个实体。或者你很少需要在一次请求中获取单个实体的全部信息，你也可以使用多行来存储每个实体。</p>
 <h3 id="相关的实体应该存储在邻近的行">相关的实体应该存储在邻近的行</h3>
 <p>这样可以使得读更加高效，也可以尽可能压缩数据</p>
@@ -106,46 +156,62 @@
 <p>如果你想知道用户jadams 是否关注 tjefferson，你可以简单搜索<code>jadams(df887e44)和tjefferson(b0452e5c)</code>哈希值组成的 rowkey行 <code>df887e44b0452e5c</code> 存在, 所以 我们知道 jadams 关注了 tjefferson.</p>
 <p>注意我们存储了被关注者的用户名，因为没有这个信息，找到哈希对应的用户名是比较耗时的。</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5871f03bd2f092c392ca4d4a
-                 data-title=HBase Schema 设计
-                 data-url=hbase-schema>
-            </div>
+          <div class="ds-thread" data-thread-key=5871f03bd2f092c392ca4d4a data-title=HBase Schema 设计 data-url=hbase-schema>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

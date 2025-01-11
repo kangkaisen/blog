@@ -1,54 +1,81 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|The Query Observability Of StarRocks</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> The Query Observability Of StarRocks</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2023-02-05</p>
-            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>The Query Observability Of StarRocks</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2023-02-05</p>
+          <p>
+            分类:
+            <a href="../tag/OLAP.html" target="_blank"
+              >OLAP</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
 <li><a href="#1-starrocks-explain-sql">1 StarRocks Explain + SQL</a><ul>
-<li><a href="#11-starrocks-explain-logical-sql">1.1 StarRocks Explain logical + SQL</a></li>
-<li><a href="#12-starrocks-explain-cost-sql">1.2 Starrocks Explain Cost + SQL</a></li>
+<li><a href="#1-1-starrocks-explain-logical-sql">1.1 StarRocks Explain logical + SQL</a></li>
+<li><a href="#1-2-starrocks-explain-cost-sql">1.2 Starrocks Explain Cost + SQL</a></li>
 </ul>
-</li>
 <li><a href="#2-starrocks-sql-optimizer-trace-performance">2 StarRocks SQL Optimizer Trace performance</a></li>
 <li><a href="#3-starrocks-sql-optimizer-detail-trace-log">3 StarRocks SQL Optimizer Detail Trace Log</a></li>
 <li><a href="#4-starrocks-execution-trace-visualization">4 StarRocks Execution Trace visualization</a></li>
@@ -58,26 +85,28 @@
 <li><a href="#8-starrocks-runtime-query-metrics">8 StarRocks Runtime Query metrics</a></li>
 <li><a href="#9-starrocks-big-query">9 StarRocks Big Query</a></li>
 <li><a href="#10-starrocks-information-schema-table">10 StarRocks information schema table</a><ul>
-<li><a href="#becompactions-表">be_compactions 表</a></li>
-<li><a href="#beconfigs-表">be_configs 表</a></li>
-<li><a href="#belogs-表">be_logs 表</a></li>
-<li><a href="#bemetrics-表">be_metrics 表</a></li>
-<li><a href="#betxns-表">be_txns 表</a></li>
-<li><a href="#fetabletschedules-表">fe_tablet_schedules 表</a></li>
-<li><a href="#loadtrackinglogs-表">load_tracking_logs 表</a></li>
+<li><a href="#be-compactions-表">be_compactions 表</a></li>
+<li><a href="#be-configs-表">be_configs 表</a></li>
+<li><a href="#be-logs-表">be_logs 表</a></li>
+<li><a href="#be-metrics-表">be_metrics 表</a></li>
+<li><a href="#be-txns-表">be_txns 表</a></li>
+<li><a href="#fe-tablet-schedules-表">fe_tablet_schedules 表</a></li>
+<li><a href="#load-tracking-logs-表">load_tracking_logs 表</a></li>
 </ul>
-</li>
 <li><a href="#11-starrocks-统计信息表">11 StarRocks 统计信息表</a></li>
 <li><a href="#12-fe-动态执行脚本">12 FE 动态执行脚本</a></li>
 <li><a href="#13-be-动态执行脚本">13 BE 动态执行脚本</a></li>
+</li>
+</li>
 </ul>
 <!-- toc stop -->
+<!-- toc -->
 <p>过去两年，我们开发了很多查询层的分析，诊断工具，加强了 StarRocks 查询层的可观测性，今天给大家简单介绍下，之后我们还会在可观测性方面继续加强。</p>
 <h2 id="1-starrocks-explain-sql">1 StarRocks Explain + SQL</h2>
 <p>参考 <a href="https://docs.starrocks.io/en-us/latest/administration/Query_planning#plan-analysis">https://docs.starrocks.io/en-us/latest/administration/Query_planning#plan-analysis</a> 可以看到每个 SQL 的执行计划</p>
 <pre><code>explain SELECT t2_126.c_2_0 FROM t2 AS t2_126 INNER JOIN   (SELECT v0_127.c_0_2,           v0_127.c_0_7    FROM v0 AS v0_127    WHE
 RE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0 AS v0_127) ) subv0 ON t2_126.c_2_5 = subv0.c_0_2;
-</code></pre><h3 id="11-starrocks-explain-logical-sql">1.1 StarRocks Explain logical + SQL</h3>
+</code></pre><h3 id="1-1-starrocks-explain-logical-sql">1.1 StarRocks Explain logical + SQL</h3>
 <p>相比  Explain + SQL，信息更少，可以更方便地看到整个执行计划</p>
 <pre><code>mysql&gt; Explain logical SELECT t2_126.c_2_0 FROM t2 AS t2_126 INNER JOIN   (SELECT v0_127.c_0_2,           v0_127.c_0_7    FROM v0 AS v0_127    WHERE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0 AS v0_127) ) subv0 ON t2_126.c_2_5 = subv0.c_0_2;
 
@@ -125,7 +154,7 @@ RE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0
 |                     predicate: cast(6:c_2_5 as datetime) IS NOT NULL                                                  |
 +-----------------------------------------------------------------------------------------------------------------------+
 39 rows in set (0.04 sec)
-</code></pre><h3 id="12-starrocks-explain-cost-sql">1.2 Starrocks Explain Cost + SQL</h3>
+</code></pre><h3 id="1-2-starrocks-explain-cost-sql">1.2 Starrocks Explain Cost + SQL</h3>
 <p>相比  Explain + SQL，信息更多，有了列的统计信息，列的类型，Nullable 等信息</p>
 <pre><code>mysql&gt; Explain costs SELECT t2_126.c_2_0 FROM t2 AS t2_126 INNER JOIN   (SELECT v0_127.c_0_2,           v0_127.c_0_7    FROM v0 AS v0_127
    WHERE EXISTS        (SELECT v0_127.c_0_7         FROM t1 AS t1_125,              v0 AS v0_127) ) subv0 ON t2_126.c_2_5 = subv0.c_0_2;
@@ -578,7 +607,7 @@ starrocks_be_wg_pip_exe_poller_block_queue_len 0
 <p>StarRocks 的慢查询会收集在 $log/slow_query.log 中。</p>
 <h2 id="10-starrocks-information-schema-table">10 StarRocks information schema table</h2>
 <p>StarRocks 在持续加强和晚上 information schema 的table信息，除了常规的 tablet schema 信息外，我们还加入以下增加可观测性的表：</p>
-<h3 id="be_compactions-表">be_compactions 表</h3>
+<h3 id="be-compactions-表">be_compactions 表</h3>
 <p>可以通过 SQL 直接查询每个 BE 上 compaction 的关键信息</p>
 <pre><code>CREATE TABLE `be_compactions` (
   `BE_ID` bigint(20) NULL COMMENT &quot;&quot;,
@@ -590,7 +619,7 @@ starrocks_be_wg_pip_exe_poller_block_queue_len 0
   `MANUAL_COMPACTION_CONCURRENCY` bigint(20) NULL COMMENT &quot;&quot;,
   `MANUAL_COMPACTION_CANDIDATES_NUM` bigint(20) NULL COMMENT &quot;&quot;
 ) ENGINE=SCHEMA ;
-</code></pre><h3 id="be_configs-表">be_configs 表</h3>
+</code></pre><h3 id="be-configs-表">be_configs 表</h3>
 <p>可以通过 SQL 直接查询每个 BE 上的配置信息：</p>
 <pre><code>mysql&gt; select * from be_configs limit 2;
 +-------+----------------------------------------+-------+
@@ -600,7 +629,7 @@ starrocks_be_wg_pip_exe_poller_block_queue_len 0
 | 10002 | auto_adjust_pagecache_interval_seconds | 10    |
 +-------+----------------------------------------+-------+
 2 rows in set (0.02 sec)
-</code></pre><h3 id="be_logs-表">be_logs 表</h3>
+</code></pre><h3 id="be-logs-表">be_logs 表</h3>
 <p>可以通过 SQL 直接查询每个 BE 上相关事务的日志信息：</p>
 <pre><code>CREATE TABLE `be_logs` (
   `BE_ID` bigint(20) NULL COMMENT &quot;&quot;,
@@ -618,7 +647,7 @@ mysql&gt; select * from be_logs limit 1;
 | 10002 | I     | 1685401899 | 214764 | I0530 07:11:39.266544 214764 daemon.cpp:201] Current memory statistics: process(17415544), query_pool(6080), load(0), metadata(1285032), compaction(0), schema_change(0), column_pool(0), page_cache(0), update(0), chunk_allocator(0), clone(0), consistency(0) |
 +-------+-------+------------+--------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 1 row in set (4.00 sec)
-</code></pre><h3 id="be_metrics-表">be_metrics 表</h3>
+</code></pre><h3 id="be-metrics-表">be_metrics 表</h3>
 <p>可以通过 SQL 直接查询每个 BE 上的指标信息：</p>
 <pre><code>mysql&gt; select * from be_metrics limit 20;
 +-------+-----------------------------------+--------+-------+
@@ -646,7 +675,7 @@ mysql&gt; select * from be_logs limit 1;
 | 10002 | chunk_pool_system_free_count      |        |     0 |
 +-------+-----------------------------------+--------+-------+
 20 rows in set (0.02 sec)
-</code></pre><h3 id="be_txns-表">be_txns 表</h3>
+</code></pre><h3 id="be-txns-表">be_txns 表</h3>
 <p>可以通过 SQL 直接查询每个 BE 上每个导入事务的关键时间信息和统计信息</p>
 <pre><code>CREATE TABLE `be_txns` (
   `BE_ID` bigint(20) NULL COMMENT &quot;&quot;,
@@ -664,7 +693,7 @@ mysql&gt; select * from be_logs limit 1;
   `DATA_SIZE` bigint(20) NULL COMMENT &quot;&quot;,
   `VERSION` bigint(20) NULL COMMENT &quot;&quot;
 ) ENGINE=SCHEMA ;
-</code></pre><h3 id="fe_tablet_schedules-表">fe_tablet_schedules 表</h3>
+</code></pre><h3 id="fe-tablet-schedules-表">fe_tablet_schedules 表</h3>
 <p>可以通过 SQL 直接查询 starrocks 集群 tablet 调度和 balance的状态</p>
 <pre><code>CREATE TABLE `fe_tablet_schedules` (
   `TABLE_ID` bigint(20) NULL COMMENT &quot;&quot;,
@@ -683,7 +712,7 @@ mysql&gt; select * from be_logs limit 1;
   `CLONE_DURATION` double NULL COMMENT &quot;&quot;,
   `MSG` varchar(2048) NULL COMMENT &quot;&quot;
 ) ENGINE=SCHEMA ;
-</code></pre><h3 id="load_tracking_logs-表">load_tracking_logs 表</h3>
+</code></pre><h3 id="load-tracking-logs-表">load_tracking_logs 表</h3>
 <p>可以查看 load 的 tracking_logs</p>
 <pre><code>CREATE TABLE `load_tracking_logs` (
   `JOB_ID` bigint(20) NULL COMMENT &quot;&quot;,
@@ -820,46 +849,62 @@ Query OK, 0 rows affected (0.00 sec)
 dir: /home/decster/projects/starrocks/localrun/be/storage rocksdb: 156484
 compact OK size: 12708
 </code></pre>
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=63e265e7f877388ae7fd0c07
-                 data-title=The Query Observability Of StarRocks
-                 data-url=starrocks-observability>
-            </div>
+          <div class="ds-thread" data-thread-key=63e265e7f877388ae7fd0c07 data-title=The Query Observability Of StarRocks data-url=starrocks-observability>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

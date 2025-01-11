@@ -1,48 +1,206 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|设计模式入门</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> 设计模式入门</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2016-04-04</p>
-            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
-            <hr/>
-            <h3 id="设计模式">设计模式</h3>
+          <h1>设计模式入门</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2016-04-04</p>
+          <p>
+            分类:
+            <a href="../tag/笔记.html" target="_blank"
+              >笔记</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
+<ul>
+<ul>
+<li><a href="#设计模式">设计模式</a></li>
+<li><a href="#模式分类">模式分类</a><li><a href="#良好的设计">良好的设计</a></li>
+<li><a href="#设计原则">设计原则</a></li>
+<li><a href="#观察者模式">观察者模式</a><ul>
+<li><a href="#定义">定义</a></li>
+<li><a href="#气象站获取数据并显示">气象站获取数据并显示</a></li>
+<li><a href="#报纸的订阅">报纸的订阅</a></li>
+<li><a href="#主题-subject-观察者-observer">主题 Subject + 观察者 Observer</a></li>
+<li><a href="#推模式-主题向观察者主动推送消息">推模式:主题向观察者主动推送消息</a></li>
+<li><a href="#拉模式-观察者主动向主题请求消息">拉模式：观察者主动向主题请求消息</a></li>
+</ul>
+<li><a href="#装饰模式">装饰模式</a><ul>
+<li><a href="#继承-设计子类行为-是编译时静态确定">继承 设计子类行为，是编译时静态确定</a></li>
+<li><a href="#组合扩展对象行为-可以运行时动态扩展">组合扩展对象行为，可以运行时动态扩展</a></li>
+<li><a href="#定义">定义</a></li>
+<li><a href="#装饰者和被装饰者有共同的超类">装饰者和被装饰者有共同的超类</a></li>
+<li><a href="#利用继承获得-类型匹配">利用继承获得 “类型匹配”</a></li>
+<li><a href="#利用组合扩展行为">利用组合扩展行为</a></li>
+<li><a href="#应用">应用</a></li>
+<li><a href="#缺点">缺点</a></li>
+</ul>
+<li><a href="#简单工厂模式">简单工厂模式</a><ul>
+<li><a href="#定义">定义</a></li>
+<li><a href="#模式结构">模式结构</a></li>
+<li><a href="#适用场景">适用场景</a></li>
+<li><a href="#典型应用">典型应用</a></li>
+<li><a href="#总结">总结</a></li>
+</ul>
+<li><a href="#工厂方法模式">工厂方法模式</a><ul>
+<li><a href="#定义">定义</a></li>
+<li><a href="#模式结构">模式结构</a></li>
+<li><a href="#特点">特点</a></li>
+<li><a href="#总结">总结</a></li>
+</ul>
+<li><a href="#抽象工厂模式">抽象工厂模式</a><ul>
+<li><a href="#定义">定义</a></li>
+<li><a href="#特点">特点</a></li>
+<li><a href="#模式结构">模式结构</a></li>
+<li><a href="#应用">应用</a></li>
+<li><a href="#代码">代码</a></li>
+</ul>
+<li><a href="#建造者模式">建造者模式</a><ul>
+<li><a href="#定义">定义</a></li>
+<li><a href="#代码">代码</a></li>
+</ul>
+<li><a href="#单例模式">单例模式</a><ul>
+<li><a href="#定义">定义</a></li>
+<li><a href="#注意点">注意点</a></li>
+<li><a href="#应用">应用</a></li>
+<li><a href="#代码">代码</a></li>
+</ul>
+<li><a href="#命令模式">命令模式</a><ul>
+<li><a href="#定义">定义</a></li>
+<li><a href="#特点">特点</a></li>
+<li><a href="#应用">应用</a></li>
+</ul>
+<li><a href="#适配器模式">适配器模式</a><ul>
+<li><a href="#定义">定义</a></li>
+<li><a href="#特点">特点</a></li>
+<li><a href="#应用">应用</a></li>
+</ul>
+<li><a href="#外观模式">外观模式</a><ul>
+<li><a href="#定义">定义</a></li>
+<li><a href="#特点">特点</a></li>
+<li><a href="#适配器模式和外观模式的区别">适配器模式和外观模式的区别</a></li>
+</ul>
+<li><a href="#模板方法模式">模板方法模式</a><ul>
+<li><a href="#定义">定义</a></li>
+<li><a href="#特点">特点</a></li>
+<li><a href="#钩子">钩子</a></li>
+</ul>
+<li><a href="#迭代器">迭代器</a><ul>
+<li><a href="#定义">定义</a></li>
+<li><a href="#特点">特点</a></li>
+<li><a href="#应用">应用</a></li>
+</ul>
+<li><a href="#组合模式">组合模式</a><ul>
+<li><a href="#定义">定义</a></li>
+<li><a href="#特点">特点</a></li>
+</ul>
+<li><a href="#状态模式">状态模式</a><ul>
+<li><a href="#定义">定义</a></li>
+<li><a href="#特点">特点</a></li>
+<li><a href="#应用">应用</a></li>
+<li><a href="#区别">区别</a></li>
+</ul>
+<li><a href="#策略模式">策略模式</a><ul>
+<li><a href="#定义">定义</a></li>
+<li><a href="#作用">作用</a></li>
+<li><a href="#特点">特点</a></li>
+<li><a href="#应用">应用</a></li>
+<li><a href="#何时使用策略模式">何时使用策略模式？</a></li>
+<li><a href="#组成">组成</a></li>
+<li><a href="#java代码实现">Java代码实现</a></li>
+<li><a href="#python-代码实现">Python 代码实现</a></li>
+</ul>
+<li><a href="#代理模式">代理模式</a><ul>
+<li><a href="#定义">定义</a></li>
+<li><a href="#应用">应用</a></li>
+</ul>
+<li><a href="#复合模式">复合模式</a></li>
+<li><a href="#mvc模式">MVC模式</a><ul>
+<li><a href="#model-模型">model 模型</a></li>
+<li><a href="#view-视图">view  视图</a></li>
+<li><a href="#control-控制器">control 控制器</a></li>
+</ul>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</li>
+</ul>
+</ul>
+<!-- toc stop -->
+<h3 id="设计模式">设计模式</h3>
 <ul>
 <li>模式是在某个情境下，针对某问题的某种解决方案</li>
 <li>模式不是代码，是针对特定问题的通用解决方案</li>
@@ -113,12 +271,12 @@
 <p>要依赖抽象，不要依赖具体类</p>
 <h4 id="隔离变化">隔离变化</h4>
 <p>找出应用中可能发生变化的部分，和不需要改变的代码隔离开来</p>
-<h4 id="针对接口编程，而不是针对实现编程">针对接口编程，而不是针对实现编程</h4>
+<h4 id="针对接口编程-而不是针对实现编程">针对接口编程，而不是针对实现编程</h4>
 <ul>
 <li>针对超类型编程</li>
 <li>利用多态</li>
 </ul>
-<h4 id="多用组合，少用继承">多用组合，少用继承</h4>
+<h4 id="多用组合-少用继承">多用组合，少用继承</h4>
 <h4 id="为了交互对象之间的松耦合而努力">为了交互对象之间的松耦合而努力</h4>
 <h4 id="最少知识原则">最少知识原则</h4>
 <p>只和你的密友谈话</p>
@@ -139,7 +297,7 @@
 <h3 id="主题-subject-观察者-observer">主题 Subject + 观察者 Observer</h3>
 <p>主题和观察者之间松耦合</p>
 <h3 id="推模式-主题向观察者主动推送消息">推模式:主题向观察者主动推送消息</h3>
-<h3 id="拉模式：观察者主动向主题请求消息">拉模式：观察者主动向主题请求消息</h3>
+<h3 id="拉模式-观察者主动向主题请求消息">拉模式：观察者主动向主题请求消息</h3>
 <pre><code>public interface Subject {
     //添加观察者
     void attach(Observer o);
@@ -201,14 +359,14 @@ public static void main(String[] args) {
         cs.doSomeThings();
     }
 </code></pre><h2 id="装饰模式">装饰模式</h2>
-<h3 id="继承-设计子类行为，是编译时静态确定">继承 设计子类行为，是编译时静态确定</h3>
-<h3 id="组合扩展对象行为，可以运行时动态扩展">组合扩展对象行为，可以运行时动态扩展</h3>
+<h3 id="继承-设计子类行为-是编译时静态确定">继承 设计子类行为，是编译时静态确定</h3>
+<h3 id="组合扩展对象行为-可以运行时动态扩展">组合扩展对象行为，可以运行时动态扩展</h3>
 <h3 id="定义">定义</h3>
 <p>装饰者模式将责任附加到对象上，若要扩展功能，装饰者提供比继承更有弹性的方案
 增强功能。
 装饰者可以在所委托被装饰者的行为之前或者之后，加上自己的行为，以达到特定目的。</p>
 <h3 id="装饰者和被装饰者有共同的超类">装饰者和被装饰者有共同的超类</h3>
-<h3 id="利用继承获得-“类型匹配”">利用继承获得 “类型匹配”</h3>
+<h3 id="利用继承获得-类型匹配">利用继承获得 “类型匹配”</h3>
 <h3 id="利用组合扩展行为">利用组合扩展行为</h3>
 <h3 id="应用">应用</h3>
 <ul>
@@ -800,7 +958,7 @@ public static void main(String[] args) {
 <li>一个菜单功能能够根据用户的“皮肤”首选项来决定是否采用水平的还是垂直的排列形式。同事可以灵活增加菜单那的显示样式</li>
 <li>出行旅游：我们可以有几个策略可以考虑：可以骑自行车，汽车，做火车，飞机。每个策略都可以得到相同的结果，但是它们使用了不同的资源。选择策略的依据是费用，时间，使用工具还有每种方式的方便程度 。</li>
 </ul>
-<h3 id="何时使用策略模式？">何时使用策略模式？</h3>
+<h3 id="何时使用策略模式">何时使用策略模式？</h3>
 <ul>
 <li>许多相关的类仅仅是行为有异</li>
 <li>需要使用一个算法的不同变体</li>
@@ -1053,46 +1211,62 @@ n.performQuack()
 <li>将用户输入传递给模型作为动作</li>
 </ul>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5871ed64d2f092c392ca4d45
-                 data-title=设计模式入门
-                 data-url=shejimoshi>
-            </div>
+          <div class="ds-thread" data-thread-key=5871ed64d2f092c392ca4d45 data-title=设计模式入门 data-url=shejimoshi>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

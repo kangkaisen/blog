@@ -1,62 +1,88 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|数据库之美 —— 查询自适应执行</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> 数据库之美 —— 查询自适应执行</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2022-12-03</p>
-            <p>分类: <a href="../tag/数据库.html" target="_blank" >数据库</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>数据库之美 —— 查询自适应执行</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2022-12-03</p>
+          <p>
+            分类:
+            <a href="../tag/数据库.html" target="_blank"
+              >数据库</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
 <li><a href="#为什么需要自适应执行">为什么需要自适应执行</a></li>
 <li><a href="#什么是查询自适应执行">什么是查询自适应执行</a></li>
 <li><a href="#如何进行查询自适应执行">如何进行查询自适应执行</a><ul>
-<li><a href="#顶层决策优化器多次-plan">顶层决策：优化器多次 Plan</a></li>
-<li><a href="#顶层决策late-binding-之预计算多个-plan">顶层决策：Late Binding 之预计算多个 Plan</a></li>
-<li><a href="#顶层决策feedback-根据历史信息修正">顶层决策：Feedback 根据历史信息修正</a></li>
-<li><a href="#顶层决策多个-plan-同时执行择优取之">顶层决策：多个 Plan 同时执行，择优取之</a></li>
-<li><a href="#顶层决策不同分组的数据启用不同的算子">顶层决策：不同分组的数据启用不同的算子</a></li>
-<li><a href="#中层决策增加专门的决策算子">中层决策：增加专门的决策算子</a></li>
-<li><a href="#中层决策动态切换-plan">中层决策：动态切换 Plan</a></li>
-<li><a href="#基层决策算子内部自适应">基层决策：算子内部自适应</a></li>
-</ul>
-</li>
+<li><a href="#顶层决策-优化器多次-plan">顶层决策：优化器多次 Plan</a></li>
+<li><a href="#顶层决策-late-binding-之预计算多个-plan">顶层决策：Late Binding 之预计算多个 Plan</a></li>
+<li><a href="#顶层决策-feedback-根据历史信息修正">顶层决策：Feedback 根据历史信息修正</a></li>
+<li><a href="#顶层决策-多个-plan-同时执行-择优取之">顶层决策：多个 Plan 同时执行，择优取之</a></li>
+<li><a href="#顶层决策-不同分组的数据启用不同的算子">顶层决策：不同分组的数据启用不同的算子</a></li>
+<li><a href="#中层决策-增加专门的决策算子">中层决策：增加专门的决策算子</a></li>
+<li><a href="#中层决策-动态切换-plan">中层决策：动态切换 Plan</a></li>
+<li><a href="#基层决策-算子内部自适应">基层决策：算子内部自适应</a></li>
 <li><a href="#自适应执行策略的关键点">自适应执行策略的关键点</a></li>
 <li><a href="#目前哪些-case-可以自适应">目前哪些 Case 可以自适应</a></li>
 <li><a href="#自适应执行的挑战">自适应执行的挑战</a></li>
@@ -66,7 +92,10 @@
 <li><a href="#总结">总结</a></li>
 <li><a href="#参考资料">参考资料</a></li>
 </ul>
+</li>
+</ul>
 <!-- toc stop -->
+<!-- toc -->
 <p>今天给大家分享下数据库领域比较重要的优化：查询自适应执行。</p>
 <h2 id="为什么需要自适应执行">为什么需要自适应执行</h2>
 <p><img src="media/16660847700843/olap%20%E6%9E%81%E9%80%9F.png" alt="SQL 处理流程 "></p>
@@ -92,33 +121,33 @@
 <p><img src="media/16660847700843/aqp%20example.png" alt="aqp example"></p>
 <p><img src="media/16660847700843/aqp%20example%202.png" alt="aqp example 2"></p>
 <h2 id="如何进行查询自适应执行">如何进行查询自适应执行</h2>
-<h3 id="顶层决策：优化器多次-plan">顶层决策：优化器多次 Plan</h3>
+<h3 id="顶层决策-优化器多次-plan">顶层决策：优化器多次 Plan</h3>
 <p>这个思路最简单，也最容易实现，就是在执行过程中的一些物化点，收集简单的统计信息，然后让优化器重新进行 Plan。</p>
 <p>所谓的物化点，就是当前时刻，可以拥有查询执行的结果的全量数据。在 Stage By Stage 执行模型中，每个 Stage 的结束都是物化点，在 Pipeline 执行模型中，每个 Block 算子执行结束的地方，可以作为物化点。</p>
 <p>这种思路的典型实现有 Spark，Oracle，BigQuery 等, 一个典型的自适应策略就是将 Join 分布式执行策略的自适应，比如一开始是 Suffle Join，发现右表比较小后，转成 Broadcast Join。</p>
-<h3 id="顶层决策：late-binding-之预计算多个-plan">顶层决策：Late Binding 之预计算多个 Plan</h3>
+<h3 id="顶层决策-late-binding-之预计算多个-plan">顶层决策：Late Binding 之预计算多个 Plan</h3>
 <p>和在物化点重新 Plan 的思路类似，我们可以提前根据 SQL 模板规划好多个 Plan，比如对于 table a join table b where b.column1 = x,  由于 b 表 column 1 的统计信息缺失，我们无法准确估计出 b 进过过滤后的行数，但是 a 的表统计信息我们有，假如我们知道 a 表的行数是 1000 万行，那么我们可以根据 b 表的行数准备 3 个 不同的 plan, 如下图所示：</p>
 <p><img src="media/16660847700843/join%20size.png" alt="join size"></p>
-<h3 id="顶层决策：feedback-根据历史信息修正">顶层决策：Feedback 根据历史信息修正</h3>
+<h3 id="顶层决策-feedback-根据历史信息修正">顶层决策：Feedback 根据历史信息修正</h3>
 <p>我们需要自适应的根源是<strong>优化器的统计信息不准</strong>，那么解决这个问题的一个思路就是我们想办法让统计信息变得更准。 在用户的实际生产查询中，对同一个表的某些列经常会发起多次的连续查询，这样我们就可以前几次查询的时获取到相关列的 max,min,基数值等统计信息来修正优化器中的统计信息，让随后的查询可以获得更精确的统计信息，进而产生更优的 Plan。</p>
 <p>这个思路已经在工业界大量实现，Feedback 这种方式的缺点是：</p>
 <ol>
 <li>无法解决某张表，某个列第一次查询没有统计信息的问题</li>
 <li>无法解决 Streaming 查询统计信息不断变化的问题</li>
 </ol>
-<h3 id="顶层决策：多个-plan-同时执行，择优取之">顶层决策：多个 Plan 同时执行，择优取之</h3>
+<h3 id="顶层决策-多个-plan-同时执行-择优取之">顶层决策：多个 Plan 同时执行，择优取之</h3>
 <p>还有一种类似 Spark, MapReduce 推测执行的思路，我们在一开始不是选择出一条 “最优” 的 Plan 去执行，而是选择出“最优”的两三个 Plan 去执行，执行一段时候后，发现哪个 Plan 执行地最快，就最终选择哪个，其他的 Cancel 掉。</p>
 <p>这个思路的缺点比较明显：</p>
 <ol>
 <li>额外消耗较多的资源</li>
 <li>最多只能同时执行少数几个 Plan，但是当 SQL 很复杂时，会有成千上万条 Plan，很慢保证选择出高效的 Plan</li>
 </ol>
-<h3 id="顶层决策：不同分组的数据启用不同的算子">顶层决策：不同分组的数据启用不同的算子</h3>
+<h3 id="顶层决策-不同分组的数据启用不同的算子">顶层决策：不同分组的数据启用不同的算子</h3>
 <p><img src="media/16660847700843/qm1.png" alt="qm1"></p>
 <p>如上图所示，我们可以和机器学习结合，分析数据特点，根据数据的特点对数据进行分组，让不同组的数据可以执行不同的查询计划。</p>
 <p>下图是一个更具体的示意，可以看到在执行层，会有多组执行算子，查询时会根据数据本身将数据路由到不同的执行算子。 当然，如果让查询优化器和机器学习结合的话，我们也可以从让统计信息更准确这个方向发力，通过机器学习的方式让统计信息更准。</p>
 <p><img src="media/16660847700843/qm2.png" alt="qm2"></p>
-<h3 id="中层决策：增加专门的决策算子">中层决策：增加专门的决策算子</h3>
+<h3 id="中层决策-增加专门的决策算子">中层决策：增加专门的决策算子</h3>
 <p>我们发现，顶层要做出更好的决策，需要的信息更多，一旦决策失误，影响面会更大，要做出的决策越细，决策本身的成本就会更低，所以类似公司管理，我们可以将决策权下方到中层或者基层，让中层或者基层管理作出细粒度的决策。</p>
 <p>但是我们在正常的算子中并没有专门的决策算子，我们需要引入一个新的算子：Eddy</p>
 <p><img src="media/16660847700843/eddy%201.png" alt="eddy 1"></p>
@@ -139,11 +168,11 @@
 <li><strong>基于内容的自适应</strong>：如下图所示，就是根据每一行数据的具体内容，决定路由到哪个算子</li>
 </ol>
 <p><img src="media/16660847700843/edyy6.png" alt="edyy6"></p>
-<h3 id="中层决策：动态切换-plan">中层决策：动态切换 Plan</h3>
+<h3 id="中层决策-动态切换-plan">中层决策：动态切换 Plan</h3>
 <p>类似于前面的全局在运行时重新 Plan，我们也可以在局部动态切换 Plan，如图是一个 3 表 Join 后再 group by 的例子，我们在运行时变换 3 表 Join 的顺序，但是这里需要注意的点，为了保证结果的正确性，我们需要再额外加入一个缝补或者纠正的 Plan：让分别在 Plan 0 和 plan 1 执行的两部分数据 （T0,T1, C0,C1）再 Join 一次，然后把 3 部分数据再 Union 一下。</p>
 <p><img src="media/16660847700843/CQP.png" alt="CQP"></p>
 <p>这种自适应执行策略 需要 Pipeline 引擎具有动态修改拓扑结构的能力。</p>
-<h3 id="基层决策：算子内部自适应">基层决策：算子内部自适应</h3>
+<h3 id="基层决策-算子内部自适应">基层决策：算子内部自适应</h3>
 <p>自适应执行的最细粒度便是一个算子内部的自适应执行，这里会介绍下最常见的 Scan 索引的自适应选择，谓词顺序选择的自适应，以及 Join 算子的自适应。</p>
 <h4 id="scan-索引的自适应选择">Scan 索引的自适应选择</h4>
 <p>在传统 TP 数据库，Scan 索引的选择是由优化器决定的，和 join reorder 结合后，会导致搜索空间的指数级膨胀，为了避免这个问题，在 StarRocks 中，我们在优化器中不考虑 Scan 索引的选择，而是将 Scan 索引的选择交给了存储层，在存储层 Scan 时，我们会对 Bitmap 索引，延迟物化等策略进行了自适应处理，假如一个 Bitmap 索引的选择度很低，我们就会使用 bitmap 索引，否则就不会使用 Bitmap 索引。</p>
@@ -215,46 +244,62 @@
 <li>Adaptive Query Processing : <a href="https://www.researchgate.net/publication/236345471_Adaptive_Query_Processing">https://www.researchgate.net/publication/236345471_Adaptive_Query_Processing</a></li>
 </ol>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=638b5b3fc6bc44d132fac294
-                 data-title=数据库之美 —— 查询自适应执行
-                 data-url=adaptive>
-            </div>
+          <div class="ds-thread" data-thread-key=638b5b3fc6bc44d132fac294 data-title=数据库之美 —— 查询自适应执行 data-url=adaptive>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

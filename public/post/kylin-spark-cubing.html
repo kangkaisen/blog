@@ -1,62 +1,93 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|Kylin 2.0 Spark Cubing 优化改进</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> Kylin 2.0 Spark Cubing 优化改进</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2017-07-02</p>
-            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>Kylin 2.0 Spark Cubing 优化改进</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2017-07-02</p>
+          <p>
+            分类:
+            <a href="../tag/OLAP.html" target="_blank"
+              >OLAP</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
-<li><a href="#spark-cubing-简介">Spark Cubing 简介</a></li>
-<li><a href="#spark-cubing-访问-kerberos认证的-hbase-解1">Spark Cubing 访问 Kerberos认证的 HBase 解1</a></li>
+<ul>
+<li><a href="#spark-cubing-简介">Spark Cubing 简介</a><li><a href="#spark-cubing-访问-kerberos认证的-hbase-解1">Spark Cubing 访问 Kerberos认证的 HBase 解1</a></li>
 <li><a href="#spark-cubing-访问-kerberos认证的-hbase-解2">Spark Cubing 访问 Kerberos认证的 HBase 解2</a></li>
 <li><a href="#spark-cubing-参数配置">Spark Cubing 参数配置</a></li>
-<li><a href="#spark-cubing-的构建性能">Spark Cubing 的构建性能</a></li>
-<li><a href="#spark-cubing-的资源消耗">Spark Cubing 的资源消耗</a></li>
+<li><a href="#spark-cubing-的构建性能">Spark Cubing 的构建性能</a><li><a href="#spark-cubing-的资源消耗">Spark Cubing 的资源消耗</a></li>
 <li><a href="#spark-cubing-的优缺点">Spark Cubing 的优缺点</a></li>
 <li><a href="#spark-cubing-的适用场景">Spark Cubing 的适用场景</a></li>
 <li><a href="#spark-cubing-字典加载优化">Spark Cubing 字典加载优化</a></li>
 <li><a href="#spark-学习资料推荐">Spark 学习资料推荐</a></li>
 <li><a href="#总结">总结</a></li>
+</li>
+</li>
+</ul>
 </ul>
 <!-- toc stop -->
+<!-- toc -->
 <p>Kylin 2.0 引入了Spark Cubing beta版本，本文主要介绍我是如何让 Spark Cubing 支持 启用Kerberos的HBase集群，再介绍下Spark Cubing的性能测试结果和适用场景。</p>
 <h3 id="spark-cubing-简介">Spark Cubing 简介</h3>
 <p>在简介Spark Cubing之前，我简介下MapReduce Batch Cubing。所谓的MapReduce Batch Cubing就是利用MapReduce 计算引擎 批量计算Cube，其输入是Hive表，输出是HBase的KeyValue，整个构建过程主要包含以下6步：</p>
@@ -77,7 +108,7 @@
 <p>Spark 计算Cuboid只会用1个 Application计算：
 <img src="http://kylin.apache.org/images/blog/spark-cubing-layer.png" alt="此处输入图片的描述"></p>
 <p>Spark Cubing的核心实现类是<code>SparkCubingByLayer</code>。</p>
-<h4 id="为什么目前只有计算cuboid这一步用spark计算？">为什么目前只有计算Cuboid这一步用Spark计算？</h4>
+<h4 id="为什么目前只有计算cuboid这一步用spark计算">为什么目前只有计算Cuboid这一步用Spark计算？</h4>
 <p>个人认为主要有以下两点：</p>
 <ol>
 <li>实现并不复杂。</li>
@@ -208,46 +239,62 @@ kylin.engine.spark.rdd-partition-cut-mb=100
 <h3 id="总结">总结</h3>
 <p>用HDFSResourceStore替换HBaseResourceStore后，Spark Cubing已经具备了在启用Kerberos的HBase集群环境下大规模使用的基础。后续我将开放Spark Cubing功能让感兴趣的用户使用。<strong>最后，十分感谢我们团队Spark 小伙伴的给力支持。</strong></p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=595a09ffde02721206aa7bb2
-                 data-title=Kylin 2.0 Spark Cubing 优化改进
-                 data-url=kylin-spark-cubing>
-            </div>
+          <div class="ds-thread" data-thread-key=595a09ffde02721206aa7bb2 data-title=Kylin 2.0 Spark Cubing 优化改进 data-url=kylin-spark-cubing>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

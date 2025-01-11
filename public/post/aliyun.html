@@ -1,86 +1,117 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|阿里云ECS的Hadoop2.6.0|Zookeeper3.4.6|Hbase0.98.13集群搭建</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> 阿里云ECS的Hadoop2.6.0|Zookeeper3.4.6|Hbase0.98.13集群搭建</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2016-04-10</p>
-            <p>分类: <a href="../tag/HBase.html" target="_blank" >HBase</a></p>
-            <hr/>
-            <p>今天小梦从阿里云ECS裸机开始给大家一步一步演示一下Hadoop2.6.0|Zookeeper3.4.6|Hbase；0.98.13集群搭建。</p>
-<!-- toc -->
+          <h1>阿里云ECS的Hadoop2.6.0|Zookeeper3.4.6|Hbase0.98.13集群搭建</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2016-04-10</p>
+          <p>
+            分类:
+            <a href="../tag/HBase.html" target="_blank"
+              >HBase</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
-<li><a href="#1修改hostname">1：修改hostname</a></li>
-<li><a href="#2挂载数据盘">2:挂载数据盘</a></li>
-<li><a href="#3修改etchosts">3：修改/etc/hosts</a></li>
-<li><a href="#4ssh免密码登录">4:SSH免密码登录</a></li>
-<li><a href="#5安装jdk17">5:安装JDK1.7</a></li>
-<li><a href="#6安装maven只在kks1节点上安装即可">6:安装maven:(只在kks1节点上安装即可)</a></li>
-<li><a href="#7下载hadoop">7：下载Hadoop</a></li>
-<li><a href="#8修改hadoop-envsh">8:修改hadoop-env.sh</a></li>
-<li><a href="#9core-sitexml">9:core-site.xml</a></li>
-<li><a href="#10hdfs-sitexml">10:hdfs-site.xml</a></li>
-<li><a href="#11yarn-sitexml">11:yarn-site.xml</a></li>
-<li><a href="#12mapred-sitexml">12:mapred-site.xml</a></li>
-<li><a href="#13slaves">13:slaves</a></li>
-<li><a href="#14fairschedulerxml">14:fairscheduler.xml</a></li>
-<li><a href="#15yarn-envsh">15:yarn-env.sh</a></li>
-<li><a href="#16复制到其余主机">16:复制到其余主机</a></li>
-<li><a href="#17启动集群">17：启动集群</a></li>
-<li><a href="#18zookeeper安装">18：zookeeper安装</a></li>
-<li><a href="#19在data目录下创建myid文件">19:在data目录下创建myid文件</a></li>
-<li><a href="#20在conf目录下建立zoocfg文件">20：在conf目录下建立zoo.cfg文件</a></li>
-<li><a href="#21在每个节点上启动zookeeper">21：在每个节点上启动zookeeper</a></li>
-<li><a href="#22hbase安装">22：Hbase安装</a></li>
-<li><a href="#23hbase-envsh">23：hbase-env.sh</a></li>
-<li><a href="#24hbase-sitexml">24：hbase-site.xml</a></li>
-<li><a href="#25regionservers">25：regionservers</a></li>
-<li><a href="#26复制到其他节点">26：复制到其他节点</a></li>
-<li><a href="#27启动集群">27：启动集群</a></li>
+<ul>
+<li><a href="#1-修改hostname">1：修改hostname</a></li>
+<li><a href="#2-挂载数据盘">2:挂载数据盘</a></li>
+<li><a href="#3-修改-etc-hosts">3：修改/etc/hosts</a></li>
+<li><a href="#4-ssh免密码登录">4:SSH免密码登录</a></li>
+<li><a href="#5-安装jdk1-7">5:安装JDK1.7</a></li>
+<li><a href="#6-安装maven-只在kks1节点上安装即可">6:安装maven:(只在kks1节点上安装即可)</a></li>
+<li><a href="#7-下载hadoop">7：下载Hadoop</a></li>
+<li><a href="#8-修改hadoop-env-sh">8:修改hadoop-env.sh</a></li>
+<li><a href="#9-core-site-xml">9:core-site.xml</a></li>
+<li><a href="#10-hdfs-site-xml">10:hdfs-site.xml</a></li>
+<li><a href="#11-yarn-site-xml">11:yarn-site.xml</a></li>
+<li><a href="#12-mapred-site-xml">12:mapred-site.xml</a></li>
+<li><a href="#13-slaves">13:slaves</a></li>
+<li><a href="#14-fairscheduler-xml">14:fairscheduler.xml</a></li>
+<li><a href="#15-yarn-env-sh">15:yarn-env.sh</a></li>
+<li><a href="#16-复制到其余主机">16:复制到其余主机</a></li>
+<li><a href="#17-启动集群">17：启动集群</a></li>
+<li><a href="#18-zookeeper安装">18：zookeeper安装</a></li>
+<li><a href="#19-在data目录下创建myid文件">19:在data目录下创建myid文件</a></li>
+<li><a href="#20-在conf目录下建立zoo-cfg文件">20：在conf目录下建立zoo.cfg文件</a></li>
+<li><a href="#21-在每个节点上启动zookeeper">21：在每个节点上启动zookeeper</a></li>
+<li><a href="#22-hbase安装">22：Hbase安装</a></li>
+<li><a href="#23-hbase-env-sh">23：hbase-env.sh</a></li>
+<li><a href="#24-hbase-site-xml">24：hbase-site.xml</a></li>
+<li><a href="#25-regionservers">25：regionservers</a></li>
+<li><a href="#26-复制到其他节点">26：复制到其他节点</a></li>
+<li><a href="#27-启动集群">27：启动集群</a></li>
+</ul>
 </ul>
 <!-- toc stop -->
+<p>今天小梦从阿里云ECS裸机开始给大家一步一步演示一下Hadoop2.6.0|Zookeeper3.4.6|Hbase；0.98.13集群搭建。
+<!-- toc --></p>
 <p>我的集群情况如下：
 依次是公网IP，内网IP，hostname，HDFS节点，HBase节点，ZK，Yarn节点</p>
 <pre><code>120.24.83.53  10.169.132.145 kks1 namenode hmatser zookeeper ResourceManager
 120.24.50.76  10.45.162.55 kks2  datanode  regionserver zookeeper  NodeManager
 120.24.50.27 10.45.162.0  kks3   datanode regionserver zookeeper    NodeManager SecondaryNameNode
 120.24.51.109  10.45.165.59 kks4 datanode regionserver NodeManager
-</code></pre><h3 id="1：修改hostname">1：修改hostname</h3>
+</code></pre><h3 id="1-修改hostname">1：修改hostname</h3>
 <pre><code>vim /etc/sysconfig/network
 修改：HOSTNAME=kks1
 sudo hostname kks1
@@ -96,7 +127,7 @@ mkfs.ext3 /dev/xvdb1
 echo &#39;/dev/xvdb1 /mnt ext3 defaults 0 0&#39; &amp;gt;&amp;gt; /etc/fstab
 mount -a
 df -h
-</code></pre><h3 id="3：修改-etc-hosts">3：修改/etc/hosts</h3>
+</code></pre><h3 id="3-修改-etc-hosts">3：修改/etc/hosts</h3>
 <pre><code>vim /etc/hosts
 10.169.132.145 kks1
 10.45.162.55 kks2
@@ -118,29 +149,29 @@ scp ~/.ssh/id_rsa.pub root@kks1:.ssh/id_rsa.pub
 # touch /root/.ssh/authorized_keys (如果已经存在这个文件, 跳过这条)
 # chmod 600 ~/.ssh/authorized_keys (# 注意： 必须将~/.ssh/authorized_keys的权限改为600, 该文件用于保存ssh客户端生成的公钥，可以修改服务器的ssh服务端配置文件/etc/ssh/sshd_config来指定其他文件名）
 # cat /root/.ssh/id_rsa.pub &amp;gt;&amp;gt; /root/.ssh/authorized_keys (将id_rsa.pub的内容追加到 authorized_keys 中, 注意不要用 &amp;gt; ，否则会清空原有的内容，使其他人无法使用原有的密钥登录)
-</code></pre><h3 id="5-安装jdk17">5:安装JDK1.7</h3>
+</code></pre><h3 id="5-安装jdk1-7">5:安装JDK1.7</h3>
 <pre><code>yum install java-1.7.0-openjdk-devel.x86_64 -y
-</code></pre><h3 id="6-安装maven-只在kks1节点上安装即可-">6:安装maven:(只在kks1节点上安装即可)</h3>
+</code></pre><h3 id="6-安装maven-只在kks1节点上安装即可">6:安装maven:(只在kks1节点上安装即可)</h3>
 <pre><code>wget http://ftp.tsukuba.wide.ad.jp/software/apache/maven/maven-3/3.3.1/binaries/apache-maven-3.3.1-bin.tar.gz
 maven下载到home目录下，则运行：
 echo export PATH=&#39;$PATH&#39;:/home/maven/bin &amp;gt;&amp;gt; /etc/profile
 配置好环境变量后，运行：source /etc/profile
 运行：mvn --version，如系统打印maven版本信息，则配置成功
-</code></pre><h3 id="7：下载hadoop">7：下载Hadoop</h3>
+</code></pre><h3 id="7-下载hadoop">7：下载Hadoop</h3>
 <pre><code>wget http://apache.cs.utah.edu/hadoop/common/hadoop-2.6.0/hadoop-2.6.0.tar.gz
-</code></pre><h3 id="8-修改hadoop-envsh">8:修改hadoop-env.sh</h3>
+</code></pre><h3 id="8-修改hadoop-env-sh">8:修改hadoop-env.sh</h3>
 <pre><code>export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.79.x86_64
 export HADOOP_PID_DIR=/var/hadoop/pids
 </code></pre><p><strong>注1：为了避免以后 sbin/stop-dfs.sh等命令失效，强烈建议设置HADOOP_PID_DIR</strong></p>
 <p><strong>注2：以后所有配置的目录尽量在启动集群前都建立好。</strong></p>
-<h3 id="9-core-sitexml">9:core-site.xml</h3>
+<h3 id="9-core-site-xml">9:core-site.xml</h3>
 <pre><code>&lt;configuration&gt;
 &lt;property&gt;
 &lt;name&gt;fs.defaultFS&lt;/name&gt;
 &lt;value&gt;hdfs://kks1:8020&lt;/value&gt;
 &lt;/property&gt;
 &lt;/configuration&gt;
-</code></pre><h3 id="10-hdfs-sitexml">10:hdfs-site.xml</h3>
+</code></pre><h3 id="10-hdfs-site-xml">10:hdfs-site.xml</h3>
 <pre><code>&lt;configuration&gt;
 
 &lt;property&gt;
@@ -159,7 +190,7 @@ export HADOOP_PID_DIR=/var/hadoop/pids
 &lt;/property&gt;
 
 &lt;/configuration&gt;
-</code></pre><h3 id="11-yarn-sitexml">11:yarn-site.xml</h3>
+</code></pre><h3 id="11-yarn-site-xml">11:yarn-site.xml</h3>
 <pre><code>&lt;configuration&gt;
 
 &lt;!-- Site specific YARN configuration properties --&gt;
@@ -248,7 +279,7 @@ export HADOOP_PID_DIR=/var/hadoop/pids
 &lt;value&gt;mapreduce_shuffle&lt;/value&gt;
 &lt;/property&gt;
 &lt;/configuration&gt;
-</code></pre><h3 id="12-mapred-sitexml">12:mapred-site.xml</h3>
+</code></pre><h3 id="12-mapred-site-xml">12:mapred-site.xml</h3>
 <pre><code>&lt;configuration&gt;
 
 &lt;!-- MR YARN Application properties --&gt;
@@ -276,7 +307,7 @@ export HADOOP_PID_DIR=/var/hadoop/pids
 <pre><code>kks2
 kks3
 kks4
-</code></pre><h3 id="14-fairschedulerxml">14:fairscheduler.xml</h3>
+</code></pre><h3 id="14-fairscheduler-xml">14:fairscheduler.xml</h3>
 <pre><code>&lt;?xml version=&quot;1.0&quot;?&gt;
 &lt;allocations&gt;
 
@@ -300,13 +331,13 @@ kks4
                   &lt;/queue&gt;
 
 &lt;/allocations&gt;
-</code></pre><h3 id="15-yarn-envsh">15:yarn-env.sh</h3>
+</code></pre><h3 id="15-yarn-env-sh">15:yarn-env.sh</h3>
 <pre><code>export YARN_PID_DIR=/var/hadoop/pids
 </code></pre><h3 id="16-复制到其余主机">16:复制到其余主机</h3>
 <pre><code>scp -r hadoop root@kks2:/home
 scp -r hadoop root@kks3:/home
 scp -r hadoop root@kks4:/home
-</code></pre><h3 id="17：启动集群">17：启动集群</h3>
+</code></pre><h3 id="17-启动集群">17：启动集群</h3>
 <pre><code>注意：所有操作均在Hadoop部署目录下进行。
 
 在kks1上，对其进行格式化，并启动：
@@ -330,7 +361,7 @@ sbin/start-dfs.sh
 sbin/start-yarn.sh
 
 sbin/stop-yarn.sh
-</code></pre><h3 id="18：zookeeper安装">18：zookeeper安装</h3>
+</code></pre><h3 id="18-zookeeper安装">18：zookeeper安装</h3>
 <pre><code>wget http://mirrors.cnnic.cn/apache/zookeeper/zookeeper-3.4.6/zookeeper-3.4.6.tar.gz
 
 tar -zvxf zookeeper-..jar
@@ -339,7 +370,7 @@ mkdir data
 mkdir datalog
 </code></pre><h3 id="19-在data目录下创建myid文件">19:在data目录下创建myid文件</h3>
 <pre><code>在kks1,kks2,kks3上依次为1,2,3。
-</code></pre><h3 id="20：在conf目录下建立zoocfg文件">20：在conf目录下建立zoo.cfg文件</h3>
+</code></pre><h3 id="20-在conf目录下建立zoo-cfg文件">20：在conf目录下建立zoo.cfg文件</h3>
 <pre><code># The number of milliseconds of each tick
 tickTime=2000
 # The number of ticks that the initial
@@ -372,18 +403,18 @@ clientPort=2181
 server.1=kks1:2888:3888
 server.2=kks2:2888:3888
 server.3=kks3:2888:3888
-</code></pre><h3 id="21：在每个节点上启动zookeeper">21：在每个节点上启动zookeeper</h3>
+</code></pre><h3 id="21-在每个节点上启动zookeeper">21：在每个节点上启动zookeeper</h3>
 <pre><code>bin/zkServer.sh stop
 bin/zkServer.sh start
 bin/zkServer.sh status 查看节点状态
-</code></pre><h3 id="22：hbase安装">22：Hbase安装</h3>
+</code></pre><h3 id="22-hbase安装">22：Hbase安装</h3>
 <pre><code>wget http://mirrors.koehn.com/apache/hbase/0.98.13/hbase-0.98.13-hadoop2-bin.tar.gz
-</code></pre><h3 id="23：hbase-envsh">23：hbase-env.sh</h3>
+</code></pre><h3 id="23-hbase-env-sh">23：hbase-env.sh</h3>
 <pre><code>vim hbase-env.sh
 export HBASE_MANAGES_ZK=false
 export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.79.x86_64
 export HBASE_PID_DIR=/var/hadoop/pids
-</code></pre><h3 id="24：hbase-sitexml">24：hbase-site.xml</h3>
+</code></pre><h3 id="24-hbase-site-xml">24：hbase-site.xml</h3>
 <pre><code>&lt;configuration&gt;
 &lt;property&gt;
 &lt;name&gt;hbase.rootdir&lt;/name&gt;
@@ -410,58 +441,74 @@ export HBASE_PID_DIR=/var/hadoop/pids
    &lt;value&gt;/home/hbase/data&lt;/value&gt;
    &lt;/property&gt;
 &lt;/configuration&gt;
-</code></pre><h3 id="25：regionservers">25：regionservers</h3>
+</code></pre><h3 id="25-regionservers">25：regionservers</h3>
 <pre><code>kks2
 kks3
 kks4
-</code></pre><h3 id="26：复制到其他节点">26：复制到其他节点</h3>
+</code></pre><h3 id="26-复制到其他节点">26：复制到其他节点</h3>
 <pre><code>scp -r hbase root@kks4:/home
-</code></pre><h3 id="27：启动集群">27：启动集群</h3>
+</code></pre><h3 id="27-启动集群">27：启动集群</h3>
 <pre><code>bin/start-hbase.sh
 
 bin/stop-hbase.sh
 </code></pre><p>至此HBase集群搭建完毕。</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5871f116d2f092c392ca4d4c
-                 data-title=阿里云ECS的Hadoop2.6.0|Zookeeper3.4.6|Hbase0.98.13集群搭建
-                 data-url=aliyun>
-            </div>
+          <div class="ds-thread" data-thread-key=5871f116d2f092c392ca4d4c data-title=阿里云ECS的Hadoop2.6.0|Zookeeper3.4.6|Hbase0.98.13集群搭建 data-url=aliyun>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

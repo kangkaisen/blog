@@ -1,113 +1,184 @@
-<!DOCTYPE HTML>
-<html>
-<head>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <link rel="shortcut icon" href="/images/favicon.ico">
-    <link rel="stylesheet" href="/css/bootstrap.css" type="text/css" />
-    <link rel="stylesheet" href="/css/home.css" type="text/css" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <link rel="shortcut icon" href="/images/favicon.ico" />
+    <link rel="preload" href="/css/bootstrap.css" as="style" />
+    <link rel="preload" href="/css/home.css" as="style" />
+    <link rel="stylesheet" href="/css/bootstrap.css" />
+    <link rel="stylesheet" href="/css/home.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>编程小梦|康凯森的技术博客</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 100px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 100px">
+      <div class="container center-block">
         <div class="col-md-2"></div>
         <div class="col-md-8 col-sm-12">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Blog</h3>
-                </div>
-                <ul class="list-group">
-                    
-                    <li class="list-group-item title"><a href="../post/java-concurrent-share-object.html">Java并发编程2：对象的共享</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/java-effective-java.html">读书笔记——《Effective Java》</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/java-concurrent-thread-safe.html">Java并发编程1：线程安全性</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/kylin-job.html"> Apache Kylin Job 生成和调度详解</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/kylin-dimension.html">Apache Kylin 维度优化指南</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/kylin-cube.html">Apache Kylin Cube 构建原理</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/booklist.html">我的书单</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/kylin-query-metrics.html">Apache Kylin 查询指标</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/intelligence-time.html">读书笔记——《智能时代》</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/binarysearch.html"> 算法之美——二分法</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/mayun.html">读书笔记——《马云，我的世界从不言败》</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/lru-lfu.html">LRU和LFU缓存置换算法</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/hbase-monitor.html">HBase 集群监控系统构建</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/hbase-bulkload.html">Hive 数据 bulkload 导入 HBase</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/xitongsheji1.html">系统设计方法论</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/hbase-hive.html">HBase 数据导入Hive</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/hbase-mr.html">Mapreduce导入导出Hbase0.98代码示例</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/aliyun.html">阿里云ECS的Hadoop2.6.0|Zookeeper3.4.6|Hbase0.98.13集群搭建</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/sqoop.html">Sqoop从Hive导入Mysql失败解决方案</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/fenbushi.html">读书笔记——《大规模分布式存储系统原理解析和架构实战》</a></li>
-                    
-                </ul>
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">Blog</h3>
             </div>
-            <nav>
-                <ul class="pager">
-                    
-                    <li class="previous"><a  href="../page/3.html">上一页</a></li>
-                    
-                    
-                    <li class="next"><a  href="../page/5.html">下一页</a></li>
-                    
-                </ul>
-            </nav>
+            <ul class="list-group">
+              
+              <li class="list-group-item title">
+                <a href="../post/java-concurrent-share-object.html">Java并发编程2：对象的共享</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/java-effective-java.html">读书笔记——《Effective Java》</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/java-concurrent-thread-safe.html">Java并发编程1：线程安全性</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/kylin-job.html"> Apache Kylin Job 生成和调度详解</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/kylin-dimension.html">Apache Kylin 维度优化指南</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/kylin-cube.html">Apache Kylin Cube 构建原理</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/booklist.html">我的书单</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/kylin-query-metrics.html">Apache Kylin 查询指标</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/intelligence-time.html">读书笔记——《智能时代》</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/binarysearch.html"> 算法之美——二分法</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/mayun.html">读书笔记——《马云，我的世界从不言败》</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/lru-lfu.html">LRU和LFU缓存置换算法</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/hbase-monitor.html">HBase 集群监控系统构建</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/hbase-bulkload.html">Hive 数据 bulkload 导入 HBase</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/xitongsheji1.html">系统设计方法论</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/hbase-hive.html">HBase 数据导入Hive</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/hbase-mr.html">Mapreduce导入导出Hbase0.98代码示例</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/aliyun.html">阿里云ECS的Hadoop2.6.0|Zookeeper3.4.6|Hbase0.98.13集群搭建</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/sqoop.html">Sqoop从Hive导入Mysql失败解决方案</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/fenbushi.html">读书笔记——《大规模分布式存储系统原理解析和架构实战》</a>
+              </li>
+              
+            </ul>
+          </div>
+          <nav>
+            <ul class="pager">
+              
+              <li class="previous">
+                <a href="../page/3.html">上一页</a>
+              </li>
+               
+              <li class="next">
+                <a href="../page/5.html">下一页</a>
+              </li>
+              
+            </ul>
+          </nav>
         </div>
         <div class="col-md-2"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-
-</body>
+      })();
+    </script>
+  </body>
 </html>

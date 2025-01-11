@@ -1,48 +1,77 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|Sqoop从Hive导入Mysql失败解决方案</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> Sqoop从Hive导入Mysql失败解决方案</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2016-04-10</p>
-            <p>分类: <a href="../tag/BigData.html" target="_blank" >BigData</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>Sqoop从Hive导入Mysql失败解决方案</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2016-04-10</p>
+          <p>
+            分类:
+            <a href="../tag/BigData.html" target="_blank"
+              >BigData</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
+<ul>
 <ul>
 <li><a href="#测试sqoop是否可以连接到mysql">测试Sqoop是否可以连接到mysql</a></li>
 <li><a href="#用sqoop将mysql数据导入hdfs">用Sqoop将mysql数据导入HDFS</a></li>
@@ -51,7 +80,9 @@
 <li><a href="#sqoop从hive导入mysql注意事项">Sqoop从Hive导入mysql注意事项</a></li>
 <li><a href="#sqoop从hive导入mysql失败终极解决方案">Sqoop从Hive导入mysql失败终极解决方案</a></li>
 </ul>
+</ul>
 <!-- toc stop -->
+<!-- toc -->
 <h3 id="测试sqoop是否可以连接到mysql">测试Sqoop是否可以连接到mysql</h3>
 <pre><code>sqoop  list-databases --connect jdbc:mysql://120.25.122.238:3306/  --username root --password root
 </code></pre><h3 id="用sqoop将mysql数据导入hdfs">用Sqoop将mysql数据导入HDFS</h3>
@@ -109,55 +140,71 @@ id,name列
 </code></pre><p>我们使用<code>\t</code>分割，所以sqoop把 <code>什么是OSI参考模型？各层的主要功能是什么？]</code> 当做 int类型解析，进而失败。</p>
 <h3 id="sqoop从hive导入mysql失败终极解决方案">Sqoop从Hive导入mysql失败终极解决方案</h3>
 <p>这个时候，我们可以修改并重新编译sqoop导入mysql解析规则的java文件。每次通过sqoop导入MySql的时，都会在sqoop目录生成一个以MySql表命名的.java文件，然后打成JAR包，给sqoop提交给hadoop 的MR来解析Hive表中的数据。那可以根据报的错误，找到对应的行，改写该文件，编译，重新打包，sqoop可以通过 -jar-file ，–class-name 组合让我们指定运行自己的jar包中的某个class。</p>
-<h4 id="编译打包方法如下：">编译打包方法如下：</h4>
+<h4 id="编译打包方法如下">编译打包方法如下：</h4>
 <pre><code>javac -cp ./:/home/sqoop/sqoop-1.4.6.jar:/home/hadoop/share/hadoop/common/hadoop-common-2.6.0.jar:/home/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-core-2.6.0.jar sougou.java
 jar -cf sougou.jar sougou.class
-</code></pre><h4 id="运行命令如下：">运行命令如下：</h4>
+</code></pre><h4 id="运行命令如下">运行命令如下：</h4>
 <pre><code>//hive导入mysql：
 
 sqoop export -D sqoop.export.records.per.statement=10 --connect jdbc:mysql://kks1:3306/sougou --username hive --password hive --table sougou --fields-terminated-by &#39;\t&#39; --export-dir &quot;/hivedata/warehouse/sougou.db/sougou/month=6/week=1/day=1&quot; --null-string &#39;\\N&#39; --null-non-string &#39;\\N&#39; --jar-file /home/sqoop/sougou.jar --class-name sougou;
 </code></pre><p><code>我们通过修改相关的java文件不仅可以解决各种解析异常，也可以实现自定义多字节列分隔符的功能。</code></p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5871f181d2f092c392ca4d4d
-                 data-title=Sqoop从Hive导入Mysql失败解决方案
-                 data-url=sqoop>
-            </div>
+          <div class="ds-thread" data-thread-key=5871f181d2f092c392ca4d4d data-title=Sqoop从Hive导入Mysql失败解决方案 data-url=sqoop>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

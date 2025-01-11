@@ -1,59 +1,90 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦| 读书笔记——《深入浅出面向对象分析和设计》</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1>  读书笔记——《深入浅出面向对象分析和设计》</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2016-11-26</p>
-            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1> 读书笔记——《深入浅出面向对象分析和设计》</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2016-11-26</p>
+          <p>
+            分类:
+            <a href="../tag/笔记.html" target="_blank"
+              >笔记</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
+<ul>
 <ul>
 <li><a href="#一-写文章的技巧">一 写文章的技巧</a></li>
 <li><a href="#二-什么是伟大的软件">二 什么是伟大的软件？</a></li>
 <li><a href="#三-如何设计伟大软件">三 如何设计伟大软件？</a></li>
-<li><a href="#四-需求是什么">四 需求是什么？</a></li>
-<li><a href="#五-良好的设计">五 良好的设计</a></li>
-<li><a href="#六-架构设计">六 架构设计</a></li>
-<li><a href="#七-设计原则">七 设计原则</a></li>
+<li><a href="#四-需求是什么">四 需求是什么？</a><li><a href="#五-良好的设计">五 良好的设计</a></li>
+<li><a href="#六-架构设计">六 架构设计</a><li><a href="#七-设计原则">七 设计原则</a></li>
 <li><a href="#八-迭代和测试">八 迭代和测试</a></li>
+</li>
+</li>
+</ul>
 </ul>
 <!-- toc stop -->
+<!-- toc -->
 <h3 id="一-写文章的技巧">一 写文章的技巧</h3>
 <ol>
 <li><p>视觉化——图像优于文字</p>
@@ -71,25 +102,25 @@
 <li>让读者集中注意力</li>
 <li>拨动读者的心弦</li>
 </ol>
-<h3 id="二-什么是伟大的软件？">二 什么是伟大的软件？</h3>
+<h3 id="二-什么是伟大的软件">二 什么是伟大的软件？</h3>
 <ol>
 <li>伟大软件必须让客户满意，满足客户的需求。</li>
 <li>伟大软件是设计良好，编码良好并且易于维护、重用及扩展。</li>
 </ol>
-<h3 id="三-如何设计伟大软件？">三 如何设计伟大软件？</h3>
+<h3 id="三-如何设计伟大软件">三 如何设计伟大软件？</h3>
 <ol>
 <li>确认软件做客户要他做的事。</li>
 <li>运用基本的OO原则来增加软件的灵活性。</li>
 <li>努力实现可维护、可重用的设计。</li>
 </ol>
-<h3 id="四-需求是什么？">四 需求是什么？</h3>
+<h3 id="四-需求是什么">四 需求是什么？</h3>
 <p>It&#39;s a <strong>specific thing</strong> your <strong>system</strong> has to <strong>do</strong> to work <strong>correctly</strong>.</p>
 <p>需求是系统为了正确运作所必须做的事情。</p>
 <p>取得好需求的最佳方式就是了解系统应该做什么。</p>
 <p><strong>客户永远是正确的。需求永远在变化。</strong></p>
 <p>需求的变更有时会暴露出关于系统你所不知的问题。</p>
 <p>需求的变更是经常的，随着你每次对需求的实现，系统总是随之改善。</p>
-<h4 id="41-用例是什么？">4.1  用例是什么？</h4>
+<h4 id="4-1-用例是什么">4.1  用例是什么？</h4>
 <p>A use case describes <strong>what</strong> your system <strong>does</strong> to accomplish a <strong>partilar</strong> <strong>customer goal</strong>.</p>
 <p>用例是把系统描述为实现特定用户目标要做的事情。</p>
 <p>好的用例以<strong>容易理解</strong>的语言，<strong>清楚</strong>且<strong>准确</strong>地解释了系统在做什么。</p>
@@ -100,7 +131,7 @@
 <li>起点和终点</li>
 <li>外部启动者</li>
 </ul>
-<h4 id="42-文本分析">4.2 文本分析</h4>
+<h4 id="4-2-文本分析">4.2 文本分析</h4>
 <p>查看用例中<strong>名词和动词</strong>以整理出<strong>类与方法</strong>的动作叫做文本分析。</p>
 <h3 id="五-良好的设计">五 良好的设计</h3>
 <ol>
@@ -127,7 +158,7 @@
 <li>有时候，编写伟大代码的最佳方式，是在<strong>允许的情况下</strong>将程序代码编写<strong>往后延</strong>。</li>
 <li>伟大软件不只是<strong>伟大程序代码</strong>。</li>
 </ol>
-<h4 id="什么是架构上重要的事情？">什么是架构上重要的事情？</h4>
+<h4 id="什么是架构上重要的事情">什么是架构上重要的事情？</h4>
 <ol>
 <li>它是系统本质的一部分吗？ 系统的本质是指在最基本的层次上系统是什么。</li>
 <li>这他妈的是什么意思？</li>
@@ -153,46 +184,62 @@
 <p><strong>契约式编程</strong>：你正在与客户的程序代码合作，以对你将如何处理有问题的状况达成协议。</p>
 <p><strong>防御式编程</strong>：确保客户获得“安全的”响应，不管客户要什么。</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5871fa5fd2f092c392ca4d61
-                 data-title= 读书笔记——《深入浅出面向对象分析和设计》
-                 data-url=head-first-object>
-            </div>
+          <div class="ds-thread" data-thread-key=5871fa5fd2f092c392ca4d61 data-title= 读书笔记——《深入浅出面向对象分析和设计》 data-url=head-first-object>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

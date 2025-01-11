@@ -2,7 +2,6 @@ var express = require('express');
 var auth = require('./lib/auth');
 var post = require('./controllers/post');
 var user = require('./controllers/user');
-var git = require('./controllers/git');
 var router = express.Router();
 
 router.get('/blog',  auth.userRequired, post.getAll);                     //获取博客
@@ -23,6 +22,4 @@ router.get('/admin/blog', user.postCreate);
 router.get('/admin', user.admin);
 router.post('/signin', user.signin);
 
-
-router.post('/api/github', git.postHook);
 module.exports = router;

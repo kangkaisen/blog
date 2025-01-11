@@ -4,8 +4,8 @@
     <title>编程小梦</title>
     <description>编程小梦|康凯森的技术博客</description>
     <link>https://blog.bcmeng.com/</link>
-    <lastBuildDate>Fri, 30 Jun 2023 23:26:27 GMT</lastBuildDate>
-    <pubDate>Fri, 30 Jun 2023 23:26:27 GMT</pubDate>
+    <lastBuildDate>Sat, 11 Jan 2025 08:19:18 GMT</lastBuildDate>
+    <pubDate>Sat, 11 Jan 2025 08:19:18 GMT</pubDate>
     <item>
       <title>康凯森的公开分享</title>
       <description>&lt;!-- toc --&gt;
@@ -465,6 +465,11 @@ https://zh.mweb.im/
 
 ![mweb](media/15436424734179/mweb.png)
 
+## 科学上网 —— Fastlink
+
+自己已经使用一年多了，比较快速稳定，尤其是不限制客户端数目，使用起来比较方便。
+
+[fastlink](https://v02.fl-aff.com/auth/register?code=Muo0) 
 
 ## 电子书阅读 ———— 得到
 https://www.dedao.cn/
@@ -477,11 +482,6 @@ https://www.processon.com/
 我用了很多年了，感觉画图比较方便，一开始吸引我的主要是大量模板，可以基于模板快速做图，然后就是做图本身比较简单。
 
 ![Processon](media/15436424734179/Processon.png)
-
-## VPN 工具 ———— dlercloud
-https://dlercloud.com/
-
-客户端可以使用 Clash for Windows，使用很多年了，比较稳定。
 
 ## 论文搜索软件 ———— Sci-Hub
 https://sci-hub.se/
@@ -501,9 +501,7 @@ https://unbug.github.io/codelf/
 ## 文件格式转换工具 ———— cloudconvert
 https://cloudconvert.com/
 
-可以支持多种文件格式的相互转换，之前用过几次。
-
-## Markdown ——</description>
+可以支持多种文件</description>
       <link>https://blog.bcmeng.com/post/tools.html</link>
       <pubDate>2022-11-20</pubDate>
     </item>

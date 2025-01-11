@@ -1,48 +1,76 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|基于Druid的Kylin存储引擎实践</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> 基于Druid的Kylin存储引擎实践</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2018-08-11</p>
-            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>基于Druid的Kylin存储引擎实践</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2018-08-11</p>
+          <p>
+            分类:
+            <a href="../tag/OLAP.html" target="_blank"
+              >OLAP</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
 <li><a href="#kylin-在美团点评的服务现状">Kylin 在美团点评的服务现状</a></li>
 <li><a href="#kylin-on-hbase-问题">Kylin On HBase 问题</a></li>
@@ -54,7 +82,6 @@
 <li><a href="#kylin-on-druid-poc">Kylin On Druid POC</a></li>
 <li><a href="#why-kylin-on-druid">Why Kylin On Druid</a></li>
 </ul>
-</li>
 <li><a href="#kylin-on-druid">Kylin On Druid</a><ul>
 <li><a href="#kylin-可插拔架构">Kylin 可插拔架构</a></li>
 <li><a href="#kylin-on-druid-架构">Kylin On Druid 架构</a></li>
@@ -63,7 +90,6 @@
 <li><a href="#kylin-on-druid-特性">Kylin On Druid 特性</a></li>
 <li><a href="#kylin-on-druid-未来规划">Kylin On Druid  未来规划</a></li>
 </ul>
-</li>
 <li><a href="#faq">FAQ</a><ul>
 <li><a href="#q1-为什么不直接用druid代替kylin">Q1 为什么不直接用Druid代替Kylin?</a></li>
 <li><a href="#q2-为什么没有选择kylin-on-kudu">Q2 为什么没有选择Kylin On Kudu?</a></li>
@@ -72,8 +98,11 @@
 <li><a href="#关于carbondata-的-datamap特性">关于CarbonData 的 DataMap特性</a></li>
 </ul>
 </li>
+</li>
+</li>
 </ul>
 <!-- toc stop -->
+<!-- toc -->
 <p>本文的内容是我在8月11日Kylin Meetup上《基于Druid的Kylin存储引擎实践》的演讲稿。</p>
 <p>《基于Druid的Kylin存储引擎实践》PDF下载： <a href="https://blog.bcmeng.com/pdf/kangkaisen-kylin-on-druid.pdf">https://blog.bcmeng.com/pdf/kangkaisen-kylin-on-druid.pdf</a></p>
 <p>本次分享的内容主要分为3部分，首先我会介绍下Kylin On HBase的问题，也就是我们为什么要为Kylin实现一个新的存储引擎，其次我会介绍下我们Kylin新存储引擎探索的过程，这部分会解释我们为什么选择了Druid作为Kylin的存储引擎，最后我会介绍下Kylin On Druid的整体架构,核心原理和Kylin On Druid的成果。 下面的分享中Kylin On Druid有时会简称为KOD。</p>
@@ -210,7 +239,7 @@
 <p>本次分享从Kylin On HBase 问题出发，解释了为什么我们给Kylin新增一种存储引擎，进而介绍了我们存储引擎探索的过程，最后介绍了Kylin On Druid的架构和原理。 </p>
 <p>最后，需要注意的一点是，<strong>最新版本的Parquet已经有了PageIndex，点查询的性能显著提高</strong>，所以Kylin On paquert 或许依然值得尝试。</p>
 <h2 id="faq">FAQ</h2>
-<h3 id="q1-为什么不直接用druid代替kylin-">Q1 为什么不直接用Druid代替Kylin?</h3>
+<h3 id="q1-为什么不直接用druid代替kylin">Q1 为什么不直接用Druid代替Kylin?</h3>
 <ol>
 <li>Kylin的预计算比Druid更加强大，Druid只能计算Base Cuboid</li>
 <li>Kylin支持基于预计算的精确计算，精确去重是我司强需求</li>
@@ -220,59 +249,75 @@
 <li>Kylin支持Join</li>
 </ol>
 <p>总之，用Druid代替Kylin的工作量远远大于Kylin On Druid的工作量。</p>
-<h3 id="q2-为什么没有选择kylin-on-kudu-">Q2 为什么没有选择Kylin On Kudu?</h3>
+<h3 id="q2-为什么没有选择kylin-on-kudu">Q2 为什么没有选择Kylin On Kudu?</h3>
 <ol>
 <li>Kudu 并没有倒排索引或者二级索引</li>
 <li>Kudu 是C++实现的，我们团队的技术栈主要是Java，我们的存储团队也没有引进Kudu</li>
 </ol>
-<h3 id="q3-为什么没有选择去优化改进hbase？">Q3 为什么没有选择去优化改进HBase？</h3>
+<h3 id="q3-为什么没有选择去优化改进hbase">Q3 为什么没有选择去优化改进HBase？</h3>
 <p>因为要将HBase的Key-Value模型改成列存的话已经不仅仅是优化改进了，需要重新设计整个系统。 可以参考 <a href="https://kudu.apache.org/faq.html#why-build-a-new-storage-engine-why-not-just-improve-apache-hbase-to-increase-its-scan-speed">https://kudu.apache.org/faq.html#why-build-a-new-storage-engine-why-not-just-improve-apache-hbase-to-increase-its-scan-speed</a></p>
-<h3 id="q4-druid和kylin的应用场景？">Q4 Druid和Kylin的应用场景？</h3>
+<h3 id="q4-druid和kylin的应用场景">Q4 Druid和Kylin的应用场景？</h3>
 <p>在我司，Kylin是主推的离线OLAP引擎，Druid是主推的实时OLAP引擎。</p>
 <h3 id="关于carbondata-的-datamap特性">关于CarbonData 的 DataMap特性</h3>
 <p>CarbonData在最近的版本实现了DataMap特性: <a href="https://carbondata.apache.org/datamap-developer-guide.html">https://carbondata.apache.org/datamap-developer-guide.html</a> </p>
 <p>DataMap的主要目的是一份存储支持多种查询场景，实现CarbonData设计之初的愿景；核心思想是一份数据，多种索引，不同场景下的查询用不同的索引进行加速，查询时可以自动路由到相应的索引。 目前已经实现了Pre-aggregate DataMap，Timeseries DataMap，Lucene DataMap，BloomFilter DataMap等，个人比较看好CarbonData这个特性。</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5b718a01b2badfeea1298495
-                 data-title=基于Druid的Kylin存储引擎实践
-                 data-url=kylin-on-druid>
-            </div>
+          <div class="ds-thread" data-thread-key=5b718a01b2badfeea1298495 data-title=基于Druid的Kylin存储引擎实践 data-url=kylin-on-druid>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

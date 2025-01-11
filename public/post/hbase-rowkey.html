@@ -1,75 +1,104 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|HBase Rowkey设计</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> HBase Rowkey设计</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2016-04-09</p>
-            <p>分类: <a href="../tag/HBase.html" target="_blank" >HBase</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>HBase Rowkey设计</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2016-04-09</p>
+          <p>
+            分类:
+            <a href="../tag/HBase.html" target="_blank"
+              >HBase</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
 <li><a href="#建立schema">建立Schema</a></li>
 <li><a href="#列族的数量">列族的数量</a><ul>
 <li><a href="#列族的基数">列族的基数</a></li>
 </ul>
-</li>
 <li><a href="#rowkey-设计">Rowkey 设计</a><ul>
-<li><a href="#热点">热点</a></li>
-<li><a href="#单调递增-rwokey时间连续序列">单调递增 rwokey(时间连续序列)</a></li>
+<li><a href="#热点">热点</a><li><a href="#单调递增-rwokey-时间连续序列">单调递增 rwokey(时间连续序列)</a></li>
 <li><a href="#尽量减少行和列的大小">尽量减少行和列的大小</a></li>
-</ul>
-</li>
 <li><a href="#版本号">版本号</a><ul>
 <li><a href="#最大版本号">最大版本号</a></li>
 <li><a href="#最小版本号">最小版本号</a></li>
 </ul>
-</li>
 <li><a href="#schema-design-case-studies">Schema Design Case Studies</a><ul>
-<li><a href="#日志数据和时间序列数据">日志数据和时间序列数据</a></li>
-<li><a href="#日志数据和增强型时间序列数据">日志数据和增强型时间序列数据</a></li>
-<li><a href="#case-study-customerorder">Case Study - Customer/Order</a></li>
-<li><a href="#case-study-tallwidemiddle-schema-design">Case Study - &quot;Tall/Wide/Middle&quot; Schema Design</a></li>
-<li><a href="#case-study-list-data">Case Study - List Data</a></li>
+<li><a href="#日志数据和时间序列数据">日志数据和时间序列数据</a><li><a href="#日志数据和增强型时间序列数据">日志数据和增强型时间序列数据</a></li>
+<li><a href="#case-study-customer-order">Case Study - Customer/Order</a><li><a href="#case-study-quot-tall-wide-middle-quot-schema-design">Case Study - &quot;Tall/Wide/Middle&quot; Schema Design</a><li><a href="#case-study-list-data">Case Study - List Data</a></li>
+</li>
+</li>
+</li>
 </ul>
+</li>
+</li>
+</li>
+</ul>
+</li>
 </li>
 </ul>
 <!-- toc stop -->
+<!-- toc -->
 <h2 id="建立schema">建立Schema</h2>
 <p>Hbase 模式建立或更新可以通过 Hbase shell 工具或者使用Hbase Java API 中的 Admin类。</p>
 <p>当列族发生变动时 hbase表必须处于 disabled 状态。例如：</p>
@@ -125,7 +154,7 @@ d-foo0002
 你也可以优化哈希方法，使得某些rowkey 永远在同一个 region.</p>
 <h4 id="翻转key">翻转key</h4>
 <p>第三种防止热点的方法是翻转固定长度或者数字格式的rowkey。这样可以使得rowkey中经常改变的部分（最没意义的部分）放在前面。这样可以有效的随机 rowkey,但是牺牲了 rowkey 的有序性。</p>
-<h3 id="单调递增-rwokey-时间连续序列-">单调递增 rwokey(时间连续序列)</h3>
+<h3 id="单调递增-rwokey-时间连续序列">单调递增 rwokey(时间连续序列)</h3>
 <p>在《Hadoop 权威指南》中，有一个优化的注意点：当所有客户端一段时间内一致写入某一个region,然后再接着写入下一个 region。例如：像单调递增的 rowkey（时间戳） ，就会发生这种现象。
 可以查看 Kai Lan的漫画  <a href="http://ikaisays.com/2011/01/25/app-engine-datastore-tip-monotonically-increasing-values-are-bad/">monotonically increasing values are bad</a>. 说明了为什么单调递增的rowkey 在分布式表格系统（Hbase）中是有问题的。这种单调递增的rowkey 堆积在同一个region 的问题可以通过 随机化 输入记录来缓和。但通常来讲我们应该避免使用时间戳或者序列（1，2，3）来作为主键。</p>
 <p>如果你的确需要在Hbase存储时间序列数据，可以学习 <a href="http://opentsdb.net/">OpenTSDB</a>，它是个成功的例子。链接<a href="http://opentsdb.net/schema.html">schema</a>有一页描述了OpenTSDB在hbase中使用的模式。OpenTSDB中的key模式是：<code>[元数据类型][时间戳]</code>，初看起来这似乎违反了不使用时间戳作为rowkey的原则，然而，区别是时间戳并没有在rowkey的关键位置，而且这个设计假设拥有许多元数据类型。因此，即使有连续的混合着元数据的输入数据，它们也会Put进入表中不同的regions.</p>
@@ -258,7 +287,7 @@ public static byte[][] getHexSplits(String startKey, String endKey, int numRegio
 </code></pre><p>像上面提到的，要选择一个时间范围内的数据，scan 操作需要对每一个 桶执行，假如有100个桶，就需要100个scan才能获得完整的数据。所以我们需要一个权衡。</p>
 <h4 id="主机名在rwokey-的关键位置">主机名在rwokey 的关键位置</h4>
 <p>rowkey <code>[hostname][log-event][timestamp]</code>是一个备选，如果有大量的主机名需要读写，如果通过主机名的scan 操作是主要的这种方式就很有用。</p>
-<h4 id="时间戳，翻转时间戳">时间戳，翻转时间戳</h4>
+<h4 id="时间戳-翻转时间戳">时间戳，翻转时间戳</h4>
 <p>如果获取最新的数据是最主要的访问数据方式，那么存储 时间戳 或者翻转时间戳<code>（timestamp = Long.MAX_VALUE – timestamp）</code>，可以通过 <code>scan [hostname][log-event]</code>快速获取最新的数据。</p>
 <p><strong>没有一种方法是错的，要看最合适的情况。</strong></p>
 <h4 id="变长还是固定长度的-rowkey">变长还是固定长度的 rowkey</h4>
@@ -322,7 +351,7 @@ public static byte[][] getHexSplits(String startKey, String endKey, int numRegio
 <pre><code>[customer number 的长整形] = 8 bytes
 
 [MD5 of order number] = 16 bytes
-</code></pre><h4 id="单表？多表？">单表？多表？</h4>
+</code></pre><h4 id="单表-多表">单表？多表？</h4>
 <p>传统的方法是为 顾客和订单 建立各自的表，另一个选项是将所有的记录存入一张表。（例如：CUSTOMER++）</p>
 <p>顾客记录的 rowkey：</p>
 <pre><code>[customer-id]
@@ -474,46 +503,62 @@ rowkey是：user + valueid，具体的列可以是具体的值。
 <p>注意没有一种方法从本质上比另一种占用更多磁盘空间。你仅仅是将具体值的key从”左“（row key）移动到了”右“（column qualifiers ）,在这些方法下，每一个 key/value 依然存储完整的 rowkey, column family name. </p>
 <p>手动分页更加复杂，像跟踪每一页的许多事情，如果有插入还需要重新分页，这看起来更加复杂。它可能有轻微的速度优势在极高的吞吐量下，唯一真正知道它们的方法就是亲自去实践。如果你没有时间去实践和比较，我的建议是用最简单的方法：每个 user+value一行。</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5871efddd2f092c392ca4d49
-                 data-title=HBase Rowkey设计
-                 data-url=hbase-rowkey>
-            </div>
+          <div class="ds-thread" data-thread-key=5871efddd2f092c392ca4d49 data-title=HBase Rowkey设计 data-url=hbase-rowkey>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

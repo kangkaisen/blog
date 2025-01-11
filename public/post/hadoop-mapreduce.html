@@ -1,54 +1,83 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|Hadoop MapReduce 性能优化</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> Hadoop MapReduce 性能优化</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2016-04-03</p>
-            <p>分类: <a href="../tag/BigData.html" target="_blank" >BigData</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>Hadoop MapReduce 性能优化</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2016-04-03</p>
+          <p>
+            分类:
+            <a href="../tag/BigData.html" target="_blank"
+              >BigData</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
+<ul>
 <ul>
 <li><a href="#影响-mapreduce-的主要因素">影响 MapReduce 的主要因素</a></li>
 <li><a href="#潜在影响因素">潜在影响因素</a></li>
 <li><a href="#性能调优">性能调优</a></li>
-<li><a href="#mapred-sitexml">mapred-site.xml</a></li>
-<li><a href="#hdfs-sitexml">hdfs-site.xml</a></li>
+<li><a href="#mapred-site-xml">mapred-site.xml</a></li>
+<li><a href="#hdfs-site-xml">hdfs-site.xml</a></li>
 <li><a href="#检测-系统瓶颈">检测 系统瓶颈</a></li>
 <li><a href="#善于使用linux-相关命令">善于使用linux 相关命令</a></li>
 <li><a href="#通过计数器-识别-资源薄弱环节">通过计数器 识别 资源薄弱环节</a></li>
@@ -56,7 +85,9 @@
 <li><a href="#优化-mapreduce-任务">优化 mapreduce 任务</a></li>
 <li><a href="#hadoop-最佳实践">Hadoop 最佳实践</a></li>
 </ul>
+</ul>
 <!-- toc stop -->
+<!-- toc -->
 <h3 id="影响-mapreduce-的主要因素">影响 MapReduce 的主要因素</h3>
 <ul>
 <li>硬件因素 ：CPU 磁盘 I/O, 网络带宽， 内存</li>
@@ -77,7 +108,7 @@
 <li>磁盘 I/O</li>
 <li>网络流量</li>
 </ul>
-<h3 id="mapred-sitexml">mapred-site.xml</h3>
+<h3 id="mapred-site-xml">mapred-site.xml</h3>
 <ul>
 <li>CPU相关参数
 map reduce 任务的最大数目</li>
@@ -95,7 +126,7 @@ map reduce 任务的最大数目</li>
 机架感知</p>
 </li>
 </ul>
-<h3 id="hdfs-sitexml">hdfs-site.xml</h3>
+<h3 id="hdfs-site-xml">hdfs-site.xml</h3>
 <ul>
 <li>默认的block 块大小</li>
 <li>文件副本数</li>
@@ -135,46 +166,62 @@ map reduce 任务的最大数目</li>
 <li>提高最大打开文件描述符</li>
 </ul>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5871ec7ed2f092c392ca4d43
-                 data-title=Hadoop MapReduce 性能优化
-                 data-url=hadoop-mapreduce>
-            </div>
+          <div class="ds-thread" data-thread-key=5871ec7ed2f092c392ca4d43 data-title=Hadoop MapReduce 性能优化 data-url=hadoop-mapreduce>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

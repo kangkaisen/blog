@@ -1,48 +1,76 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|操作系统基础概念</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> 操作系统基础概念</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2016-04-03</p>
-            <p>分类: <a href="../tag/笔记.html" target="_blank" >笔记</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>操作系统基础概念</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2016-04-03</p>
+          <p>
+            分类:
+            <a href="../tag/笔记.html" target="_blank"
+              >笔记</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
 <li><a href="#计算机系统概述">计算机系统概述</a><ul>
 <li><a href="#基本构成">基本构成</a></li>
@@ -51,9 +79,8 @@
 <li><a href="#高速缓冲存储器">高速缓冲存储器</a></li>
 <li><a href="#存储器的层次结构">存储器的层次结构</a></li>
 <li><a href="#高速缓存的设计">高速缓存的设计</a></li>
-<li><a href="#io操作的三种技术">I/O操作的三种技术</a></li>
+<li><a href="#i-o操作的三种技术">I/O操作的三种技术</a></li>
 </ul>
-</li>
 <li><a href="#操作系统概述">操作系统概述</a><ul>
 <li><a href="#操作系统的内核">操作系统的内核</a></li>
 <li><a href="#多道程序设计">多道程序设计</a></li>
@@ -61,7 +88,6 @@
 <li><a href="#内存管理的任务">内存管理的任务</a></li>
 <li><a href="#操作系统的控制结构">操作系统的控制结构</a></li>
 </ul>
-</li>
 <li><a href="#进程">进程</a><ul>
 <li><a href="#进程状态">进程状态</a></li>
 <li><a href="#进程阻塞和挂起">进程阻塞和挂起</a></li>
@@ -74,48 +100,51 @@
 <li><a href="#创建新进程的步骤">创建新进程的步骤</a></li>
 <li><a href="#模式切换和进程切换的区别">模式切换和进程切换的区别</a></li>
 </ul>
-</li>
 <li><a href="#线程-和-进程的-区别-联系">线程 和 进程的 区别 联系</a><ul>
-<li><a href="#二者联系">⼆者联系：</a></li>
-<li><a href="#二者区别">⼆者区别：</a></li>
+<li><a href="#者联系">⼆者联系：</a></li>
+<li><a href="#者区别">⼆者区别：</a></li>
 <li><a href="#线程和进程的区别">线程和进程的区别</a></li>
 <li><a href="#多进程和多线程对比">多进程和多线程对比</a></li>
-</ul>
-</li>
 <li><a href="#互斥和同步">互斥和同步</a><ul>
 <li><a href="#临界区">临界区</a></li>
 <li><a href="#同步机制应遵循的准则">同步机制应遵循的准则</a></li>
 <li><a href="#pv">PV</a></li>
 <li><a href="#记录型信号量">记录型信号量</a></li>
 </ul>
-</li>
 <li><a href="#死锁和饥饿">死锁和饥饿</a><ul>
 <li><a href="#死锁的条件">死锁的条件</a></li>
 </ul>
-</li>
 <li><a href="#内存管理">内存管理</a><ul>
 <li><a href="#内部碎片和外部碎片">内部碎片和外部碎片</a></li>
 <li><a href="#逻辑地址-相对地址和物理地址">逻辑地址、相对地址和物理地址</a></li>
 <li><a href="#页和帧">页和帧</a></li>
 <li><a href="#页和段">页和段</a></li>
 </ul>
-</li>
 <li><a href="#虚拟内存">虚拟内存</a><ul>
 <li><a href="#简单分页与虚拟分页">简单分页与虚拟分页</a></li>
 <li><a href="#页表项">页表项</a></li>
 <li><a href="#驻留集和工作集">驻留集和工作集</a></li>
 </ul>
-</li>
 <li><a href="#单处理器调度">单处理器调度</a></li>
 <li><a href="#多处理器和实时调度">多处理器和实时调度</a></li>
-<li><a href="#io管理和磁盘调度">I/O管理和磁盘调度</a></li>
+<li><a href="#i-o管理和磁盘调度">I/O管理和磁盘调度</a></li>
 <li><a href="#文件管理">文件管理</a><ul>
 <li><a href="#文件组织">文件组织</a></li>
 <li><a href="#文件分配方法">文件分配方法</a></li>
 </ul>
 </li>
+</li>
+</li>
+</li>
+</li>
+</ul>
+</li>
+</li>
+</li>
+</li>
 </ul>
 <!-- toc stop -->
+<!-- toc -->
 <h2 id="计算机系统概述">计算机系统概述</h2>
 <h3 id="基本构成">基本构成</h3>
 <ul>
@@ -230,7 +259,7 @@
 <h2 id="线程-和-进程的-区别-联系">线程 和 进程的 区别 联系</h2>
 <p>进程是系统进⾏资源分配和调度的基本独⽴单位；
 线程是进程的⼀个实体，是CPU调度和分派的基本单位。</p>
-<h3 id="⼆者联系：">⼆者联系：</h3>
+<h3 id="者联系">⼆者联系：</h3>
 <ol>
 <li><p>⼀个线程只属于⼀个进程，⼀个进程中可以有多个线程 </p>
 </li>
@@ -239,7 +268,7 @@
 <li><p>多进程和多线程在执⾏过程中都需要⼀定的同步机制进⾏同步</p>
 </li>
 </ol>
-<h3 id="⼆者区别：">⼆者区别：</h3>
+<h3 id="者区别">⼆者区别：</h3>
 <ol>
 <li><p>本质：进程是拥有系统资源的基本单位，⽽线程是调度和分配的基本单位 </p>
 </li>
@@ -260,13 +289,13 @@
 <p>从逻辑角度来看（重要区别）：
 多线程的意义在于一个应用程序中，有多个执行部分可以同时执行。但是，操作系统并没有将多个线程看做多个独立的应用，来实现进程的调度和管理及资源分配。</p>
 <h3 id="多进程和多线程对比">多进程和多线程对比</h3>
-<h4 id="数据共享、同步">数据共享、同步</h4>
+<h4 id="数据共享-同步">数据共享、同步</h4>
 <p>继承数据是分开的:共享复杂，需要用IPC;同步简单。</p>
 <p>多线程共享进程数据：共享简单；同步复杂。</p>
-<h4 id="内存、cpu">内存、CPU</h4>
+<h4 id="内存-cpu">内存、CPU</h4>
 <p>进程占用内存多，切换复杂，CPU利用率低</p>
 <p>线程占用内存少，切换简单，CPU利用率高</p>
-<h4 id="创建销毁、切换">创建销毁、切换</h4>
+<h4 id="创建销毁-切换">创建销毁、切换</h4>
 <p>进程创建销毁、切换复杂，速度慢 </p>
 <p>线程创建销毁、切换简单，速度快 </p>
 <h4 id="编程调试">编程调试</h4>
@@ -323,7 +352,7 @@ V(S):   S.value = S.value + 1;
 <h2 id="内存管理">内存管理</h2>
 <h3 id="内部碎片和外部碎片">内部碎片和外部碎片</h3>
 <p>内部碎片是指由于被装入的数据块小于分区大小而导致的分区内部所浪费的空间。外部碎片是与动态分区相关的一种现象，它是指在所有分区外的存储空间会变成越来越多的碎片的</p>
-<h3 id="逻辑地址、相对地址和物理地址">逻辑地址、相对地址和物理地址</h3>
+<h3 id="逻辑地址-相对地址和物理地址">逻辑地址、相对地址和物理地址</h3>
 <p>逻辑地址是指与当前数据在内存中的物理分配地址无关的访问地址，在执行对内存的访问之前必须把它转化成物理地址。</p>
 <p>相对地址是逻辑地址的一个特例，是相对于某些已知点（通常是程序的开始处）的存储单元。</p>
 <p>物理地址或绝对地址是数据在主存中的实际位置。</p>
@@ -368,46 +397,62 @@ V(S):   S.value = S.value + 1;
 <li>索引文件</li>
 </ul>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5871ecded2f092c392ca4d44
-                 data-title=操作系统基础概念
-                 data-url=caozuoxitong>
-            </div>
+          <div class="ds-thread" data-thread-key=5871ecded2f092c392ca4d44 data-title=操作系统基础概念 data-url=caozuoxitong>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

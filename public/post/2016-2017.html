@@ -1,48 +1,76 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|2016总结和2017规划</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> 2016总结和2017规划</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2017-02-11</p>
-            <p>分类: <a href="../tag/个人.html" target="_blank" >个人</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>2016总结和2017规划</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2017-02-11</p>
+          <p>
+            分类:
+            <a href="../tag/个人.html" target="_blank"
+              >个人</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
 <ul>
 <li><a href="#2016总结">2016总结</a><ul>
 <li><a href="#重要事件">重要事件</a></li>
@@ -50,20 +78,21 @@
 <li><a href="#感悟">感悟</a></li>
 <li><a href="#总结">总结</a></li>
 </ul>
-</li>
 <li><a href="#2017规划">2017规划</a><ul>
-<li><a href="#p1-英语听说读写提升">P1 英语听，说，读，写提升</a></li>
+<li><a href="#p1-英语听-说-读-写提升">P1 英语听，说，读，写提升</a></li>
 <li><a href="#p1-锻炼减肥">P1 锻炼减肥</a></li>
 <li><a href="#p1-读书">P1 读书</a></li>
 <li><a href="#p1-kylin系统的掌控力进一步提高">P1 Kylin系统的掌控力进一步提高</a></li>
 <li><a href="#p1-熟悉各olap系统的原理">P1 熟悉各OLAP系统的原理</a></li>
 <li><a href="#p1-掌握sql的解析和编译过程">P1 掌握SQL的解析和编译过程。</a></li>
 <li><a href="#p2-熟悉分布式列式存储系统的实现原理">P2 熟悉分布式列式存储系统的实现原理。</a></li>
-<li><a href="#p2-学习总结常见的大数据算法协议系统">P2 学习总结常见的大数据算法，协议，系统。</a></li>
+<li><a href="#p2-学习总结常见的大数据算法-协议-系统">P2 学习总结常见的大数据算法，协议，系统。</a></li>
 </ul>
+</li>
 </li>
 </ul>
 <!-- toc stop -->
+<!-- toc -->
 <h2 id="2016总结">2016总结</h2>
 <h3 id="重要事件">重要事件</h3>
 <pre><code>1 2016年7月1日 从西安电子科技大学通信工程专业本科毕业，学生时代结束。
@@ -90,7 +119,7 @@
 <h2 id="2017规划">2017规划</h2>
 <p><strong>争取做到不碰游戏，不碰小说，不碰电视剧。</strong></p>
 <p><strong>要多读书，多锻炼，多听音乐，多外出，多思考。</strong></p>
-<h3 id="p1-英语听，说，读，写提升">P1 英语听，说，读，写提升</h3>
+<h3 id="p1-英语听-说-读-写提升">P1 英语听，说，读，写提升</h3>
 <p>目标： 英语流利说的英语等级从3级提升到6级，期望3个月可以提升1级。</p>
 <p>排期：</p>
 <p>周一到周五每天早上和晚上各用时半个小时。</p>
@@ -107,54 +136,70 @@
 <p>目标：可以随意修改各部分代码；问题可以分钟级别快速定位；对Kylin系统有重大贡献；全年可以输出3篇以上高质量Kylin相关文章。</p>
 <h3 id="p1-熟悉各olap系统的原理">P1 熟悉各OLAP系统的原理</h3>
 <p>结果输出： 每个系统学习完后输出一篇博客。</p>
-<h3 id="p1-掌握sql的解析和编译过程。">P1 掌握SQL的解析和编译过程。</h3>
+<h3 id="p1-掌握sql的解析和编译过程">P1 掌握SQL的解析和编译过程。</h3>
 <p>目标： 掌握一般SQL的解析和编译过程。</p>
 <p>结果输出： 输出一篇博客，通过一个具体示例将核心原理串起来。</p>
-<h3 id="p2-熟悉分布式列式存储系统的实现原理。">P2 熟悉分布式列式存储系统的实现原理。</h3>
+<h3 id="p2-熟悉分布式列式存储系统的实现原理">P2 熟悉分布式列式存储系统的实现原理。</h3>
 <p>通过具体的分布式存储系统学习，例如CarbonData，Parquet等，熟悉分布式列式存储系统的实现原理。</p>
-<h3 id="p2-学习总结常见的大数据算法，协议，系统。">P2 学习总结常见的大数据算法，协议，系统。</h3>
+<h3 id="p2-学习总结常见的大数据算法-协议-系统">P2 学习总结常见的大数据算法，协议，系统。</h3>
 <p>像《大数据日知录》这本书一样，对整个大数据领域的重要算法，重要协议，重要系统进行总结整理。</p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=589ec18d03b7b3033084c314
-                 data-title=2016总结和2017规划
-                 data-url=2016-2017>
-            </div>
+          <div class="ds-thread" data-thread-key=589ec18d03b7b3033084c314 data-title=2016总结和2017规划 data-url=2016-2017>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

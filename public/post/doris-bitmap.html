@@ -1,48 +1,77 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|Apache Doris 基于 Bitmap的精确去重和用户行为分析</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> Apache Doris 基于 Bitmap的精确去重和用户行为分析</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2020-01-05</p>
-            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>Apache Doris 基于 Bitmap的精确去重和用户行为分析</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2020-01-05</p>
+          <p>
+            分类:
+            <a href="../tag/OLAP.html" target="_blank"
+              >OLAP</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
+<ul>
 <ul>
 <li><a href="#a-store-about-bitmap-count-distinct">A Store About Bitmap Count Distinct</a></li>
 <li><a href="#why-hll-is-not-enough">Why HLL Is Not Enough</a></li>
@@ -51,12 +80,14 @@
 <li><a href="#how-doris-count-distinct-with-bitmap">How Doris Count Distinct With Bitmap</a></li>
 <li><a href="#how-to-use-doris-bitmap">How To Use Doris Bitmap</a></li>
 <li><a href="#user-behavior-analysis-based-on-bitmap">User Behavior Analysis Based on Bitmap</a></li>
-<li><a href="#doris-intersectcount">Doris Intersect_count</a></li>
+<li><a href="#doris-intersect-count">Doris Intersect_count</a></li>
 <li><a href="#doris-bitmap-todo">Doris Bitmap ToDo</a></li>
 <li><a href="#summary">Summary</a></li>
 <li><a href="#references">References</a></li>
 </ul>
+</ul>
 <!-- toc stop -->
+<!-- toc -->
 <p>本文主要介绍 Apache Doris 基于 Bitmap 的 精确去重和用户行为分析。 我们首先看下基于 Bitmap 的精确去重：</p>
 <h3 id="a-store-about-bitmap-count-distinct">A Store About Bitmap Count Distinct</h3>
 <p>2016 年 1 月份，我当时是美团点评的实习生，主要做 HBase 这块。 当时我的 mentor 孙叶锐，也是 Kylin 的 PMC，在 Kylin 中实现了 Bitmap 聚合指标，开始只支持 Int 类型，然后在 16 年 5 月份的时候，为了支持任意类型的精确去重，我的 mentor 孙叶锐在 Kylin 中实现了全局字典。</p>
@@ -177,7 +208,7 @@ insert into bitmap_table1 select id, bitmap_hash(id_string) from table;
 <p>第三种是基于 Bitmap 的 UDAF 实现的，也就是今天要分享的。</p>
 <p>第四种是用专用的系统来做用户行为分析，专用系统的好处是可以针对特定场景，做更多的优化。 </p>
 <p>而且在专用系统里，很多公司也采用了基于 Bitmap 的方案，原因是我们可以用 1 个 bit 位表示一个用户，那么 Bitmap 的交，并，差，对称差集等运算都可以和大多数用户行为模型对应起来，并且 Bitmap 的交，并，差，对称差集运算可以借助 SIMD 指令加速，是很高效的。比如， 去重用户就是 Bitmap 取 1 的个数，活跃用户就是两个 Bitmap 取并集，重度用户，留存用户，转换可以是两个 Bitmap 取交集，新增用户可以是 Bitmap 取差集等等。</p>
-<h3 id="doris-intersect_count">Doris Intersect_count</h3>
+<h3 id="doris-intersect-count">Doris Intersect_count</h3>
 <p>由于我们现在已经在 Doris 的聚合模型中支持了 Bitmap，所以我们便可以基于 Bitmap 实现各类 UDF, UDAF，来实现大多数用户行为分析。</p>
 <p>目前，我们首先在 Doris 中实现了求交集的 UDAF intersect_count，这个 UDAF 的定义是参考 Kylin 的，主要是为了支持 Kylin 的应用可以迁移到 Doris 中来。intersect_count 的第一个参数是 Bitmap 列，第二个参数是用来过滤的维度列，
 第三个参数开始是变长参数，含义是过滤维度列的不同取值。intersect_count 整个函数的功能就是计算满足 filter_column 过滤条件的多个 Bitmap 的交集的基数值。前面提到过，Bitmap 交集可以用来计算留存，漏斗，用户画像，下面我们来具体看一下。</p>
@@ -221,46 +252,62 @@ or (tag_type=&#39; 收入 &#39; and tag_value=&#39;10-20 万 &#39;)
 <p><a href="https://kyligence.io/zh/blog/apache-kylin-count-distinct-application-in-user-behavior-analysis/">Kylin 精确去重在用户行为分析中的妙用 </a></p>
 <p><a href="kylin.apache.org/docs30/howto/howto_use_hive_mr_dict.html">Use Hive to build global dictionary</a></p>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5e11aea311386a390e1d52e0
-                 data-title=Apache Doris 基于 Bitmap的精确去重和用户行为分析
-                 data-url=doris-bitmap>
-            </div>
+          <div class="ds-thread" data-thread-key=5e11aea311386a390e1d52e0 data-title=Apache Doris 基于 Bitmap的精确去重和用户行为分析 data-url=doris-bitmap>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

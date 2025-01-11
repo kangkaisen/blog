@@ -1,59 +1,90 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
-    <link rel="shortcut icon" href="../images/favicon.ico">
-    <link rel="stylesheet" href="../css/code.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css"/>
-    <link rel="stylesheet" href="../css/main.css" type="text/css"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" href="../css/code.css" type="text/css" />
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" />
     <title>编程小梦|Apache Kylin 精确去重指标优化历程</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <h1> Apache Kylin 精确去重指标优化历程</h1>
-            <hr/>
-            <p>作者: 康凯森</p>
-            <p>日期: 2017-01-04</p>
-            <p>分类: <a href="../tag/OLAP.html" target="_blank" >OLAP</a></p>
-            <hr/>
-            <!-- toc -->
+          <h1>Apache Kylin 精确去重指标优化历程</h1>
+          <hr />
+          <p>作者: 康凯森</p>
+          <p>日期: 2017-01-04</p>
+          <p>
+            分类:
+            <a href="../tag/OLAP.html" target="_blank"
+              >OLAP</a
+            >
+          </p>
+          <hr />
+          <!-- toc -->
+<ul>
 <ul>
 <li><a href="#问题背景">问题背景</a></li>
 <li><a href="#优化1-将精确去重指标拆分hbase列族">优化1 将精确去重指标拆分HBase列族</a></li>
 <li><a href="#优化2-移除不必要的tostring避免bitmap-deserialize">优化2 移除不必要的toString避免bitmap deserialize</a></li>
 <li><a href="#优化3-获取bitmap的字节长度时避免deserialize">优化3 获取bitmap的字节长度时避免deserialize</a></li>
-<li><a href="#优化4-无需上卷聚合的精确去重查询优化">优化4 无需上卷聚合的精确去重查询优化</a></li>
-<li><a href="#总结">总结</a></li>
+<li><a href="#优化4-无需上卷聚合的精确去重查询优化">优化4 无需上卷聚合的精确去重查询优化</a><li><a href="#总结">总结</a></li>
 <li><a href="#反思">反思</a></li>
 <li><a href="#相关kylin-jira">相关Kylin JIRA</a></li>
+</li>
+</ul>
 </ul>
 <!-- toc stop -->
+<!-- toc -->
 <p>本文记录了我将Apache Kylin超高基数的精确去重指标查询提速数十倍的过程，大家有任何建议或者疑问欢迎讨论。</p>
 <h3 id="问题背景">问题背景</h3>
 <p>某业务方的cube有12个维度，35个指标，其中13个是精确去重指标，并且有一半以上的精确去重指标单天基数在千万级别，cube单天数据量1.5亿行左右。</p>
@@ -99,7 +130,7 @@ GROUP BY A, B
 <h3 id="优化4-无需上卷聚合的精确去重查询优化">优化4 无需上卷聚合的精确去重查询优化</h3>
 <p>从精确去重指标在美团点评大规模使用以来，我们发现部分用户的应用场景并没有跨segment上卷聚合的需求，即只需要查询单天的去重值，或是每次全量构建的cube，也无需跨segment上卷聚合。</p>
 <p>所以我们希望<strong>对无需上卷聚合的精确去重查询进行优化</strong>，当时我考虑了两种可行的方案：</p>
-<h4 id="方案1：-精确去重指标新增一种返回类型">方案1： 精确去重指标新增一种返回类型</h4>
+<h4 id="方案1-精确去重指标新增一种返回类型">方案1： 精确去重指标新增一种返回类型</h4>
 <p>一个极端的做法是对<strong>无需跨segment上卷聚合的精确去重查询，我们只存储最终的去重值</strong>。</p>
 <p><strong>优点：</strong></p>
 <ol>
@@ -115,7 +146,7 @@ GROUP BY A, B
 </ol>
 <p><strong>实现难点：</strong>
 如果能够接受以上缺点，实现成本并不高，目前没有想到明显的难点。</p>
-<h4 id="方案2：serialize-bitmap的同时写入distinct-count值。">方案2：serialize bitmap的同时写入distinct count值。</h4>
+<h4 id="方案2-serialize-bitmap的同时写入distinct-count值">方案2：serialize bitmap的同时写入distinct count值。</h4>
 <p><strong>优点：</strong></p>
 <ol>
 <li>对用户无影响。</li>
@@ -159,46 +190,62 @@ GROUP BY A, B
 <li><a href="https://issues.apache.org/jira/browse/KYLIN-2353">KYLIN-2353 Serialize BitmapCounter with distinct count</a> 优化4</li>
 </ul>
 
-            <hr/>
-            <h3>《OLAP 性能优化指南》欢迎 Star&共建 </h3>
-            <p><a href="https://github.com/kangkaisen/olap-performance" target="_blank" >《OLAP 性能优化指南》</a></p>
-            <h3>欢迎关注微信公众号</h3>
-            <div style="padding: 0; margin: 10px auto; width: 90%; text-align: center"><p><img src="../images/zhishixingqiu.png" /></p></div>
+          <hr />
+          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <p>
+            <a
+              href="https://github.com/kangkaisen/olap-performance"
+              target="_blank"
+              >《OLAP 性能优化指南》</a
+            >
+          </p>
+          <h3>欢迎关注微信公众号</h3>
+          <div
+            style="
+              padding: 0;
+              margin: 10px auto;
+              width: 90%;
+              text-align: center;
+            "
+          >
+            <p><img src="../images/zhishixingqiu.png" /></p>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="row" style="padding-top: 60px">
-    <div class="container center-block">
+    <div class="row" style="padding-top: 60px">
+      <div class="container center-block">
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
-            <div class="ds-thread"
-                 data-thread-key=5871fbcbd2f092c392ca4d65
-                 data-title=Apache Kylin 精确去重指标优化历程
-                 data-url=kylin-distinct-count>
-            </div>
+          <div class="ds-thread" data-thread-key=5871fbcbd2f092c392ca4d65 data-title=Apache Kylin 精确去重指标优化历程 data-url=kylin-distinct-count>
+          </div>
         </div>
         <div class="col-md-1"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
 
-<script src="../js/code.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="../js/jquery.min.js"></script>
-<script src="../js/bootstrap.js"></script>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <script src="../js/code.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>
