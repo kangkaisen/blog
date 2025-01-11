@@ -16,4 +16,6 @@
 ### 支持 Cloudflare Pages 一键部署
 ### 清新,简洁,急速
 
+![pagespeed-100-score](public/images/pagespeed-100-score.jpg)
+
 ![blog-Cloudflare-pages-performance](public/images/blog-performance.jpg)

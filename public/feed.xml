@@ -4,8 +4,8 @@
     <title>编程小梦</title>
     <description>编程小梦|康凯森的技术博客</description>
     <link>https://blog.bcmeng.com/</link>
-    <lastBuildDate>Sat, 11 Jan 2025 12:08:23 GMT</lastBuildDate>
-    <pubDate>Sat, 11 Jan 2025 12:08:23 GMT</pubDate>
+    <lastBuildDate>Sat, 11 Jan 2025 12:32:13 GMT</lastBuildDate>
+    <pubDate>Sat, 11 Jan 2025 12:32:13 GMT</pubDate>
     <item>
       <title>康凯森的公开分享</title>
       <description>&lt;!-- toc --&gt;
@@ -25,8 +25,7 @@
     </item>
     <item>
       <title>博客迁移到 Cloudflare Pages</title>
-      <description>
-&lt;!-- toc --&gt;
+      <description>&lt;!-- toc --&gt;
 ## 1 迁移原因
 编程小梦的博客是部署在阿里云的EC2机器上的，但是这次续费时因为我的机型太老，直接不让续费了。我的博客是大学时候部署了，也有十多年了。 正在最近在使用 Cloudflare pages，索性就决定直接迁移到 Cloudflare pages, 迁移过程比我预想的简单，也解决了之前部署在AWS EC2的好几个痛点。
 
@@ -64,7 +63,7 @@ Cloudflare 自动扫描的DNS 记录可能不全，大家需要check一下，漏
 3. 目标 URL：https://${1}
 4. 状态码：301
 
-## 3 迁移到 Cloudflare Page</description>
+## 3 迁移到 Cloudflare Pages </description>
       <link>https://blog.bcmeng.com/post/cloudflare-pages-blog.html</link>
       <pubDate>2025-01-11</pubDate>
     </item>
