@@ -1,111 +1,180 @@
-<!DOCTYPE HTML>
-<html>
-<head>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <meta name="google-site-verification" content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA" />
-    <link rel="shortcut icon" href="/images/favicon.ico">
-    <link rel="stylesheet" href="/css/bootstrap.css" type="text/css" />
-    <link rel="stylesheet" href="/css/home.css" type="text/css" />
+    <meta
+      name="google-site-verification"
+      content="KEatQX-J4dYY-6J2KU_aP5X8gAJ8wS0lhylI8umX6WA"
+    />
+    <link rel="shortcut icon" href="/images/favicon.ico" />
+    <link rel="preload" href="/css/bootstrap.css" as="style" />
+    <link rel="preload" href="/css/home.css" as="style" />
+    <link rel="stylesheet" href="/css/bootstrap.css" />
+    <link rel="stylesheet" href="/css/home.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>编程小梦|康凯森的技术博客</title>
-</head>
-<body>
-<nav class="navbar navbar-default navbar-static-top" style="opacity: .9" role="navigation">
-    <div class="container-fluid">
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-static-top"
+      style="opacity: 0.9"
+      role="navigation"
+    >
+      <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">编程小梦</a>
+          <button
+            type="button"
+            class="navbar-toggle"
+            data-toggle="collapse"
+            data-target="#bs-example-navbar-collapse-1"
+          >
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">编程小梦</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://medium.com/@kangkaisen" target="_blank"  rel="nofollow"> Medium </a></li>
-                <li><a href="https://perf.bcmeng.com/" target="_blank"  rel="nofollow">《OLAP 数据库性能优化指南》</a></li>
-                <li class="active"><a href="/">Blog</a></li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a
+                href="https://medium.com/@kangkaisen"
+                target="_blank"
+                rel="nofollow"
+              >
+                Medium
+              </a>
+            </li>
+            <li>
+              <a href="https://perf.bcmeng.com/" target="_blank" rel="nofollow"
+                >《OLAP 数据库性能优化指南》</a
+              >
+            </li>
+            <li class="active"><a href="/">Blog</a></li>
+          </ul>
         </div>
-    </div>
-</nav>
-<div class="row" style="padding-top: 100px">
-    <div class="container center-block">
+      </div>
+    </nav>
+    <div class="row" style="padding-top: 100px">
+      <div class="container center-block">
         <div class="col-md-2"></div>
         <div class="col-md-8 col-sm-12">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Blog</h3>
-                </div>
-                <ul class="list-group">
-                    
-                    <li class="list-group-item title"><a href="../post/kks-public.html">康凯森的公开分享</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/StarRocks-databricks.html">被 DataBricks CEO 唯一提及的数据库：StarRocks</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/olap-book-1.html">《OLAP 数据库性能优化指南》0.1 版本发布</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/starrocks-look-up.html">Beat SingleStore, StarRocks 数百亿数据毫秒级点查</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/chatgpt-case.html">我 ChatGPT 网站一次微小升级的复盘</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/mpp-grouped-excution-stage.html">MPP Pipeline VS Grouped Execution VS Stage By Stage</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/olap-performance-10.html">OLAP 查询性能优化 10 问</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/chatgpt-life.html">ChatGPT 真的可以让流浪地球的丫丫 “复活”</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/chatgpt-money.html">ChatGPT  教程&amp;资源&amp;应用大全</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/chatgpt-bug.html">ChatGPT 自动为数据库找 Bug</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/starrocks-observability.html">The Query Observability Of StarRocks</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/starrocks-10.html">最强开源 OLAP 数据库，你应该选择的 10 个理由</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/adaptive.html">数据库之美 —— 查询自适应执行</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/tools.html">12 款日常生产力工具推荐</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/starrocks-internal.html">StarRocks 技术原理资料汇总</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/database-hard.html">打造一款强大成熟的数据库有多难</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/database-prototype.html">如何快速打造一个高性能数据库原型</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/dpa.html">Data-Parallel Actors：千行代码构建高性能 OLAP 数据库</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/zhishixingqiu.html">我开通了知识星球</a></li>
-                    
-                    <li class="list-group-item title"><a href="../post/fastest_database.html">如何打造一款极速分析型数据库</a></li>
-                    
-                </ul>
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">Blog</h3>
             </div>
-            <nav>
-                <ul class="pager">
-                    
-                    
-                    <li class="next"><a  href="../page/2.html">下一页</a></li>
-                    
-                </ul>
-            </nav>
+            <ul class="list-group">
+              
+              <li class="list-group-item title">
+                <a href="../post/kks-public.html">康凯森的公开分享</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/StarRocks-databricks.html">被 DataBricks CEO 唯一提及的数据库：StarRocks</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/olap-book-1.html">《OLAP 数据库性能优化指南》0.1 版本发布</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/starrocks-look-up.html">Beat SingleStore, StarRocks 数百亿数据毫秒级点查</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/chatgpt-case.html">我 ChatGPT 网站一次微小升级的复盘</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/mpp-grouped-excution-stage.html">MPP Pipeline VS Grouped Execution VS Stage By Stage</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/olap-performance-10.html">OLAP 查询性能优化 10 问</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/chatgpt-life.html">ChatGPT 真的可以让流浪地球的丫丫 “复活”</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/chatgpt-money.html">ChatGPT  教程&amp;资源&amp;应用大全</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/chatgpt-bug.html">ChatGPT 自动为数据库找 Bug</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/starrocks-observability.html">The Query Observability Of StarRocks</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/starrocks-10.html">最强开源 OLAP 数据库，你应该选择的 10 个理由</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/adaptive.html">数据库之美 —— 查询自适应执行</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/tools.html">12 款日常生产力工具推荐</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/starrocks-internal.html">StarRocks 技术原理资料汇总</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/database-hard.html">打造一款强大成熟的数据库有多难</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/database-prototype.html">如何快速打造一个高性能数据库原型</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/dpa.html">Data-Parallel Actors：千行代码构建高性能 OLAP 数据库</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/zhishixingqiu.html">我开通了知识星球</a>
+              </li>
+              
+              <li class="list-group-item title">
+                <a href="../post/fastest_database.html">如何打造一款极速分析型数据库</a>
+              </li>
+              
+            </ul>
+          </div>
+          <nav>
+            <ul class="pager">
+               
+              <li class="next">
+                <a href="../page/2.html">下一页</a>
+              </li>
+              
+            </ul>
+          </nav>
         </div>
         <div class="col-md-2"></div>
+      </div>
     </div>
-</div>
 
-<div class="footer">
-    <a href="https://www.bcmeng.com/" target="_blank"  rel="nofollow">康凯森</a>
-</div>
-<script>
-    var _hmt = _hmt || [];
-    (function() {
+    <div class="footer">
+      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+        >康凯森</a
+      >
+    </div>
+    <script>
+      var _hmt = _hmt || [];
+      (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?1d198a377ef466190881d1c021155925";
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-
-</body>
+      })();
+    </script>
+  </body>
 </html>
