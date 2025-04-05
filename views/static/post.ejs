@@ -60,8 +60,11 @@
         <div class="col-md-1"></div>
         <div class="col-md-10 col-sm-12">
           <h1><%= post.title %></h1>
-          <hr />
-          <p>作者: <%= post.author %></p>
+          <hr/>
+          <p>
+            作者: 
+            <a href="https://kangkaisen.com" target="_blank"><%= author.name %></a>
+          </p>
           <p>日期: <%= post.time %></p>
           <p>
             分类:
@@ -108,7 +111,7 @@
     </div>
 
     <div class="footer">
-      <a href="https://www.bcmeng.com/" target="_blank" rel="nofollow"
+      <a href="https://kangkaisen.com" target="_blank"
         ><%= author.name %></a
       >
     </div>
