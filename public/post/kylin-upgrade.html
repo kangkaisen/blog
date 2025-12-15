@@ -276,12 +276,12 @@ Bug类型的issue应该描述bug产生的原因，Fix bug的思路。Improve类�
 <p>一个意外是在所有环境升级2.0的4天之后，发生了一次查询事故。事故的原因是升级2.0后，由于新版的Coprocessor会加载更多的类，所以HBase RegionServer的PermGen增加了10M左右，超过了MaxPermSize，所以PermGen就OOM了。事故的本质原因是RegionServer的PermGen配置较小和Kylin Coprocessor 中catch了OOM异常。而<strong>事实上OOM异常几乎没有理由去catch，Kylin Coprocessor中更不应该去catch OOM</strong>。</p>
 
           <hr />
-          <h3>《OLAP 性能优化指南》欢迎 Star&共建</h3>
+          <h3>TalkCody 欢迎 Star&共建</h3>
           <p>
             <a
-              href="https://github.com/kangkaisen/olap-performance"
+              href="https://talkcody.com"
               target="_blank"
-              >《OLAP 性能优化指南》</a
+              >TalkCody</a
             >
           </p>
           <h3>欢迎关注微信公众号</h3>
